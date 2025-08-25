@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tone Analysis Dashboard - Admin</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="admin-container">
+        <header class="admin-header">
+            <h1><i class="fas fa-chart-line"></i> Tone Analysis Dashboard</h1>
+            <div class="header-actions">
+                <button id="refreshBtn" class="btn btn-primary">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+                <a href="/" class="btn btn-secondary">
+                    <i class="fas fa-home"></i> Back to Site
+                </a>
+            </div>
+        </header>
+
+        <main class="admin-main">
+            <!-- Statistics Overview -->
+            <section class="stats-overview">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="totalMessages">-</h3>
+                        <p>Total Messages</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="analyzedMessages">-</h3>
+                        <p>Analyzed Messages</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-smile"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="positivePercentage">-</h3>
+                        <p>Positive Sentiment</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="avgConfidence">-</h3>
+                        <p>Avg Confidence</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- OpenAI Token Usage Section -->
+            <section class="token-usage-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-coins"></i> OpenAI Token Usage</h2>
+                    <div class="token-actions">
+                        <button id="refreshTokensBtn" class="btn btn-primary">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                        <button id="resetTokensBtn" class="btn btn-warning">
+                            <i class="fas fa-trash-alt"></i> Reset Stats
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="token-stats-overview">
+                    <div class="token-stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="totalTokens">-</h3>
+                            <p>Total Tokens Used</p>
+                        </div>
+                    </div>
+                    <div class="token-stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="totalRequests">-</h3>
+                            <p>API Requests</p>
+                        </div>
+                    </div>
+                    <div class="token-stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="totalCost">-</h3>
+                            <p>Total Cost</p>
+                        </div>
+                    </div>
+                    <div class="token-stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-calculator"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="avgTokensPerRequest">-</h3>
+                            <p>Avg Tokens/Request</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="token-charts">
+                    <div class="chart-card">
+                        <h3>Daily Token Usage (Last 7 Days)</h3>
+                        <canvas id="tokenUsageChart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Today's Usage</h3>
+                        <div class="today-stats">
+                            <div class="today-stat">
+                                <span class="label">Tokens:</span>
+                                <span id="todayTokens" class="value">-</span>
+                            </div>
+                            <div class="today-stat">
+                                <span class="label">Requests:</span>
+                                <span id="todayRequests" class="value">-</span>
+                            </div>
+                            <div class="today-stat">
+                                <span class="label">Cost:</span>
+                                <span id="todayCost" class="value">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Charts Section -->
+            <section class="charts-section">
+                <div class="chart-container">
+                    <div class="chart-card">
+                        <h3>Sentiment Distribution</h3>
+                        <canvas id="sentimentChart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Emotion Breakdown</h3>
+                        <canvas id="emotionChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Messages Table -->
+            <section class="messages-section">
+                <div class="section-header">
+                    <h2>Recent Messages with Tone Analysis</h2>
+                    <div class="filter-controls">
+                        <select id="sentimentFilter">
+                            <option value="">All Sentiments</option>
+                            <option value="positive">Positive</option>
+                            <option value="negative">Negative</option>
+                            <option value="neutral">Neutral</option>
+                        </select>
+                        <select id="emotionFilter">
+                            <option value="">All Emotions</option>
+                            <option value="joy">Joy</option>
+                            <option value="anger">Anger</option>
+                            <option value="sadness">Sadness</option>
+                            <option value="fear">Fear</option>
+                            <option value="surprise">Surprise</option>
+                            <option value="disgust">Disgust</option>
+                            <option value="neutral">Neutral</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="messagesTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Message</th>
+                                <th>Sentiment</th>
+                                <th>Emotion</th>
+                                <th>Confidence</th>
+                                <th>Summary</th>
+                            </tr>
+                        </thead>
+                        <tbody id="messagesTableBody">
+                            <tr>
+                                <td colspan="8" class="loading">
+                                    <i class="fas fa-spinner fa-spin"></i> Loading messages...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="js/admin.js"></script>
+</body>
+</html>
