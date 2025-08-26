@@ -35,7 +35,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static('.'));
 
 // Database connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb+srv://ninjalovato2010:Soluciones%242025@cluster0.5wlep3k.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0', {
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/personal-website', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
