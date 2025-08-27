@@ -1,7 +1,6 @@
 // Sample projects data
 const projects = [
     {
-        title: 'Project One',
         description: 'A responsive web application built with React and Node.js that helps users manage their tasks efficiently.',
         image: 'https://source.unsplash.com/random/600x400?tech,code',
         tags: ['React', 'Node.js', 'MongoDB'],
@@ -173,7 +172,7 @@ if (form) {
         try {
             const formData = new FormData(form);
             const formObject = Object.fromEntries(formData.entries());   
-            const response = await fetch('http://localhost:3000/api/contact', {
+            const response = await fetch(window.location.origin + '/api/contact', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

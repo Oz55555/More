@@ -25,7 +25,22 @@ app.use(helmet({
   }
 }));
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'https://moreeeee.up.railway.app',
+      process.env.FRONTEND_URL
+    ].filter(Boolean);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));
@@ -35,17 +50,54 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static('.'));
 
 // Database connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/personal-website', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => {
-  console.log('✅ Connected to MongoDB Atlas successfully');
-})
-.catch(err => {
-  console.error('❌ MongoDB connection error:', err.message);
-  console.error('Full error:', err);
-});
+const connectDB = async () => {
+  try {
+    if (!process.env.MONGODB_URI) {
+      throw new Error('MONGODB_URI environment variable is not set');
+    }
+
+    console.log('🔄 Attempting to connect to MongoDB...');
+    console.log('Using URI:', process.env.MONGODB_URI.replace(/\/\/.*@/, '//***:***@')); // Hide credentials in logs
+    
+    await mongoose.connect(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 10000, // 10 seconds timeout
+      socketTimeoutMS: 45000, // 45 seconds socket timeout
+    });
+    
+    console.log('✅ Connected to MongoDB successfully');
+    
+    // Test the connection
+    await mongoose.connection.db.admin().ping();
+    console.log('✅ MongoDB ping successful');
+    
+  } catch (err) {
+    console.error('❌ MongoDB connection failed:');
+    console.error('Error message:', err.message);
+    
+    if (err.name === 'MongoServerSelectionError') {
+      console.error('🔍 Server selection failed. Check:');
+      console.error('  - MongoDB URI is correct');
+      console.error('  - Network connectivity');
+      console.error('  - MongoDB service is running');
+    }
+    
+    if (err.name === 'MongoParseError') {
+      console.error('🔍 URI parse error. Check:');
+      console.error('  - MongoDB URI format');
+      console.error('  - Special characters are URL encoded');
+    }
+    
+    // Don't exit in production, let the app run without DB
+    if (process.env.NODE_ENV !== 'production') {
+      process.exit(1);
+    }
+  }
+};
+
+// Connect to database
+connectDB();
 
 // Validation middleware
 const validateContactForm = [

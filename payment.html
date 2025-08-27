@@ -62,6 +62,51 @@
                 <!-- Payment Form -->
                 <div class="payment-form-container">
                     <form id="payment-form" class="payment-form">
+                        <!-- Payment Method Selection -->
+                        <div class="form-section">
+                            <h3><i class="fas fa-credit-card"></i> Select Payment Method</h3>
+                            <div class="payment-methods-grid">
+                                <div class="payment-method-option" data-method="paypal">
+                                    <input type="radio" id="method-paypal" name="paymentMethod" value="PayPal" checked>
+                                    <label for="method-paypal">
+                                        <div class="method-icon">
+                                            <i class="fab fa-paypal"></i>
+                                        </div>
+                                        <div class="method-info">
+                                            <h4>PayPal</h4>
+                                            <p>Quick and secure</p>
+                                        </div>
+                                    </label>
+                                </div>
+                                
+                                <div class="payment-method-option" data-method="visa">
+                                    <input type="radio" id="method-visa" name="paymentMethod" value="Visa">
+                                    <label for="method-visa">
+                                        <div class="method-icon">
+                                            <i class="fab fa-cc-visa"></i>
+                                        </div>
+                                        <div class="method-info">
+                                            <h4>Visa</h4>
+                                            <p>Credit/Debit Card</p>
+                                        </div>
+                                    </label>
+                                </div>
+                                
+                                <div class="payment-method-option" data-method="mastercard">
+                                    <input type="radio" id="method-mastercard" name="paymentMethod" value="Mastercard">
+                                    <label for="method-mastercard">
+                                        <div class="method-icon">
+                                            <i class="fab fa-cc-mastercard"></i>
+                                        </div>
+                                        <div class="method-info">
+                                            <h4>Mastercard</h4>
+                                            <p>Credit/Debit Card</p>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Personal Information -->
                         <div class="form-section">
                             <h3><i class="fas fa-user"></i> Personal Information</h3>
@@ -127,7 +172,7 @@
 
                         <!-- Payment Details (Credit Card only) -->
                         <div class="form-section" id="card-details" style="display: none;">
-                            <h3><i class="fas fa-credit-card"></i> Payment Details</h3>
+                            <h3><i class="fas fa-credit-card"></i> Card Details</h3>
                             <div class="form-group">
                                 <label for="cardNumber">Card Number *</label>
                                 <input type="text" id="cardNumber" name="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19">

@@ -8,8 +8,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update payment summary
     updatePaymentSummary(amount, method);
     
+    // Set initial payment method selection
+    setInitialPaymentMethod(method);
+    
     // Show/hide card details based on payment method
     toggleCardDetails(method);
+    
+    // Setup payment method change listeners
+    setupPaymentMethodListeners();
     
     // Form validation and submission
     setupFormHandling();
@@ -29,6 +35,30 @@ function updatePaymentSummary(amount, method) {
     // Add payment method indicator class
     const methodElement = document.getElementById('payment-method');
     methodElement.className = `payment-method-indicator ${method.toLowerCase()}`;
+}
+
+function setInitialPaymentMethod(method) {
+    const methodRadio = document.querySelector(`input[value="${method}"]`);
+    if (methodRadio) {
+        methodRadio.checked = true;
+    }
+}
+
+function setupPaymentMethodListeners() {
+    const paymentMethodRadios = document.querySelectorAll('input[name="paymentMethod"]');
+    
+    paymentMethodRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            const selectedMethod = this.value;
+            updatePaymentSummary(getCurrentAmount(), selectedMethod);
+            toggleCardDetails(selectedMethod);
+        });
+    });
+}
+
+function getCurrentAmount() {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('amount') || '0';
 }
 
 function toggleCardDetails(method) {
@@ -224,10 +254,13 @@ function processPayment() {
     const formData = new FormData(document.getElementById('payment-form'));
     const paymentData = Object.fromEntries(formData.entries());
     
-    // Add URL parameters
+    // Add URL parameters and get selected payment method
     const urlParams = new URLSearchParams(window.location.search);
     paymentData.amount = urlParams.get('amount');
-    paymentData.paymentMethod = urlParams.get('method');
+    
+    // Get the selected payment method from the form
+    const selectedMethod = document.querySelector('input[name="paymentMethod"]:checked');
+    paymentData.paymentMethod = selectedMethod ? selectedMethod.value : 'PayPal';
     
     // Check if payment method is PayPal
     if (paymentData.paymentMethod === 'PayPal') {

@@ -1,7 +1,7 @@
 // Admin Dashboard JavaScript
 class ToneAnalysisDashboard {
     constructor() {
-        this.apiBase = 'http://localhost:3000/api';
+        this.apiBase = window.location.origin + '/api';
         this.charts = {};
         this.messages = [];
         this.filteredMessages = [];
