@@ -289,7 +289,10 @@ window.addEventListener('scroll', () => {
 
 // Initialize
 function init() {
-    renderProjects();
+    // Only render projects if we're on the main page (not payment page)
+    if (document.querySelector('.projects-grid')) {
+        renderProjects();
+    }
 }
 
 // Run when DOM is fully loaded
