@@ -22,6 +22,11 @@ class ToneAnalysisDashboard {
             this.loadData();
         });
 
+        // Logout button
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            this.logout();
+        });
+
         // Token refresh and reset buttons
         document.getElementById('refreshTokensBtn').addEventListener('click', () => {
             this.loadTokenStats();
@@ -456,6 +461,31 @@ class ToneAnalysisDashboard {
                 </tr>
             `;
         }).join('');
+    }
+
+    async logout() {
+        try {
+            const response = await fetch(`${this.apiBase}/admin/logout`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include'
+            });
+
+            const data = await response.json();
+            
+            if (response.ok && data.success) {
+                // Redirect to login page
+                window.location.href = '/login';
+            } else {
+                console.error('Logout failed:', data.message);
+                alert('Error al cerrar sesión. Por favor, intente nuevamente.');
+            }
+        } catch (error) {
+            console.error('Logout error:', error);
+            alert('Error de conexión al cerrar sesión.');
+        }
     }
 
     escapeHtml(text) {
