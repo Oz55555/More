@@ -445,9 +445,22 @@ app.post('/api/token-stats/reset', requireAuth, async (req, res) => {
 // Create payment intent
 app.post('/api/create-payment-intent', async (req, res) => {
   try {
+    console.log('🔄 Creating payment intent with data:', req.body);
+    
+    // Check if Stripe is configured
+    if (!process.env.STRIPE_SECRET_KEY) {
+      console.error('❌ STRIPE_SECRET_KEY not configured');
+      return res.status(500).json({
+        success: false,
+        message: 'Payment system not configured'
+      });
+    }
+    
     const { amount, currency = 'usd', paymentMethodType = 'card' } = req.body;
+    console.log('💰 Payment details:', { amount, currency, paymentMethodType });
 
-    if (!amount || amount < 50) { // Minimum $0.50
+    if (!amount || amount < 0.50) { // Minimum $0.50
+      console.log('❌ Invalid amount:', amount);
       return res.status(400).json({
         success: false,
         message: 'Amount must be at least $0.50'
@@ -611,3 +624,6 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Visit: http://localhost:${PORT}`);
 });
+
+
+

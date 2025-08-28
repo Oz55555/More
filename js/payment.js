@@ -563,10 +563,17 @@ async function processStripePayment(paymentData, submitBtn, originalText) {
             })
         });
 
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error('❌ Payment intent creation failed:', errorData);
+            throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+        }
+        
         const { clientSecret, paymentIntentId } = await response.json();
+        console.log('✅ Payment intent created successfully');
 
         if (!clientSecret) {
-            throw new Error('Failed to create payment intent');
+            throw new Error('Failed to create payment intent - no client secret received');
         }
 
         // Confirm payment with Stripe
