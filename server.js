@@ -23,7 +23,8 @@ app.use(helmet({
       fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
       imgSrc: ["'self'", "data:", "https:", "http:"],
       scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://js.stripe.com"],
-      connectSrc: ["'self'", "https://api.stripe.com"]
+      connectSrc: ["'self'", "https://api.stripe.com"],
+      frameSrc: ["'self'", "https://js.stripe.com", "https://hooks.stripe.com"]
     }
   }
 }));
