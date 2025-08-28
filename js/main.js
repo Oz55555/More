@@ -1,6 +1,7 @@
 // Sample projects data
 const projects = [
     {
+        title: 'Task Management App',
         description: 'A responsive web application built with React and Node.js that helps users manage their tasks efficiently.',
         image: 'https://source.unsplash.com/random/600x400?tech,code',
         tags: ['React', 'Node.js', 'MongoDB'],
@@ -135,6 +136,11 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 
 // Populate projects
 function renderProjects() {
+    if (!projectsGrid) {
+        console.warn('Projects grid element not found');
+        return;
+    }
+    
     projectsGrid.innerHTML = projects.map(project => `
         <div class="project-card fade-in">
             <img src="${project.image}" alt="${project.title}" class="project-img">
