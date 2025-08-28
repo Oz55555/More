@@ -183,13 +183,21 @@ function toggleCardDetails(method) {
         
         // Unmount Stripe card element if it exists
         if (cardElement && cardElement._mounted) {
-            cardElement.unmount();
+            try {
+                cardElement.unmount();
+                console.log('🔄 Unmounted Stripe element for PayPal');
+            } catch (e) {
+                console.warn('Warning unmounting for PayPal:', e);
+            }
         }
     } else {
+        console.log(`🔄 Switching to ${method}, setting up Stripe card element...`);
         cardDetails.style.display = 'block';
         
-        // Replace traditional card inputs with Stripe Elements
-        setupStripeCardElement();
+        // Wait a moment for DOM to be ready, then setup Stripe
+        setTimeout(() => {
+            setupStripeCardElement();
+        }, 100);
         
         // Only make non-Stripe fields required
         const nameOnCardInput = document.getElementById('cardName');
@@ -266,37 +274,39 @@ function setupStripeCardElement() {
                 }
             }
             
-            // Mount the element
-            try {
-                cardElement.mount('#stripe-card-element');
-                console.log('✅ Stripe card element mounted successfully');
-                
-                // Handle real-time validation errors from the card Element
-                cardElement.on('change', ({error}) => {
-                    let errorElement = document.getElementById('card-errors');
-                    if (!errorElement) {
-                        errorElement = document.createElement('div');
-                        errorElement.id = 'card-errors';
-                        errorElement.style.cssText = 'color: #e53e3e; font-size: 14px; margin-top: 0.5rem;';
-                        stripeCardContainer.appendChild(errorElement);
-                    }
+            // Wait a moment before mounting to ensure DOM is ready
+            setTimeout(() => {
+                try {
+                    cardElement.mount('#stripe-card-element');
+                    console.log('✅ Stripe card element mounted successfully');
                     
-                    if (error) {
-                        errorElement.textContent = error.message;
-                    } else {
-                        errorElement.textContent = '';
-                    }
-                });
-                
-                // Add loading indicator
-                cardElement.on('ready', () => {
-                    console.log('✅ Stripe card element ready for input');
-                    stripeCardContainer.style.borderColor = '#10b981';
-                });
-            } catch (mountError) {
-                console.error('❌ Error mounting Stripe element:', mountError);
-                enableTraditionalCardFields();
-            }
+                    // Handle real-time validation errors from the card Element
+                    cardElement.on('change', ({error}) => {
+                        let errorElement = document.getElementById('card-errors');
+                        if (!errorElement) {
+                            errorElement = document.createElement('div');
+                            errorElement.id = 'card-errors';
+                            errorElement.style.cssText = 'color: #e53e3e; font-size: 14px; margin-top: 0.5rem;';
+                            stripeCardContainer.appendChild(errorElement);
+                        }
+                        
+                        if (error) {
+                            errorElement.textContent = error.message;
+                        } else {
+                            errorElement.textContent = '';
+                        }
+                    });
+                    
+                    // Add loading indicator
+                    cardElement.on('ready', () => {
+                        console.log('✅ Stripe card element ready for input');
+                        stripeCardContainer.style.borderColor = '#10b981';
+                    });
+                } catch (mountError) {
+                    console.error('❌ Error mounting Stripe element:', mountError);
+                    enableTraditionalCardFields();
+                }
+            }, 150);
         }
         
     } catch (error) {
