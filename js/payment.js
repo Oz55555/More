@@ -255,32 +255,48 @@ function setupStripeCardElement() {
         }
         
         // Mount Stripe card element
-        if (cardElement && !cardElement._mounted) {
-            cardElement.mount('#stripe-card-element');
-            console.log('✅ Stripe card element mounted successfully');
-            
-            // Handle real-time validation errors from the card Element
-            cardElement.on('change', ({error}) => {
-                let errorElement = document.getElementById('card-errors');
-                if (!errorElement) {
-                    errorElement = document.createElement('div');
-                    errorElement.id = 'card-errors';
-                    errorElement.style.cssText = 'color: #e53e3e; font-size: 14px; margin-top: 0.5rem;';
-                    stripeCardContainer.appendChild(errorElement);
+        if (cardElement) {
+            // Unmount first if already mounted to avoid errors
+            if (cardElement._mounted) {
+                try {
+                    cardElement.unmount();
+                    console.log('🔄 Unmounted existing Stripe element');
+                } catch (e) {
+                    console.warn('Warning unmounting element:', e);
                 }
+            }
+            
+            // Mount the element
+            try {
+                cardElement.mount('#stripe-card-element');
+                console.log('✅ Stripe card element mounted successfully');
                 
-                if (error) {
-                    errorElement.textContent = error.message;
-                } else {
-                    errorElement.textContent = '';
-                }
-            });
-            
-            // Add loading indicator
-            cardElement.on('ready', () => {
-                console.log('✅ Stripe card element ready for input');
-                stripeCardContainer.style.borderColor = '#10b981';
-            });
+                // Handle real-time validation errors from the card Element
+                cardElement.on('change', ({error}) => {
+                    let errorElement = document.getElementById('card-errors');
+                    if (!errorElement) {
+                        errorElement = document.createElement('div');
+                        errorElement.id = 'card-errors';
+                        errorElement.style.cssText = 'color: #e53e3e; font-size: 14px; margin-top: 0.5rem;';
+                        stripeCardContainer.appendChild(errorElement);
+                    }
+                    
+                    if (error) {
+                        errorElement.textContent = error.message;
+                    } else {
+                        errorElement.textContent = '';
+                    }
+                });
+                
+                // Add loading indicator
+                cardElement.on('ready', () => {
+                    console.log('✅ Stripe card element ready for input');
+                    stripeCardContainer.style.borderColor = '#10b981';
+                });
+            } catch (mountError) {
+                console.error('❌ Error mounting Stripe element:', mountError);
+                enableTraditionalCardFields();
+            }
         }
         
     } catch (error) {
@@ -516,9 +532,23 @@ async function processStripePayment(paymentData, submitBtn, originalText) {
             throw new Error('Stripe not properly initialized - using traditional payment processing');
         }
         
-        // Check if card element is ready
+        // Check if card element is ready and mounted
         if (!cardElement._mounted) {
-            throw new Error('Stripe card element not mounted');
+            console.error('❌ Stripe card element not mounted, attempting to mount...');
+            
+            // Try to mount the element if it's not mounted
+            try {
+                const stripeContainer = document.getElementById('stripe-card-element');
+                if (stripeContainer) {
+                    cardElement.mount('#stripe-card-element');
+                    console.log('✅ Successfully mounted Stripe element during payment');
+                } else {
+                    throw new Error('Stripe container not found');
+                }
+            } catch (mountError) {
+                console.error('❌ Failed to mount Stripe element:', mountError);
+                throw new Error('Stripe card element could not be mounted - using fallback payment processing');
+            }
         }
 
         // Create payment intent on server
