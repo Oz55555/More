@@ -36,9 +36,22 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 async function initializeStripe() {
     try {
+        console.log('🔄 Initializing Stripe...');
+        
+        // Check if Stripe.js loaded
+        if (typeof Stripe === 'undefined') {
+            throw new Error('Stripe.js not loaded');
+        }
+        
         // Get Stripe publishable key from server
         const response = await fetch('/api/stripe-config');
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
         const config = await response.json();
+        console.log('📡 Stripe config received:', { success: config.success, hasKey: !!config.publishableKey });
         
         if (config.success && config.publishableKey) {
             stripe = Stripe(config.publishableKey);
@@ -59,11 +72,67 @@ async function initializeStripe() {
                     },
                 },
             });
+            
+            console.log('✅ Stripe initialized successfully');
         } else {
-            console.error('Failed to load Stripe configuration');
+            throw new Error('Invalid Stripe configuration: ' + JSON.stringify(config));
         }
     } catch (error) {
-        console.error('Error initializing Stripe:', error);
+        console.error('❌ Error initializing Stripe:', error);
+        showStripeError(error.message);
+        // Enable fallback to traditional card fields
+        enableTraditionalCardFields();
+    }
+}
+
+function showStripeError(message) {
+    const errorDiv = document.createElement('div');
+    errorDiv.style.cssText = `
+        background: #fee;
+        border: 1px solid #fcc;
+        color: #c33;
+        padding: 1rem;
+        border-radius: 8px;
+        margin: 1rem 0;
+        font-size: 14px;
+    `;
+    errorDiv.innerHTML = `
+        <strong>⚠️ Payment System Notice:</strong><br>
+        ${message}<br>
+        <small>Using traditional card input as fallback.</small>
+    `;
+    
+    const cardDetails = document.getElementById('card-details');
+    if (cardDetails) {
+        cardDetails.insertBefore(errorDiv, cardDetails.firstChild);
+    }
+}
+
+function enableTraditionalCardFields() {
+    console.log('🔄 Enabling traditional card fields as fallback');
+    
+    // Show traditional card input fields
+    const cardNumberInput = document.getElementById('cardNumber');
+    const expiryDateInput = document.getElementById('expiryDate');
+    const cvvInput = document.getElementById('cvv');
+    
+    if (cardNumberInput) {
+        cardNumberInput.style.display = 'block';
+        cardNumberInput.setAttribute('required', 'required');
+    }
+    if (expiryDateInput) {
+        expiryDateInput.style.display = 'block';
+        expiryDateInput.setAttribute('required', 'required');
+    }
+    if (cvvInput) {
+        cvvInput.style.display = 'block';
+        cvvInput.setAttribute('required', 'required');
+    }
+    
+    // Hide Stripe container if it exists
+    const stripeContainer = document.getElementById('stripe-card-element');
+    if (stripeContainer) {
+        stripeContainer.style.display = 'none';
     }
 }
 
@@ -131,61 +200,92 @@ function toggleCardDetails(method) {
 }
 
 function setupStripeCardElement() {
-    if (!stripe || !elements) {
-        console.error('Stripe not initialized');
+    if (!stripe || !elements || !cardElement) {
+        console.warn('⚠️ Stripe not properly initialized, using traditional fields');
+        enableTraditionalCardFields();
         return;
     }
     
-    // Hide traditional card input fields
-    const cardNumberInput = document.getElementById('cardNumber');
-    const expiryDateInput = document.getElementById('expiryDate');
-    const cvvInput = document.getElementById('cvv');
-    
-    if (cardNumberInput) cardNumberInput.style.display = 'none';
-    if (expiryDateInput) expiryDateInput.style.display = 'none';
-    if (cvvInput) cvvInput.style.display = 'none';
-    
-    // Create container for Stripe card element
-    let stripeCardContainer = document.getElementById('stripe-card-element');
-    if (!stripeCardContainer) {
-        stripeCardContainer = document.createElement('div');
-        stripeCardContainer.id = 'stripe-card-element';
-        stripeCardContainer.style.cssText = `
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            background: white;
-        `;
+    try {
+        console.log('🔄 Setting up Stripe card element');
         
-        // Insert after card number label
-        const cardNumberGroup = cardNumberInput.closest('.form-group');
-        if (cardNumberGroup) {
-            cardNumberGroup.appendChild(stripeCardContainer);
+        // Hide traditional card input fields
+        const cardNumberInput = document.getElementById('cardNumber');
+        const expiryDateInput = document.getElementById('expiryDate');
+        const cvvInput = document.getElementById('cvv');
+        
+        if (cardNumberInput) {
+            cardNumberInput.style.display = 'none';
+            cardNumberInput.removeAttribute('required');
         }
-    }
-    
-    // Mount Stripe card element
-    if (cardElement && !cardElement._mounted) {
-        cardElement.mount('#stripe-card-element');
+        if (expiryDateInput) {
+            expiryDateInput.style.display = 'none';
+            expiryDateInput.removeAttribute('required');
+        }
+        if (cvvInput) {
+            cvvInput.style.display = 'none';
+            cvvInput.removeAttribute('required');
+        }
         
-        // Handle real-time validation errors from the card Element
-        cardElement.on('change', ({error}) => {
-            const displayError = document.getElementById('card-errors');
-            if (!displayError) {
-                const errorDiv = document.createElement('div');
-                errorDiv.id = 'card-errors';
-                errorDiv.style.cssText = 'color: #e53e3e; font-size: 14px; margin-top: 0.5rem;';
-                stripeCardContainer.appendChild(errorDiv);
-            }
+        // Create container for Stripe card element
+        let stripeCardContainer = document.getElementById('stripe-card-element');
+        if (!stripeCardContainer) {
+            stripeCardContainer = document.createElement('div');
+            stripeCardContainer.id = 'stripe-card-element';
+            stripeCardContainer.style.cssText = `
+                padding: 12px;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                margin-bottom: 1rem;
+                background: white;
+                min-height: 40px;
+            `;
             
-            const errorElement = document.getElementById('card-errors');
-            if (error) {
-                errorElement.textContent = error.message;
+            // Insert after card number label
+            const cardNumberGroup = cardNumberInput ? cardNumberInput.closest('.form-group') : null;
+            if (cardNumberGroup) {
+                cardNumberGroup.appendChild(stripeCardContainer);
             } else {
-                errorElement.textContent = '';
+                // Fallback: insert in card details section
+                const cardDetails = document.getElementById('card-details');
+                if (cardDetails) {
+                    cardDetails.appendChild(stripeCardContainer);
+                }
             }
-        });
+        }
+        
+        // Mount Stripe card element
+        if (cardElement && !cardElement._mounted) {
+            cardElement.mount('#stripe-card-element');
+            console.log('✅ Stripe card element mounted successfully');
+            
+            // Handle real-time validation errors from the card Element
+            cardElement.on('change', ({error}) => {
+                let errorElement = document.getElementById('card-errors');
+                if (!errorElement) {
+                    errorElement = document.createElement('div');
+                    errorElement.id = 'card-errors';
+                    errorElement.style.cssText = 'color: #e53e3e; font-size: 14px; margin-top: 0.5rem;';
+                    stripeCardContainer.appendChild(errorElement);
+                }
+                
+                if (error) {
+                    errorElement.textContent = error.message;
+                } else {
+                    errorElement.textContent = '';
+                }
+            });
+            
+            // Add loading indicator
+            cardElement.on('ready', () => {
+                console.log('✅ Stripe card element ready for input');
+                stripeCardContainer.style.borderColor = '#10b981';
+            });
+        }
+        
+    } catch (error) {
+        console.error('❌ Error setting up Stripe card element:', error);
+        enableTraditionalCardFields();
     }
 }
 
@@ -410,8 +510,15 @@ function processPayment() {
 
 async function processStripePayment(paymentData, submitBtn, originalText) {
     try {
+        console.log('🔄 Processing Stripe payment...');
+        
         if (!stripe || !cardElement) {
-            throw new Error('Stripe not properly initialized');
+            throw new Error('Stripe not properly initialized - using traditional payment processing');
+        }
+        
+        // Check if card element is ready
+        if (!cardElement._mounted) {
+            throw new Error('Stripe card element not mounted');
         }
 
         // Create payment intent on server
