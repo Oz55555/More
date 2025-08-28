@@ -1,5 +1,12 @@
 // Payment Form JavaScript
-document.addEventListener('DOMContentLoaded', function() {
+let stripe;
+let elements;
+let cardElement;
+
+document.addEventListener('DOMContentLoaded', async function() {
+    // Initialize Stripe
+    await initializeStripe();
+    
     // Get URL parameters
     const urlParams = new URLSearchParams(window.location.search);
     const amount = urlParams.get('amount') || '0';
@@ -20,12 +27,45 @@ document.addEventListener('DOMContentLoaded', function() {
     // Form validation and submission
     setupFormHandling();
     
-    // Card number formatting
+    // Card number formatting (only for non-Stripe fields)
     setupCardFormatting();
     
     // Back button event listener
     setupBackButton();
 });
+
+async function initializeStripe() {
+    try {
+        // Get Stripe publishable key from server
+        const response = await fetch('/api/stripe-config');
+        const config = await response.json();
+        
+        if (config.success && config.publishableKey) {
+            stripe = Stripe(config.publishableKey);
+            elements = stripe.elements();
+            
+            // Create card element
+            cardElement = elements.create('card', {
+                style: {
+                    base: {
+                        fontSize: '16px',
+                        color: '#424770',
+                        '::placeholder': {
+                            color: '#aab7c4',
+                        },
+                    },
+                    invalid: {
+                        color: '#9e2146',
+                    },
+                },
+            });
+        } else {
+            console.error('Failed to load Stripe configuration');
+        }
+    } catch (error) {
+        console.error('Error initializing Stripe:', error);
+    }
+}
 
 function updatePaymentSummary(amount, method) {
     document.getElementById('payment-method').textContent = method;
@@ -71,12 +111,79 @@ function toggleCardDetails(method) {
         cardInputs.forEach(input => {
             input.removeAttribute('required');
         });
+        
+        // Unmount Stripe card element if it exists
+        if (cardElement && cardElement._mounted) {
+            cardElement.unmount();
+        }
     } else {
         cardDetails.style.display = 'block';
-        // Add required attribute for credit cards
-        cardInputs.forEach(input => {
-            if (input.id !== 'cvv') { // CVV might not be required for some cards
-                input.setAttribute('required', 'required');
+        
+        // Replace traditional card inputs with Stripe Elements
+        setupStripeCardElement();
+        
+        // Only make non-Stripe fields required
+        const nameOnCardInput = document.getElementById('cardName');
+        if (nameOnCardInput) {
+            nameOnCardInput.setAttribute('required', 'required');
+        }
+    }
+}
+
+function setupStripeCardElement() {
+    if (!stripe || !elements) {
+        console.error('Stripe not initialized');
+        return;
+    }
+    
+    // Hide traditional card input fields
+    const cardNumberInput = document.getElementById('cardNumber');
+    const expiryDateInput = document.getElementById('expiryDate');
+    const cvvInput = document.getElementById('cvv');
+    
+    if (cardNumberInput) cardNumberInput.style.display = 'none';
+    if (expiryDateInput) expiryDateInput.style.display = 'none';
+    if (cvvInput) cvvInput.style.display = 'none';
+    
+    // Create container for Stripe card element
+    let stripeCardContainer = document.getElementById('stripe-card-element');
+    if (!stripeCardContainer) {
+        stripeCardContainer = document.createElement('div');
+        stripeCardContainer.id = 'stripe-card-element';
+        stripeCardContainer.style.cssText = `
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            background: white;
+        `;
+        
+        // Insert after card number label
+        const cardNumberGroup = cardNumberInput.closest('.form-group');
+        if (cardNumberGroup) {
+            cardNumberGroup.appendChild(stripeCardContainer);
+        }
+    }
+    
+    // Mount Stripe card element
+    if (cardElement && !cardElement._mounted) {
+        cardElement.mount('#stripe-card-element');
+        
+        // Handle real-time validation errors from the card Element
+        cardElement.on('change', ({error}) => {
+            const displayError = document.getElementById('card-errors');
+            if (!displayError) {
+                const errorDiv = document.createElement('div');
+                errorDiv.id = 'card-errors';
+                errorDiv.style.cssText = 'color: #e53e3e; font-size: 14px; margin-top: 0.5rem;';
+                stripeCardContainer.appendChild(errorDiv);
+            }
+            
+            const errorElement = document.getElementById('card-errors');
+            if (error) {
+                errorElement.textContent = error.message;
+            } else {
+                errorElement.textContent = '';
             }
         });
     }
@@ -172,7 +279,21 @@ function isValidEmail(email) {
 
 function isValidCardNumber(cardNumber) {
     const cleanNumber = cardNumber.replace(/\s/g, '');
-    return /^\d{13,19}$/.test(cleanNumber) && luhnCheck(cleanNumber);
+    if (!/^\d{13,19}$/.test(cleanNumber)) return false;
+    
+    // Get selected payment method
+    const selectedMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value;
+    
+    // Validate specific card types
+    if (selectedMethod === 'Visa') {
+        // Visa cards start with 4 and are 13, 16, or 19 digits
+        if (!/^4\d{12}(\d{3})?(\d{3})?$/.test(cleanNumber)) return false;
+    } else if (selectedMethod === 'Mastercard') {
+        // Mastercard starts with 5[1-5] or 2[2-7] and are 16 digits
+        if (!/^(5[1-5]\d{14}|2[2-7]\d{14})$/.test(cleanNumber)) return false;
+    }
+    
+    return luhnCheck(cleanNumber);
 }
 
 function isValidExpiryDate(expiryDate) {
@@ -283,19 +404,110 @@ function processPayment() {
         return;
     }
     
-    // For credit card payments, simulate processing
-    setTimeout(() => {
-        // In a real application, you would send this data to your payment processor
-        console.log('Payment Data:', paymentData);
-        
-        // Show success message
-        showPaymentSuccess(paymentData);
-        
-        // Reset button
+    // For credit card payments, process with Stripe
+    processStripePayment(paymentData, submitBtn, originalText);
+}
+
+async function processStripePayment(paymentData, submitBtn, originalText) {
+    try {
+        if (!stripe || !cardElement) {
+            throw new Error('Stripe not properly initialized');
+        }
+
+        // Create payment intent on server
+        const response = await fetch('/api/create-payment-intent', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                amount: parseFloat(paymentData.amount),
+                currency: 'usd'
+            })
+        });
+
+        const { clientSecret, paymentIntentId } = await response.json();
+
+        if (!clientSecret) {
+            throw new Error('Failed to create payment intent');
+        }
+
+        // Confirm payment with Stripe
+        const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+            payment_method: {
+                card: cardElement,
+                billing_details: {
+                    name: `${paymentData.firstName} ${paymentData.lastName}`,
+                    email: paymentData.email,
+                    phone: paymentData.phone,
+                    address: {
+                        line1: paymentData.address,
+                        city: paymentData.city,
+                        state: paymentData.state,
+                        postal_code: paymentData.zipCode,
+                        country: paymentData.country
+                    }
+                }
+            }
+        });
+
+        if (error) {
+            console.error('Payment failed:', error);
+            showCreditCardError({
+                ...paymentData,
+                error: error.message
+            });
+        } else if (paymentIntent.status === 'succeeded') {
+            // Confirm payment on server and save donation info
+            const confirmResponse = await fetch('/api/confirm-payment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    paymentIntentId: paymentIntent.id,
+                    donorInfo: {
+                        firstName: paymentData.firstName,
+                        lastName: paymentData.lastName,
+                        email: paymentData.email,
+                        phone: paymentData.phone,
+                        address: paymentData.address,
+                        city: paymentData.city,
+                        state: paymentData.state,
+                        zipCode: paymentData.zipCode,
+                        country: paymentData.country,
+                        anonymous: paymentData.anonymous
+                    },
+                    amount: paymentData.amount,
+                    message: paymentData.message
+                })
+            });
+
+            const confirmResult = await confirmResponse.json();
+            
+            if (confirmResult.success) {
+                showCreditCardSuccess({
+                    ...paymentData,
+                    transactionId: confirmResult.transactionId,
+                    chargeId: confirmResult.chargeId
+                });
+            } else {
+                throw new Error(confirmResult.message || 'Failed to confirm payment');
+            }
+        }
+
+    } catch (error) {
+        console.error('Payment processing error:', error);
+        showCreditCardError({
+            ...paymentData,
+            error: error.message
+        });
+    } finally {
+        // Reset button state
         submitBtn.classList.remove('loading');
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
-    }, 2000);
+    }
 }
 
 function showPayPalRedirect(paymentData, paypalUrl) {
@@ -386,7 +598,7 @@ function updateModalForPaymentInProgress(paymentData) {
 }
 
 function showPaymentSuccess(paymentData) {
-    // Create success modal or redirect to success page
+    // Create success modal for PayPal payments
     const successMessage = `
         <div class="payment-success">
             <div class="success-content">
@@ -414,82 +626,194 @@ function showPaymentSuccess(paymentData) {
     `;
     
     document.body.insertAdjacentHTML('beforeend', successMessage);
+}
+
+function showCreditCardSuccess(paymentData) {
+    // Generate a fake transaction ID for demo purposes
+    const transactionId = 'TXN' + Date.now().toString().slice(-8);
+    const cardType = paymentData.paymentMethod;
+    const lastFourDigits = paymentData.cardNumber ? paymentData.cardNumber.replace(/\s/g, '').slice(-4) : '****';
     
-    // Style the modals
-    const style = document.createElement('style');
-    style.textContent = `
-        .payment-success, .paypal-redirect-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-        }
-        .success-content, .modal-content {
-            background: white;
-            padding: 3rem;
-            border-radius: 15px;
-            text-align: center;
-            max-width: 450px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-        }
-        .success-content i, .modal-content i {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-        }
-        .success-content i {
-            color: #10b981;
-        }
-        .paypal-icon {
-            color: #0070ba !important;
-        }
-        .success-content h2, .modal-content h2 {
-            color: #333;
-            margin-bottom: 1rem;
-        }
-        .success-content p, .modal-content p {
-            color: #666;
-            margin-bottom: 1rem;
-        }
-        .instructions {
-            font-size: 0.9rem;
-            color: #888 !important;
-        }
-        .modal-actions {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            margin-top: 2rem;
-        }
-        .btn-primary, .btn-secondary {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-        .btn-primary {
-            background: #0070ba;
-            color: white;
-        }
-        .btn-primary:hover {
-            background: #005ea6;
-        }
-        .btn-secondary {
-            background: #f5f5f5;
-            color: #333;
-        }
-        .btn-secondary:hover {
-            background: #e0e0e0;
-        }
+    const successMessage = `
+        <div class="payment-success">
+            <div class="success-content">
+                <i class="fas fa-check-circle"></i>
+                <h2>¡Pago Procesado Exitosamente!</h2>
+                <p>Tu donación de <strong>$${paymentData.amount}</strong> ha sido procesada.</p>
+                
+                <div class="transaction-details">
+                    <h3>Detalles de la Transacción</h3>
+                    <div class="detail-row">
+                        <span>ID de Transacción:</span>
+                        <span><strong>${transactionId}</strong></span>
+                    </div>
+                    <div class="detail-row">
+                        <span>Método de Pago:</span>
+                        <span>${cardType} ****${lastFourDigits}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>Fecha:</span>
+                        <span>${new Date().toLocaleDateString('es-ES')}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>Estado:</span>
+                        <span class="status-approved">Aprobado</span>
+                    </div>
+                </div>
+                
+                <p class="thank-you-message">
+                    <strong>¡Gracias ${paymentData.firstName}!</strong><br>
+                    Tu generosa donación ayuda a mantener este proyecto funcionando.
+                </p>
+                
+                <p class="receipt-info">
+                    <small>Se enviará un recibo por email a ${paymentData.email}</small>
+                </p>
+                
+                <div class="modal-actions">
+                    <button id="download-receipt-btn" class="btn-primary">
+                        <i class="fas fa-download"></i> Descargar Recibo
+                    </button>
+                    <button id="return-home-btn" class="btn-secondary">
+                        Volver al Inicio
+                    </button>
+                </div>
+            </div>
+        </div>
     `;
-    document.head.appendChild(style);
+    
+    document.body.insertAdjacentHTML('beforeend', successMessage);
+    
+    // Add event listener for download receipt
+    document.getElementById('download-receipt-btn').addEventListener('click', function() {
+        generateReceipt(paymentData, transactionId);
+    });
+}
+
+function showCreditCardError(paymentData) {
+    const errorMessage = `
+        <div class="payment-error">
+            <div class="error-content">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h2>Error en el Procesamiento</h2>
+                <p>Lo sentimos, no pudimos procesar tu pago en este momento.</p>
+                
+                <div class="error-details">
+                    <h3>Posibles causas:</h3>
+                    <ul style="text-align: left; margin: 1rem 0;">
+                        <li>Fondos insuficientes en la tarjeta</li>
+                        <li>Información de tarjeta incorrecta</li>
+                        <li>Tarjeta expirada o bloqueada</li>
+                        <li>Problema temporal del procesador</li>
+                    </ul>
+                </div>
+                
+                <p><strong>Sugerencias:</strong></p>
+                <ul style="text-align: left; margin: 1rem 0;">
+                    <li>Verifica los datos de tu tarjeta</li>
+                    <li>Intenta con otra tarjeta</li>
+                    <li>Usa PayPal como alternativa</li>
+                </ul>
+                
+                <div class="modal-actions">
+                    <button id="retry-card-payment-btn" class="btn-primary">
+                        <i class="fas fa-redo"></i> Reintentar
+                    </button>
+                    <button id="try-paypal-btn" class="btn-secondary">
+                        <i class="fab fa-paypal"></i> Usar PayPal
+                    </button>
+                    <button id="return-home-btn" class="btn-secondary">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', errorMessage);
+    
+    // Add event listeners
+    document.getElementById('retry-card-payment-btn').addEventListener('click', function() {
+        document.querySelector('.payment-error').remove();
+    });
+    
+    document.getElementById('try-paypal-btn').addEventListener('click', function() {
+        // Switch to PayPal and close modal
+        document.querySelector('input[value="PayPal"]').checked = true;
+        toggleCardDetails('PayPal');
+        updatePaymentSummary(paymentData.amount, 'PayPal');
+        document.querySelector('.payment-error').remove();
+    });
+}
+
+function generateReceipt(paymentData, transactionId) {
+    // Create a simple text receipt
+    const receiptContent = `
+===========================================
+           RECIBO DE DONACIÓN
+===========================================
+
+Fecha: ${new Date().toLocaleDateString('es-ES')}
+ID Transacción: ${transactionId}
+
+-------------------------------------------
+DETALLES DEL DONANTE:
+-------------------------------------------
+Nombre: ${paymentData.firstName} ${paymentData.lastName}
+Email: ${paymentData.email}
+Teléfono: ${paymentData.phone || 'No proporcionado'}
+
+-------------------------------------------
+DETALLES DEL PAGO:
+-------------------------------------------
+Método: ${paymentData.paymentMethod}
+Monto: $${paymentData.amount}
+Estado: APROBADO
+
+-------------------------------------------
+MENSAJE:
+-------------------------------------------
+${paymentData.message || 'Sin mensaje'}
+
+-------------------------------------------
+¡Gracias por tu generosa donación!
+Tu apoyo es muy valorado.
+
+Oscar Medina
+Desarrollador Web
+===========================================
+    `;
+    
+    // Create and download the receipt
+    const blob = new Blob([receiptContent], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `recibo_donacion_${transactionId}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+
+    // Show download confirmation
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #10b981;
+        color: white;
+        padding: 1rem;
+        border-radius: 8px;
+        z-index: 10001;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    `;
+    notification.innerHTML = '<i class="fas fa-check"></i> Recibo descargado exitosamente';
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
 }
 
 function setupBackButton() {
@@ -530,3 +854,159 @@ document.addEventListener('click', function(e) {
         showPayPalRedirect(paymentData, paypalUrl);
     }
 });
+
+// Style the modals
+const style = document.createElement('style');
+style.textContent = `
+    .payment-success, .paypal-redirect-modal, .payment-error {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+    }
+    .success-content, .modal-content, .error-content {
+        background: white;
+        padding: 3rem;
+        border-radius: 15px;
+        text-align: center;
+        max-width: 500px;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+    .success-content i, .modal-content i, .error-content i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+    }
+    .success-content .fa-check-circle {
+        color: #10b981;
+    }
+    .success-content .fa-info-circle {
+        color: #3b82f6;
+    }
+    .error-content .fa-exclamation-triangle {
+        color: #ef4444;
+    }
+    .paypal-icon {
+        color: #0070ba !important;
+    }
+    .success-content h2, .modal-content h2, .error-content h2 {
+        color: #333;
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+    }
+    .success-content p, .modal-content p, .error-content p {
+        color: #666;
+        margin-bottom: 1rem;
+        line-height: 1.5;
+    }
+    .transaction-details {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        text-align: left;
+    }
+    .transaction-details h3 {
+        color: #333;
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+        text-align: center;
+    }
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+    .status-approved {
+        color: #10b981;
+        font-weight: 600;
+    }
+    .thank-you-message {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin: 1.5rem 0;
+    }
+    .receipt-info {
+        color: #888;
+        font-style: italic;
+    }
+    .error-details {
+        background: #fef2f2;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        text-align: left;
+    }
+    .error-details h3 {
+        color: #dc2626;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+    .instructions {
+        font-size: 0.9rem;
+        color: #888 !important;
+    }
+    .modal-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 2rem;
+        flex-wrap: wrap;
+    }
+    .btn-primary, .btn-secondary {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .btn-primary {
+        background: #0070ba;
+        color: white;
+    }
+    .btn-primary:hover {
+        background: #005ea6;
+        transform: translateY(-2px);
+    }
+    .btn-secondary {
+        background: #f5f5f5;
+        color: #333;
+    }
+    .btn-secondary:hover {
+        background: #e0e0e0;
+        transform: translateY(-2px);
+    }
+    @media (max-width: 768px) {
+        .success-content, .modal-content, .error-content {
+            margin: 1rem;
+            padding: 2rem;
+            max-width: calc(100% - 2rem);
+        }
+        .modal-actions {
+            flex-direction: column;
+        }
+        .btn-primary, .btn-secondary {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+`;
+document.head.appendChild(style);

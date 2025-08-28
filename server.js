@@ -2,7 +2,10 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
+const session = require('express-session');
+const bcrypt = require('bcryptjs');
 const { body, validationResult } = require('express-validator');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 require('dotenv').config();
 
 const Contact = require('./models/Contact');
@@ -19,8 +22,8 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
       imgSrc: ["'self'", "data:", "https:", "http:"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
-      connectSrc: ["'self'"]
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://js.stripe.com"],
+      connectSrc: ["'self'", "https://api.stripe.com"]
     }
   }
 }));
@@ -45,6 +48,18 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// Session configuration
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'your-secret-key-change-in-production',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
 
 // Serve static files
 app.use(express.static('.'));
@@ -121,8 +136,13 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
 
-// Admin dashboard route
-app.get('/admin', (req, res) => {
+// Login page route
+app.get('/login', (req, res) => {
+  res.sendFile(__dirname + '/login.html');
+});
+
+// Admin dashboard route (protected)
+app.get('/admin', requireAuth, (req, res) => {
   res.sendFile(__dirname + '/admin.html');
 });
 
@@ -190,8 +210,87 @@ app.post('/api/contact', validateContactForm, async (req, res) => {
   }
 });
 
+// Authentication middleware
+function requireAuth(req, res, next) {
+  if (req.session && req.session.isAuthenticated) {
+    return next();
+  } else {
+    return res.redirect('/login');
+  }
+}
+
+// Admin login endpoint
+app.post('/api/admin/login', [
+  body('username').trim().notEmpty().withMessage('Username is required'),
+  body('password').notEmpty().withMessage('Password is required')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const { username, password } = req.body;
+    
+    // Get admin credentials from environment variables
+    const adminUsername = process.env.ADMIN_USERNAME || 'admin';
+    const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+    
+    // Check credentials
+    if (username === adminUsername && password === adminPassword) {
+      req.session.isAuthenticated = true;
+      req.session.username = username;
+      
+      res.json({
+        success: true,
+        message: 'Login successful',
+        redirectUrl: '/admin'
+      });
+    } else {
+      res.status(401).json({
+        success: false,
+        message: 'Credenciales incorrectas'
+      });
+    }
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor'
+    });
+  }
+});
+
+// Admin logout endpoint
+app.post('/api/admin/logout', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      return res.status(500).json({
+        success: false,
+        message: 'Error al cerrar sesión'
+      });
+    }
+    res.json({
+      success: true,
+      message: 'Sesión cerrada exitosamente'
+    });
+  });
+});
+
+// Check authentication status
+app.get('/api/admin/status', (req, res) => {
+  res.json({
+    isAuthenticated: !!(req.session && req.session.isAuthenticated),
+    username: req.session ? req.session.username : null
+  });
+});
+
 // Get all contact submissions (admin endpoint)
-app.get('/api/contacts', async (req, res) => {
+app.get('/api/contacts', requireAuth, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
@@ -232,7 +331,7 @@ app.get('/api/contacts', async (req, res) => {
 });
 
 // Get tone analysis statistics (admin endpoint)
-app.get('/api/contacts/tone-stats', async (req, res) => {
+app.get('/api/contacts/tone-stats', requireAuth, async (req, res) => {
   try {
     const stats = await Contact.aggregate([
       {
@@ -303,7 +402,7 @@ app.get('/api/contacts/tone-stats', async (req, res) => {
 });
 
 // Get OpenAI token usage statistics (admin endpoint)
-app.get('/api/token-stats', async (req, res) => {
+app.get('/api/token-stats', requireAuth, async (req, res) => {
   try {
     const tokenStats = toneAnalysisService.getTokenStats();
     
@@ -322,7 +421,7 @@ app.get('/api/token-stats', async (req, res) => {
 });
 
 // Reset token statistics (admin endpoint)
-app.post('/api/token-stats/reset', async (req, res) => {
+app.post('/api/token-stats/reset', requireAuth, async (req, res) => {
   try {
     toneAnalysisService.resetTokenStats();
     
@@ -338,6 +437,146 @@ app.post('/api/token-stats/reset', async (req, res) => {
       message: 'Error resetting token statistics'
     });
   }
+});
+
+// Stripe payment routes
+
+// Create payment intent
+app.post('/api/create-payment-intent', async (req, res) => {
+  try {
+    const { amount, currency = 'usd', paymentMethodType = 'card' } = req.body;
+
+    if (!amount || amount < 50) { // Minimum $0.50
+      return res.status(400).json({
+        success: false,
+        message: 'Amount must be at least $0.50'
+      });
+    }
+
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(amount * 100), // Convert to cents
+      currency: currency,
+      payment_method_types: [paymentMethodType],
+      metadata: {
+        type: 'donation',
+        website: 'personal-website'
+      }
+    });
+
+    res.json({
+      success: true,
+      clientSecret: paymentIntent.client_secret,
+      paymentIntentId: paymentIntent.id
+    });
+
+  } catch (error) {
+    console.error('Error creating payment intent:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error creating payment intent'
+    });
+  }
+});
+
+// Confirm payment and save donation info
+app.post('/api/confirm-payment', async (req, res) => {
+  try {
+    const {
+      paymentIntentId,
+      donorInfo,
+      amount,
+      message
+    } = req.body;
+
+    // Retrieve the payment intent from Stripe
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+
+    if (paymentIntent.status === 'succeeded') {
+      // Save donation information to database
+      const donationRecord = new Contact({
+        name: `${donorInfo.firstName} ${donorInfo.lastName}`,
+        email: donorInfo.email,
+        phone: donorInfo.phone || '',
+        message: message || 'Donation via credit card',
+        tone: 'positive',
+        metadata: {
+          type: 'donation',
+          amount: amount,
+          paymentMethod: 'credit_card',
+          paymentIntentId: paymentIntentId,
+          stripeChargeId: paymentIntent.latest_charge,
+          anonymous: donorInfo.anonymous || false,
+          billingAddress: {
+            address: donorInfo.address,
+            city: donorInfo.city,
+            state: donorInfo.state,
+            zipCode: donorInfo.zipCode,
+            country: donorInfo.country
+          }
+        }
+      });
+
+      await donationRecord.save();
+
+      res.json({
+        success: true,
+        message: 'Payment confirmed and donation recorded',
+        transactionId: paymentIntent.id,
+        chargeId: paymentIntent.latest_charge
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        message: 'Payment not successful',
+        status: paymentIntent.status
+      });
+    }
+
+  } catch (error) {
+    console.error('Error confirming payment:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error confirming payment'
+    });
+  }
+});
+
+// Stripe webhook endpoint
+app.post('/api/stripe-webhook', express.raw({type: 'application/json'}), (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+  } catch (err) {
+    console.error('Webhook signature verification failed:', err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  // Handle the event
+  switch (event.type) {
+    case 'payment_intent.succeeded':
+      const paymentIntent = event.data.object;
+      console.log('Payment succeeded:', paymentIntent.id);
+      // Additional processing can be done here
+      break;
+    case 'payment_intent.payment_failed':
+      const failedPayment = event.data.object;
+      console.log('Payment failed:', failedPayment.id);
+      break;
+    default:
+      console.log(`Unhandled event type ${event.type}`);
+  }
+
+  res.json({received: true});
+});
+
+// Get Stripe publishable key
+app.get('/api/stripe-config', (req, res) => {
+  res.json({
+    success: true,
+    publishableKey: process.env.STRIPE_PUBLISHABLE_KEY
+  });
 });
 
 // Health check endpoint
