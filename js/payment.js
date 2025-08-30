@@ -194,10 +194,10 @@ function toggleCardDetails(method) {
         console.log(`🔄 Switching to ${method}, setting up Stripe card element...`);
         cardDetails.style.display = 'block';
         
-        // Wait a moment for DOM to be ready, then setup Stripe
+        // Wait for DOM to be ready, then setup Stripe with retry logic
         setTimeout(() => {
-            setupStripeCardElement();
-        }, 100);
+            setupStripeCardElementWithRetry();
+        }, 200);
         
         // Only make non-Stripe fields required
         const nameOnCardInput = document.getElementById('cardName');
@@ -207,7 +207,9 @@ function toggleCardDetails(method) {
     }
 }
 
-function setupStripeCardElement() {
+function setupStripeCardElementWithRetry(retryCount = 0) {
+    const maxRetries = 3;
+    
     if (!stripe || !elements || !cardElement) {
         console.warn('⚠️ Stripe not properly initialized, using traditional fields');
         enableTraditionalCardFields();
@@ -215,7 +217,7 @@ function setupStripeCardElement() {
     }
     
     try {
-        console.log('🔄 Setting up Stripe card element');
+        console.log(`🔄 Setting up Stripe card element (attempt ${retryCount + 1})`);
         
         // Hide traditional card input fields
         const cardNumberInput = document.getElementById('cardNumber');
@@ -277,7 +279,7 @@ function setupStripeCardElement() {
             // Wait a moment before mounting to ensure DOM is ready
             setTimeout(() => {
                 try {
-                    cardElement.mount('#stripe-card-element');
+                    cardElement.mount('#card-element');
                     console.log('✅ Stripe card element mounted successfully');
                     
                     // Handle real-time validation errors from the card Element
@@ -303,16 +305,36 @@ function setupStripeCardElement() {
                         stripeCardContainer.style.borderColor = '#10b981';
                     });
                 } catch (mountError) {
-                    console.error('❌ Error mounting Stripe element:', mountError);
-                    enableTraditionalCardFields();
+                    console.error(`❌ Error mounting Stripe element (attempt ${retryCount + 1}):`, mountError);
+                    
+                    if (retryCount < maxRetries) {
+                        console.log(`🔄 Retrying in ${(retryCount + 1) * 500}ms...`);
+                        setTimeout(() => {
+                            setupStripeCardElementWithRetry(retryCount + 1);
+                        }, (retryCount + 1) * 500);
+                    } else {
+                        console.warn('❌ Max retries reached, falling back to traditional fields');
+                        enableTraditionalCardFields();
+                    }
                 }
-            }, 150);
+            }, 200 + (retryCount * 100));
         }
         
     } catch (error) {
         console.error('❌ Error setting up Stripe card element:', error);
-        enableTraditionalCardFields();
+        if (retryCount < maxRetries) {
+            setTimeout(() => {
+                setupStripeCardElementWithRetry(retryCount + 1);
+            }, (retryCount + 1) * 500);
+        } else {
+            enableTraditionalCardFields();
+        }
     }
+}
+
+// Keep the original function for backward compatibility
+function setupStripeCardElement() {
+    setupStripeCardElementWithRetry(0);
 }
 
 function setupFormHandling() {
@@ -548,9 +570,9 @@ async function processStripePayment(paymentData, submitBtn, originalText) {
             
             // Try to mount the element if it's not mounted
             try {
-                const stripeContainer = document.getElementById('stripe-card-element');
+                const stripeContainer = document.getElementById('card-element');
                 if (stripeContainer) {
-                    cardElement.mount('#stripe-card-element');
+                    cardElement.mount('#card-element');
                     console.log('✅ Successfully mounted Stripe element during payment');
                 } else {
                     throw new Error('Stripe container not found');
@@ -607,9 +629,24 @@ async function processStripePayment(paymentData, submitBtn, originalText) {
 
         if (error) {
             console.error('Payment failed:', error);
+            
+            // Show specific error message based on error type
+            let userFriendlyMessage = error.message;
+            if (error.code === 'card_declined') {
+                userFriendlyMessage = '⚠️ Tu tarjeta fue rechazada. Para pruebas, usa: 4242424242424242 (Visa) o 5555555555554444 (Mastercard)';
+            } else if (error.code === 'insufficient_funds') {
+                userFriendlyMessage = 'Fondos insuficientes en la tarjeta.';
+            } else if (error.code === 'expired_card') {
+                userFriendlyMessage = 'La tarjeta ha expirado.';
+            } else if (error.code === 'incorrect_cvc') {
+                userFriendlyMessage = 'El código CVC es incorrecto.';
+            }
+            
             showCreditCardError({
                 ...paymentData,
-                error: error.message
+                error: userFriendlyMessage,
+                originalError: error.message,
+                errorCode: error.code
             });
         } else if (paymentIntent.status === 'succeeded') {
             // Confirm payment on server and save donation info
@@ -850,24 +887,32 @@ function showCreditCardError(paymentData) {
             <div class="error-content">
                 <i class="fas fa-exclamation-triangle"></i>
                 <h2>Error en el Procesamiento</h2>
-                <p>Lo sentimos, no pudimos procesar tu pago en este momento.</p>
+                <p><strong>${paymentData.error}</strong></p>
                 
                 <div class="error-details">
-                    <h3>Posibles causas:</h3>
-                    <ul style="text-align: left; margin: 1rem 0;">
-                        <li>Fondos insuficientes en la tarjeta</li>
-                        <li>Información de tarjeta incorrecta</li>
-                        <li>Tarjeta expirada o bloqueada</li>
-                        <li>Problema temporal del procesador</li>
-                    </ul>
+                    <h3>💳 Tarjetas de Prueba Válidas:</h3>
+                    <div style="text-align: left; margin: 1rem 0; background: #f8f9fa; padding: 1rem; border-radius: 8px;">
+                        <p><strong>Visa:</strong> 4242424242424242</p>
+                        <p><strong>Mastercard:</strong> 5555555555554444</p>
+                        <p><strong>Fecha:</strong> Cualquier fecha futura (ej: 12/25)</p>
+                        <p><strong>CVV:</strong> Cualquier 3 dígitos (ej: 123)</p>
+                    </div>
                 </div>
                 
                 <p><strong>Sugerencias:</strong></p>
                 <ul style="text-align: left; margin: 1rem 0;">
-                    <li>Verifica los datos de tu tarjeta</li>
-                    <li>Intenta con otra tarjeta</li>
+                    <li>Usa las tarjetas de prueba mostradas arriba</li>
+                    <li>Verifica que tengas claves de Stripe válidas en .env</li>
                     <li>Usa PayPal como alternativa</li>
                 </ul>
+                
+                ${paymentData.originalError ? `<details style="margin: 1rem 0; text-align: left;">
+                    <summary style="cursor: pointer; color: #666;">Detalles técnicos</summary>
+                    <p style="font-family: monospace; font-size: 12px; color: #888; margin-top: 0.5rem;">
+                        Código: ${paymentData.errorCode || 'N/A'}<br>
+                        Mensaje: ${paymentData.originalError}
+                    </p>
+                </details>` : ''}
                 
                 <div class="modal-actions">
                     <button id="retry-card-payment-btn" class="btn-primary">

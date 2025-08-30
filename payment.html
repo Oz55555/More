@@ -173,6 +173,18 @@
                         <!-- Payment Details (Credit Card only) -->
                         <div class="form-section" id="card-details" style="display: none;">
                             <h3><i class="fas fa-credit-card"></i> Card Details</h3>
+                            
+                            <!-- Stripe Card Element Container -->
+                            <div class="form-group">
+                                <label for="card-element">Card Information *</label>
+                                <div id="card-element" style="padding: 12px; border: 1px solid #ddd; border-radius: 8px; background: white; min-height: 40px;">
+                                    <!-- Stripe Elements will create form elements here -->
+                                </div>
+                                <!-- Used to display Element errors -->
+                                <div id="card-errors" role="alert" style="color: #e53e3e; font-size: 14px; margin-top: 0.5rem;"></div>
+                            </div>
+                            
+                            <!-- Fallback traditional card inputs (hidden when Stripe loads) -->
                             <div class="form-group">
                                 <label for="cardNumber">Card Number *</label>
                                 <input type="text" id="cardNumber" name="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19">
