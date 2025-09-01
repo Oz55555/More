@@ -646,11 +646,6 @@ async function processStripePayment(paymentData, submitBtn, originalText) {
             throw new Error('Failed to create payment intent - no client secret received');
         }
 
-        // Validate card element before confirming payment
-        if (!cardElement || !cardElement._mounted) {
-            throw new Error('Elemento de tarjeta no está listo para el pago');
-        }
-
         console.log('🔄 Confirming payment with Stripe...');
         
         // Confirm payment with Stripe
