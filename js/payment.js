@@ -921,9 +921,6 @@ function showCreditCardError(paymentData) {
                     <button id="retry-card-payment-btn" class="btn-primary">
                         <i class="fas fa-redo"></i> Reintentar
                     </button>
-                    <button id="try-paypal-btn" class="btn-secondary">
-                        <i class="fab fa-paypal"></i> Usar PayPal
-                    </button>
                     <button id="return-home-btn" class="btn-secondary">
                         Cancelar
                     </button>
