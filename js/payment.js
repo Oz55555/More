@@ -652,7 +652,7 @@ async function processStripePayment(paymentData, submitBtn, originalText) {
             // Show specific error message based on error type
             let userFriendlyMessage = error.message;
             if (error.code === 'card_declined') {
-                userFriendlyMessage = '⚠️ Tu tarjeta fue rechazada. Para pruebas, usa: 4242424242424242 (Visa) o 5555555555554444 (Mastercard)';
+                userFriendlyMessage = '⚠️ Tu tarjeta fue rechazada. Por favor, verifica los datos o intenta con otra tarjeta.';
             } else if (error.code === 'insufficient_funds') {
                 userFriendlyMessage = 'Fondos insuficientes en la tarjeta.';
             } else if (error.code === 'expired_card') {
@@ -839,11 +839,6 @@ function showPaymentSuccess(paymentData) {
 }
 
 function showCreditCardSuccess(paymentData) {
-    // Generate a fake transaction ID for demo purposes
-    const transactionId = 'TXN' + Date.now().toString().slice(-8);
-    const cardType = paymentData.paymentMethod;
-    const lastFourDigits = paymentData.cardNumber ? paymentData.cardNumber.replace(/\s/g, '').slice(-4) : '****';
-    
     const successMessage = `
         <div class="payment-success">
             <div class="success-content">
@@ -851,40 +846,13 @@ function showCreditCardSuccess(paymentData) {
                 <h2>¡Pago Procesado Exitosamente!</h2>
                 <p>Tu donación de <strong>$${paymentData.amount}</strong> ha sido procesada.</p>
                 
-                <div class="transaction-details">
-                    <h3>Detalles de la Transacción</h3>
-                    <div class="detail-row">
-                        <span>ID de Transacción:</span>
-                        <span><strong>${transactionId}</strong></span>
-                    </div>
-                    <div class="detail-row">
-                        <span>Método de Pago:</span>
-                        <span>${cardType} ****${lastFourDigits}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span>Fecha:</span>
-                        <span>${new Date().toLocaleDateString('es-ES')}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span>Estado:</span>
-                        <span class="status-approved">Aprobado</span>
-                    </div>
-                </div>
-                
                 <p class="thank-you-message">
                     <strong>¡Gracias ${paymentData.firstName}!</strong><br>
                     Tu generosa donación ayuda a mantener este proyecto funcionando.
                 </p>
                 
-                <p class="receipt-info">
-                    <small>Se enviará un recibo por email a ${paymentData.email}</small>
-                </p>
-                
                 <div class="modal-actions">
-                    <button id="download-receipt-btn" class="btn-primary">
-                        <i class="fas fa-download"></i> Descargar Recibo
-                    </button>
-                    <button id="return-home-btn" class="btn-secondary">
+                    <button id="return-home-btn" class="btn-primary">
                         Volver al Inicio
                     </button>
                 </div>
@@ -907,31 +875,6 @@ function showCreditCardError(paymentData) {
                 <i class="fas fa-exclamation-triangle"></i>
                 <h2>Error en el Procesamiento</h2>
                 <p><strong>${paymentData.error}</strong></p>
-                
-                <div class="error-details">
-                    <h3>💳 Tarjetas de Prueba Válidas:</h3>
-                    <div style="text-align: left; margin: 1rem 0; background: #f8f9fa; padding: 1rem; border-radius: 8px;">
-                        <p><strong>Visa:</strong> 4242424242424242</p>
-                        <p><strong>Mastercard:</strong> 5555555555554444</p>
-                        <p><strong>Fecha:</strong> Cualquier fecha futura (ej: 12/25)</p>
-                        <p><strong>CVV:</strong> Cualquier 3 dígitos (ej: 123)</p>
-                    </div>
-                </div>
-                
-                <p><strong>Sugerencias:</strong></p>
-                <ul style="text-align: left; margin: 1rem 0;">
-                    <li>Usa las tarjetas de prueba mostradas arriba</li>
-                    <li>Verifica que tengas claves de Stripe válidas en .env</li>
-                    <li>Usa PayPal como alternativa</li>
-                </ul>
-                
-                ${paymentData.originalError ? `<details style="margin: 1rem 0; text-align: left;">
-                    <summary style="cursor: pointer; color: #666;">Detalles técnicos</summary>
-                    <p style="font-family: monospace; font-size: 12px; color: #888; margin-top: 0.5rem;">
-                        Código: ${paymentData.errorCode || 'N/A'}<br>
-                        Mensaje: ${paymentData.originalError}
-                    </p>
-                </details>` : ''}
                 
                 <div class="modal-actions">
                     <button id="retry-card-payment-btn" class="btn-primary">
