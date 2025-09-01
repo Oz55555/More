@@ -361,17 +361,19 @@ function setupStripeCardElement() {
     setupStripeCardElementWithRetry(0);
 }
 
-function setupFormHandling() {
+function setupFormSubmission() {
     const form = document.getElementById('payment-form');
     const submitBtn = document.getElementById('submit-btn');
     
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        if (validateForm()) {
-            processPayment();
-        }
-    });
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (validateForm()) {
+                processPayment();
+            }
+        });
+    }
 }
 
 function validateForm() {
@@ -803,18 +805,28 @@ function showPayPalRedirect(paymentData, paypalUrl) {
     
     document.body.insertAdjacentHTML('beforeend', paypalModal);
     
-    // Add event listeners
-    document.getElementById('open-paypal-btn').addEventListener('click', function() {
-        window.open(paypalUrl, '_blank');
-        // Update modal to show payment instructions
-        setTimeout(() => {
-            updateModalForPaymentInProgress(paymentData);
-        }, 1000);
-    });
+    // Add event listeners with null safety
+    const openPaypalBtn = document.getElementById('open-paypal-btn');
+    const closeModalBtn = document.getElementById('close-modal-btn');
     
-    document.getElementById('close-modal-btn').addEventListener('click', function() {
-        document.querySelector('.paypal-redirect-modal').remove();
-    });
+    if (openPaypalBtn) {
+        openPaypalBtn.addEventListener('click', function() {
+            window.open(paypalUrl, '_blank');
+            // Update modal to show payment instructions
+            setTimeout(() => {
+                updateModalForPaymentInProgress(paymentData);
+            }, 1000);
+        });
+    }
+    
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', function() {
+            const modal = document.querySelector('.paypal-redirect-modal');
+            if (modal) {
+                modal.remove();
+            }
+        });
+    }
 }
 
 function updateModalForPaymentInProgress(paymentData) {
@@ -839,31 +851,40 @@ function updateModalForPaymentInProgress(paymentData) {
                     <i class="fab fa-paypal"></i> Reabrir PayPal
                 </button>
                 <button id="cancel-payment-btn" class="btn-secondary">
+                    {{ ... }}
                     Cancelar
                 </button>
             </div>
         `;
         
         // Add new event listeners
-        document.getElementById('payment-completed-btn').addEventListener('click', function() {
-            modal.remove();
-            showPaymentSuccess(paymentData);
-        });
+        const paymentCompletedBtn = document.getElementById('payment-completed-btn');
+        const reopenPaypalBtn = document.getElementById('reopen-paypal-btn');
+        const cancelPaymentBtn = document.getElementById('cancel-payment-btn');
         
-        document.getElementById('reopen-paypal-btn').addEventListener('click', function() {
-            const paypalUsername = 'mentesaludable';
-            const paypalUrl = `https://paypal.me/${paypalUsername}/${paymentData.amount}`;
-            const note = encodeURIComponent(`Donation from ${paymentData.firstName} ${paymentData.lastName}`);
-            const paypalUrlWithNote = `${paypalUrl}?note=${note}`;
-            
-            // Log the URL for debugging
-            console.log('PayPal URL:', paypalUrlWithNote);
-            window.open(paypalUrlWithNote, '_blank');
-        });
+        if (paymentCompletedBtn) {
+            paymentCompletedBtn.addEventListener('click', function() {
+                modal.remove();
+                showPaymentSuccess(paymentData);
+            });
+        }
         
-        document.getElementById('cancel-payment-btn').addEventListener('click', function() {
-            modal.remove();
-        });
+        if (reopenPaypalBtn) {
+            reopenPaypalBtn.addEventListener('click', function() {
+                const paypalUsername = 'mentesaludable';
+                const paypalUrl = `https://paypal.me/${paypalUsername}/${paymentData.amount}`;
+                const note = encodeURIComponent(`Donation from ${paymentData.firstName} ${paymentData.lastName}`);
+                const paypalUrlWithNote = `${paypalUrl}?note=${note}`;
+                
+                window.open(paypalUrlWithNote, '_blank');
+            });
+        }
+        
+        if (cancelPaymentBtn) {
+            cancelPaymentBtn.addEventListener('click', function() {
+                modal.remove();
+            });
+        }
     }
 }
 
@@ -922,10 +943,13 @@ function showCreditCardSuccess(paymentData) {
     
     document.body.insertAdjacentHTML('beforeend', successMessage);
     
-    // Add event listener for download receipt
-    document.getElementById('download-receipt-btn').addEventListener('click', function() {
-        generateReceipt(paymentData, transactionId);
-    });
+    // Add event listener for download receipt with null safety
+    const downloadReceiptBtn = document.getElementById('download-receipt-btn');
+    if (downloadReceiptBtn) {
+        downloadReceiptBtn.addEventListener('click', function() {
+            generateReceipt(paymentData, transactionId);
+        });
+    }
 }
 
 function showCreditCardError(paymentData) {
@@ -950,10 +974,16 @@ function showCreditCardError(paymentData) {
     
     document.body.insertAdjacentHTML('beforeend', errorMessage);
     
-    // Add event listeners
-    document.getElementById('retry-card-payment-btn').addEventListener('click', function() {
-        document.querySelector('.payment-error').remove();
-    });
+    // Add event listeners with null safety
+    const retryCardPaymentBtn = document.getElementById('retry-card-payment-btn');
+    if (retryCardPaymentBtn) {
+        retryCardPaymentBtn.addEventListener('click', function() {
+            const errorModal = document.querySelector('.payment-error');
+            if (errorModal) {
+                errorModal.remove();
+            }
+        });
+    }
     
     document.getElementById('try-paypal-btn').addEventListener('click', function() {
         // Switch to PayPal and close modal
