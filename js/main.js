@@ -95,10 +95,17 @@ function openPaymentMethod(method) {
         return;
     }
     
-    // Redirect to HTTPS payment form for secure processing
-    const methodName = method.charAt(0).toUpperCase() + method.slice(1);
-    const httpsUrl = `https://localhost:3443/payment.html?amount=${selectedAmount}&method=${methodName}`;
-    window.location.href = httpsUrl;
+    // Check if we're in production or development
+    const isProduction = window.location.protocol === 'https:' || window.location.hostname !== 'localhost';
+    const amount = selectedAmount;
+    
+    if (isProduction) {
+        // In production, stay on same domain with HTTPS
+        window.location.href = `/payment.html?amount=${amount}&method=${method}`;
+    } else {
+        // In development, redirect to HTTPS server
+        window.location.href = `https://localhost:3443/payment.html?amount=${amount}&method=${method}`;
+    }
 }
 
 // Mobile menu toggle

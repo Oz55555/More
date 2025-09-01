@@ -767,10 +767,20 @@ app.use((req, res) => {
 });
 
 // Start server
+
+// In production, trust the hosting provider's HTTPS proxy
+if (process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1);
+    console.log(' Production mode: Trusting proxy for HTTPS');
+}
+
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Visit: http://localhost:${PORT}`);
+    console.log(` Server running on port ${PORT}`);
+    console.log(` Environment: ${process.env.NODE_ENV || 'development'}`);
+    
+    if (process.env.NODE_ENV === 'production') {
+        console.log(' HTTPS handled by hosting provider');
+    } else {
+        console.log(' Development: Use https-server.js for local HTTPS testing');
+    }
 });
-
-
-
