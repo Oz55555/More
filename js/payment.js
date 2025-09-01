@@ -1026,7 +1026,10 @@ function setupBackButton() {
 }
 
 // Set current year in footer
-document.getElementById('year').textContent = new Date().getFullYear();
+const yearElement = document.getElementById('year');
+if (yearElement) {
+    yearElement.textContent = new Date().getFullYear();
+}
 
 // Add event listener for buttons in success modal
 document.addEventListener('click', function(e) {
