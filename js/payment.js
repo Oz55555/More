@@ -167,18 +167,21 @@ function toggleCardDetails(method) {
             input.removeAttribute('required');
         });
         
-        // Unmount Stripe card element if it exists
-        if (cardElement && cardElement._mounted) {
-            try {
-                cardElement.unmount();
-                console.log('🔄 Unmounted Stripe element for PayPal');
-            } catch (e) {
-                console.warn('Warning unmounting for PayPal:', e);
-            }
+        // Hide Stripe card element for PayPal but keep it mounted
+        const stripeCardContainer = document.getElementById('card-element');
+        if (stripeCardContainer) {
+            stripeCardContainer.style.display = 'none';
+            console.log('🔄 Hidden Stripe element for PayPal (keeping mounted)');
         }
     } else {
         console.log(`🔄 Switching to ${method}, setting up Stripe card element...`);
         cardDetails.style.display = 'block';
+        
+        // Show Stripe card element if it was hidden
+        const stripeCardContainer = document.getElementById('card-element');
+        if (stripeCardContainer) {
+            stripeCardContainer.style.display = 'block';
+        }
         
         // Ensure Stripe is initialized before mounting
         if (!stripe || !elements) {
@@ -188,11 +191,13 @@ function toggleCardDetails(method) {
                     setupStripeCardElementWithRetry();
                 }, 500);
             });
-        } else {
-            // Wait for DOM to be ready, then setup Stripe with retry logic
+        } else if (!cardElement || !cardElement._mounted) {
+            // Only setup if element doesn't exist or isn't mounted
             setTimeout(() => {
                 setupStripeCardElementWithRetry();
             }, 200);
+        } else {
+            console.log('✅ Stripe element already mounted and ready');
         }
         
         // Only make non-Stripe fields required
