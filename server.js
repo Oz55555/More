@@ -167,10 +167,17 @@ app.post('/api/contact', validateContactForm, async (req, res) => {
 
     // Perform tone analysis on the message
     console.log('Analyzing tone for message from:', email);
-    const toneAnalysis = await toneAnalysisService.analyzeMessageTone(message);
+    let toneAnalysis = null;
     
-    if (toneAnalysis) {
-      console.log(`Tone analysis complete - Sentiment: ${toneAnalysis.sentiment}, Emotion: ${toneAnalysis.emotion}, Confidence: ${toneAnalysis.confidence}`);
+    try {
+      toneAnalysis = await toneAnalysisService.analyzeMessageTone(message);
+      
+      if (toneAnalysis) {
+        console.log(`Tone analysis complete - Sentiment: ${toneAnalysis.sentiment}, Emotion: ${toneAnalysis.emotion}, Confidence: ${toneAnalysis.confidence}`);
+      }
+    } catch (error) {
+      console.error('Tone analysis failed:', error.message);
+      console.log('Continuing without tone analysis...');
     }
 
     // Create new contact entry with tone analysis
