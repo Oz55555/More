@@ -287,20 +287,32 @@ class ToneAnalysisDashboard {
         }
 
         const sentimentData = this.stats?.sentimentStats || {};
+        console.log('Sentiment data for chart:', sentimentData);
+        
+        // Get actual values and filter out zero values for better visualization
+        const chartData = [
+            { label: 'Positive', value: sentimentData.positive || 0, color: '#28a745' },
+            { label: 'Negative', value: sentimentData.negative || 0, color: '#dc3545' },
+            { label: 'Neutral', value: sentimentData.neutral || 0, color: '#6c757d' }
+        ].filter(item => item.value > 0);
+
+        // If no data, show a message
+        if (chartData.length === 0) {
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            ctx.font = '16px Arial';
+            ctx.fillStyle = '#6c757d';
+            ctx.textAlign = 'center';
+            ctx.fillText('No sentiment data available', ctx.canvas.width / 2, ctx.canvas.height / 2);
+            return;
+        }
+
         const data = {
-            labels: ['Positive', 'Negative', 'Neutral'],
+            labels: chartData.map(item => item.label),
             datasets: [{
-                data: [
-                    sentimentData.positive || 0,
-                    sentimentData.negative || 0,
-                    sentimentData.neutral || 0
-                ],
-                backgroundColor: [
-                    '#28a745',
-                    '#dc3545',
-                    '#6c757d'
-                ],
-                borderWidth: 0
+                data: chartData.map(item => item.value),
+                backgroundColor: chartData.map(item => item.color),
+                borderWidth: 2,
+                borderColor: '#ffffff'
             }]
         };
 
@@ -315,7 +327,36 @@ class ToneAnalysisDashboard {
                         position: 'bottom',
                         labels: {
                             padding: 20,
-                            usePointStyle: true
+                            usePointStyle: true,
+                            generateLabels: function(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    return data.labels.map((label, i) => {
+                                        const value = data.datasets[0].data[i];
+                                        return {
+                                            text: `${label}: ${value}`,
+                                            fillStyle: data.datasets[0].backgroundColor[i],
+                                            strokeStyle: data.datasets[0].borderColor,
+                                            lineWidth: data.datasets[0].borderWidth,
+                                            pointStyle: 'circle',
+                                            hidden: false,
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return `${label}: ${value} (${percentage}%)`;
+                            }
                         }
                     }
                 }
@@ -331,8 +372,20 @@ class ToneAnalysisDashboard {
         }
 
         const emotionData = this.stats?.emotionStats || {};
-        const emotions = Object.keys(emotionData);
-        const values = Object.values(emotionData);
+        console.log('Emotion data for chart:', emotionData);
+        
+        const emotions = Object.keys(emotionData).filter(key => emotionData[key] > 0);
+        const values = emotions.map(key => emotionData[key]);
+
+        // If no data, show a message
+        if (emotions.length === 0) {
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            ctx.font = '16px Arial';
+            ctx.fillStyle = '#6c757d';
+            ctx.textAlign = 'center';
+            ctx.fillText('No emotion data available', ctx.canvas.width / 2, ctx.canvas.height / 2);
+            return;
+        }
 
         const colors = {
             joy: '#ffc107',
@@ -349,7 +402,8 @@ class ToneAnalysisDashboard {
             datasets: [{
                 data: values,
                 backgroundColor: emotions.map(e => colors[e] || '#6c757d'),
-                borderWidth: 0
+                borderWidth: 1,
+                borderColor: '#ffffff'
             }]
         };
 
@@ -362,6 +416,17 @@ class ToneAnalysisDashboard {
                 plugins: {
                     legend: {
                         display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed.y;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return `${label}: ${value} (${percentage}%)`;
+                            }
+                        }
                     }
                 },
                 scales: {
@@ -369,6 +434,16 @@ class ToneAnalysisDashboard {
                         beginAtZero: true,
                         ticks: {
                             stepSize: 1
+                        },
+                        title: {
+                            display: true,
+                            text: 'Number of Messages'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Emotions'
                         }
                     }
                 }
