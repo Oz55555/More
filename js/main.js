@@ -90,14 +90,15 @@ function setCustomAmount(buttonElement) {
 }
 
 function openPaymentMethod(method) {
-    if (selectedAmount === 0) {
-        alert('Please select a donation amount first.');
+    if (selectedAmount <= 0) {
+        alert('Por favor selecciona un monto de donación primero.');
         return;
     }
     
-    // Redirect to payment form page with selected method
+    // Redirect to HTTPS payment form for secure processing
     const methodName = method.charAt(0).toUpperCase() + method.slice(1);
-    window.location.href = `payment.html?amount=${selectedAmount}&method=${methodName}`;
+    const httpsUrl = `https://localhost:3443/payment.html?amount=${selectedAmount}&method=${methodName}`;
+    window.location.href = httpsUrl;
 }
 
 // Mobile menu toggle

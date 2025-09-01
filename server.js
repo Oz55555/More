@@ -9,7 +9,10 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 require('dotenv').config();
 
 const Contact = require('./models/Contact');
+const Customer = require('./models/Customer');
+const PaymentHistory = require('./models/PaymentHistory');
 const toneAnalysisService = require('./services/toneAnalysis');
+const CustomerService = require('./services/customerService');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -506,27 +509,64 @@ app.post('/api/confirm-payment', async (req, res) => {
     const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
 
     if (paymentIntent.status === 'succeeded') {
-      // Save donation information to database
-      const donationRecord = new Contact({
+      // Create or update customer in Stripe and database
+      const customer = await CustomerService.createOrUpdateCustomer({
         name: `${donorInfo.firstName} ${donorInfo.lastName}`,
         email: donorInfo.email,
         phone: donorInfo.phone || '',
+        address: {
+          line1: donorInfo.address,
+          city: donorInfo.city,
+          state: donorInfo.state,
+          postalCode: donorInfo.zipCode,
+          country: donorInfo.country
+        },
+        metadata: {
+          source: 'donation_form',
+          anonymous: donorInfo.anonymous || false
+        }
+      });
+
+      // Record payment in payment history
+      await CustomerService.recordPayment({
+        stripePaymentIntentId: paymentIntent.id,
+        stripeCustomerId: customer.stripeCustomerId,
+        amount: amount,
+        currency: paymentIntent.currency,
+        status: paymentIntent.status,
+        paymentMethod: {
+          type: 'card',
+          brand: paymentIntent.charges?.data[0]?.payment_method_details?.card?.brand || 'unknown',
+          last4: paymentIntent.charges?.data[0]?.payment_method_details?.card?.last4 || 'unknown'
+        },
+        description: message || 'Donation via credit card',
+        receiptEmail: donorInfo.email,
+        billingAddress: {
+          line1: donorInfo.address,
+          city: donorInfo.city,
+          state: donorInfo.state,
+          postalCode: donorInfo.zipCode,
+          country: donorInfo.country
+        },
+        metadata: {
+          type: 'donation',
+          anonymous: donorInfo.anonymous || false,
+          source: 'website'
+        }
+      });
+
+      // Also save as contact for backward compatibility
+      const donationRecord = new Contact({
+        name: `${donorInfo.firstName} ${donorInfo.lastName}`,
+        email: donorInfo.email,
         message: message || 'Donation via credit card',
-        tone: 'positive',
         metadata: {
           type: 'donation',
           amount: amount,
           paymentMethod: 'credit_card',
           paymentIntentId: paymentIntentId,
           stripeChargeId: paymentIntent.latest_charge,
-          anonymous: donorInfo.anonymous || false,
-          billingAddress: {
-            address: donorInfo.address,
-            city: donorInfo.city,
-            state: donorInfo.state,
-            zipCode: donorInfo.zipCode,
-            country: donorInfo.country
-          }
+          stripeCustomerId: customer.stripeCustomerId
         }
       });
 
@@ -536,7 +576,8 @@ app.post('/api/confirm-payment', async (req, res) => {
         success: true,
         message: 'Payment confirmed and donation recorded',
         transactionId: paymentIntent.id,
-        chargeId: paymentIntent.latest_charge
+        chargeId: paymentIntent.latest_charge,
+        customerId: customer._id
       });
     } else {
       res.status(400).json({
@@ -591,6 +632,112 @@ app.get('/api/stripe-config', (req, res) => {
     success: true,
     publishableKey: process.env.STRIPE_PUBLISHABLE_KEY
   });
+});
+
+// Customer management endpoints
+app.get('/api/customers/:email', requireAuth, async (req, res) => {
+  try {
+    const { email } = req.params;
+    const customer = await CustomerService.getCustomerByEmail(email);
+    
+    if (!customer) {
+      return res.status(404).json({
+        success: false,
+        message: 'Customer not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      customer: {
+        id: customer._id,
+        stripeCustomerId: customer.stripeCustomerId,
+        name: customer.name,
+        email: customer.email,
+        address: customer.address,
+        phone: customer.phone,
+        createdAt: customer.createdAt,
+        updatedAt: customer.updatedAt
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching customer:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching customer information'
+    });
+  }
+});
+
+// Get customer payment history
+app.get('/api/customers/:customerId/payments', requireAuth, async (req, res) => {
+  try {
+    const { customerId } = req.params;
+    const { limit = 10, offset = 0 } = req.query;
+    
+    const paymentHistory = await CustomerService.getCustomerPaymentHistory(
+      customerId, 
+      parseInt(limit), 
+      parseInt(offset)
+    );
+
+    res.json({
+      success: true,
+      ...paymentHistory
+    });
+  } catch (error) {
+    console.error('Error fetching payment history:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching payment history'
+    });
+  }
+});
+
+// Get customer statistics
+app.get('/api/customers/:customerId/stats', requireAuth, async (req, res) => {
+  try {
+    const { customerId } = req.params;
+    const stats = await CustomerService.getCustomerStats(customerId);
+
+    res.json({
+      success: true,
+      stats
+    });
+  } catch (error) {
+    console.error('Error fetching customer stats:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching customer statistics'
+    });
+  }
+});
+
+// Update payment status (for webhook handling)
+app.post('/api/payments/:paymentIntentId/status', async (req, res) => {
+  try {
+    const { paymentIntentId } = req.params;
+    const { status, metadata = {} } = req.body;
+
+    const payment = await CustomerService.updatePaymentStatus(paymentIntentId, status, metadata);
+
+    res.json({
+      success: true,
+      payment: {
+        id: payment._id,
+        status: payment.status,
+        amount: payment.amount,
+        currency: payment.currency,
+        updatedAt: payment.updatedAt
+      }
+    });
+  } catch (error) {
+    console.error('Error updating payment status:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating payment status'
+    });
+  }
 });
 
 // Health check endpoint
