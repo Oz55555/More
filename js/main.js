@@ -95,17 +95,9 @@ function openPaymentMethod(method) {
         return;
     }
     
-    // Check if we're in production or development
-    const isProduction = window.location.protocol === 'https:' || window.location.hostname !== 'localhost';
+    // Always use current domain for payment redirect
     const amount = selectedAmount;
-    
-    if (isProduction) {
-        // In production, stay on same domain with HTTPS
-        window.location.href = `/payment.html?amount=${amount}&method=${method}`;
-    } else {
-        // In development, redirect to HTTPS server
-        window.location.href = `https://localhost:3443/payment.html?amount=${amount}&method=${method}`;
-    }
+    window.location.href = `/payment.html?amount=${amount}&method=${method}`;
 }
 
 // Mobile menu toggle

@@ -1019,16 +1019,8 @@ function setupBackButton() {
     const backBtn = document.getElementById('back-btn');
     if (backBtn) {
         backBtn.addEventListener('click', function() {
-            // Check if we're in production or development
-            const isProduction = window.location.protocol === 'https:' || window.location.hostname !== 'localhost';
-        
-            if (isProduction) {
-                // In production, stay on same domain
-                window.location.href = '/';
-            } else {
-                // In development, redirect back to HTTP server
-                window.location.href = 'http://localhost:3000/';
-            }
+            // Always redirect to root of current domain
+            window.location.href = '/';
         });
     }
 }
@@ -1039,7 +1031,7 @@ document.getElementById('year').textContent = new Date().getFullYear();
 // Add event listener for buttons in success modal
 document.addEventListener('click', function(e) {
     if (e.target && e.target.id === 'return-home-btn') {
-        window.location.href = 'http://localhost:3000/';
+        window.location.href = '/';
     }
     // New event listener for retry-payment-btn
     if (e.target && e.target.id === 'retry-payment-btn') {
