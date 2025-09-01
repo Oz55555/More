@@ -375,11 +375,21 @@ function setupFormHandling() {
 }
 
 function validateForm() {
+    const selectedPaymentMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value;
     const requiredFields = document.querySelectorAll('input[required], select[required]');
     let isValid = true;
     
+    // For Stripe payments, skip traditional card field validation since we use Stripe Elements
+    const skipCardValidation = (selectedPaymentMethod === 'Visa' || selectedPaymentMethod === 'Mastercard') && cardElement;
+    
     requiredFields.forEach(field => {
         const formGroup = field.closest('.form-group');
+        
+        // Skip traditional card fields if using Stripe Elements
+        if (skipCardValidation && ['cardNumber', 'expiryDate', 'cvv'].includes(field.id)) {
+            clearFieldError(formGroup);
+            return;
+        }
         
         if (!field.value.trim()) {
             showFieldError(formGroup, 'This field is required');
@@ -387,28 +397,37 @@ function validateForm() {
         } else {
             clearFieldError(formGroup);
             
-            // Additional validation
+            // Additional validation for non-Stripe fields
             if (field.type === 'email' && !isValidEmail(field.value)) {
                 showFieldError(formGroup, 'Please enter a valid email address');
                 isValid = false;
             }
             
-            if (field.id === 'cardNumber' && !isValidCardNumber(field.value)) {
-                showFieldError(formGroup, 'Please enter a valid card number');
-                isValid = false;
-            }
-            
-            if (field.id === 'expiryDate' && !isValidExpiryDate(field.value)) {
-                showFieldError(formGroup, 'Please enter a valid expiry date (MM/YY)');
-                isValid = false;
-            }
-            
-            if (field.id === 'cvv' && !isValidCVV(field.value)) {
-                showFieldError(formGroup, 'Please enter a valid CVV');
-                isValid = false;
+            // Only validate traditional card fields if NOT using Stripe Elements
+            if (!skipCardValidation) {
+                if (field.id === 'cardNumber' && !isValidCardNumber(field.value)) {
+                    showFieldError(formGroup, 'Please enter a valid card number');
+                    isValid = false;
+                }
+                
+                if (field.id === 'expiryDate' && !isValidExpiryDate(field.value)) {
+                    showFieldError(formGroup, 'Please enter a valid expiry date (MM/YY)');
+                    isValid = false;
+                }
+                
+                if (field.id === 'cvv' && !isValidCVV(field.value)) {
+                    showFieldError(formGroup, 'Please enter a valid CVV');
+                    isValid = false;
+                }
             }
         }
     });
+    
+    // Additional validation for Stripe Elements
+    if (skipCardValidation && cardElement) {
+        // Stripe Elements will handle its own validation during payment processing
+        console.log('✅ Using Stripe Elements validation');
+    }
     
     return isValid;
 }
