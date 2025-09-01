@@ -583,22 +583,41 @@ async function processStripePayment(paymentData, submitBtn, originalText) {
             throw new Error('Stripe not properly initialized - using traditional payment processing');
         }
         
-        // Check if card element is ready and mounted
+        // Ensure card element is properly mounted before payment
+        const targetElement = document.getElementById('card-element');
         if (!cardElement || !cardElement._mounted) {
-            console.error('❌ Stripe card element not mounted, attempting to mount...');
+            console.warn('⚠️ Card element not mounted, reinitializing...');
             
-            // Try to mount the element if it's not mounted
-            const targetElement = document.getElementById('card-element');
-            if (targetElement && cardElement && !cardElement._mounted) {
+            // Reinitialize Stripe elements if needed
+            if (!cardElement && elements) {
+                cardElement = elements.create('card', {
+                    style: {
+                        base: {
+                            fontSize: '16px',
+                            color: '#424770',
+                            '::placeholder': {
+                                color: '#aab7c4',
+                            },
+                        },
+                        invalid: {
+                            color: '#9e2146',
+                        },
+                    },
+                });
+            }
+            
+            if (targetElement && cardElement) {
                 try {
+                    // Clear and remount
+                    targetElement.innerHTML = '';
                     cardElement.mount('#card-element');
-                    console.log('✅ Stripe card element mounted during payment');
+                    console.log('✅ Card element remounted for payment');
                 } catch (mountError) {
-                    console.error('❌ Failed to mount element during payment:', mountError);
-                    throw new Error('Unable to initialize payment form. Please refresh the page and try again.');
+                    console.error('❌ Failed to mount element:', mountError);
+                    throw new Error('No se pudo inicializar el formulario de pago. Recarga la página e intenta nuevamente.');
                 }
             } else {
-                throw new Error('Payment form not properly initialized. Please refresh the page and try again.');
+                throw new Error('Formulario de pago no disponible. Recarga la página e intenta nuevamente.');
             }
         }
 
@@ -627,6 +646,13 @@ async function processStripePayment(paymentData, submitBtn, originalText) {
             throw new Error('Failed to create payment intent - no client secret received');
         }
 
+        // Validate card element before confirming payment
+        if (!cardElement || !cardElement._mounted) {
+            throw new Error('Elemento de tarjeta no está listo para el pago');
+        }
+
+        console.log('🔄 Confirming payment with Stripe...');
+        
         // Confirm payment with Stripe
         const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
             payment_method: {
@@ -634,13 +660,13 @@ async function processStripePayment(paymentData, submitBtn, originalText) {
                 billing_details: {
                     name: `${paymentData.firstName} ${paymentData.lastName}`,
                     email: paymentData.email,
-                    phone: paymentData.phone,
+                    phone: paymentData.phone || undefined,
                     address: {
-                        line1: paymentData.address,
-                        city: paymentData.city,
-                        state: paymentData.state,
-                        postal_code: paymentData.zipCode,
-                        country: paymentData.country
+                        line1: paymentData.address || undefined,
+                        city: paymentData.city || undefined,
+                        state: paymentData.state || undefined,
+                        postal_code: paymentData.zipCode || undefined,
+                        country: paymentData.country || 'US'
                     }
                 }
             }
