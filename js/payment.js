@@ -653,6 +653,12 @@ async function processStripePayment(paymentData, submitBtn, originalText) {
 
         console.log('🔄 Confirming payment with Stripe...');
         
+        // Validate that card element is visible and ready
+        const cardElementContainer = document.getElementById('card-element');
+        if (!cardElementContainer || cardElementContainer.style.display === 'none') {
+            throw new Error('El formulario de tarjeta no está visible. Por favor, selecciona un método de pago válido.');
+        }
+        
         // Confirm payment with Stripe
         const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
             payment_method: {
@@ -677,6 +683,15 @@ async function processStripePayment(paymentData, submitBtn, originalText) {
             
             // Show specific error message based on error type
             let userFriendlyMessage = error.message;
+            
+            // Handle incomplete card number specifically
+            if (error.code === 'incomplete_number') {
+                userFriendlyMessage = 'Por favor, ingresa un número de tarjeta completo y válido.';
+            } else if (error.code === 'incomplete_cvc') {
+                userFriendlyMessage = 'Por favor, ingresa el código CVC completo de tu tarjeta.';
+            } else if (error.code === 'incomplete_expiry') {
+                userFriendlyMessage = 'Por favor, ingresa la fecha de vencimiento completa de tu tarjeta.';
+            }
             if (error.code === 'card_declined') {
                 userFriendlyMessage = '⚠️ Tu tarjeta fue rechazada. Por favor, verifica los datos o intenta con otra tarjeta.';
             } else if (error.code === 'insufficient_funds') {
