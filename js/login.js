@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const usernameInput = document.getElementById('username');
     const passwordInput = document.getElementById('password');
     const togglePassword = document.getElementById('togglePassword');
-    const rememberMeCheckbox = document.getElementById('rememberMe');
     const loginBtn = document.getElementById('loginBtn');
     const errorMessage = document.getElementById('errorMessage');
     const errorText = document.getElementById('errorText');
@@ -19,8 +18,6 @@ document.addEventListener('DOMContentLoaded', function() {
         icon.classList.toggle('fa-eye-slash');
     });
 
-    // Load saved credentials if "Remember me" was checked
-    loadSavedCredentials();
 
     // Form submission
     loginForm.addEventListener('submit', async function(e) {
@@ -56,13 +53,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
 
             if (response.ok && data.success) {
-                // Save credentials if remember me is checked
-                if (rememberMeCheckbox.checked) {
-                    saveCredentials(username);
-                } else {
-                    clearSavedCredentials();
-                }
-
                 // Show success animation
                 loginBtn.classList.add('success-animation');
                 
@@ -104,38 +94,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function saveCredentials(username) {
-        try {
-            localStorage.setItem('adminUsername', username);
-            localStorage.setItem('rememberAdmin', 'true');
-        } catch (error) {
-            console.warn('Could not save credentials to localStorage:', error);
-        }
-    }
-
-    function loadSavedCredentials() {
-        try {
-            const savedUsername = localStorage.getItem('adminUsername');
-            const rememberAdmin = localStorage.getItem('rememberAdmin');
-            
-            if (rememberAdmin === 'true' && savedUsername) {
-                usernameInput.value = savedUsername;
-                rememberMeCheckbox.checked = true;
-                passwordInput.focus();
-            }
-        } catch (error) {
-            console.warn('Could not load saved credentials:', error);
-        }
-    }
-
-    function clearSavedCredentials() {
-        try {
-            localStorage.removeItem('adminUsername');
-            localStorage.removeItem('rememberAdmin');
-        } catch (error) {
-            console.warn('Could not clear saved credentials:', error);
-        }
-    }
 
     // Clear error message when user starts typing
     usernameInput.addEventListener('input', hideError);
