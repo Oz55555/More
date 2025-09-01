@@ -1074,11 +1074,14 @@ function setupBackButton() {
     }
 }
 
-// Set current year in footer
-const yearElement = document.getElementById('year');
-if (yearElement) {
-    yearElement.textContent = new Date().getFullYear();
-}
+// Initialize standalone functionality when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    // Set current year in footer
+    const yearElement = document.getElementById('year');
+    if (yearElement) {
+        yearElement.textContent = new Date().getFullYear();
+    }
+});
 
 // Add event listener for buttons in success modal
 document.addEventListener('click', function(e) {
@@ -1094,7 +1097,10 @@ document.addEventListener('click', function(e) {
         const paypalUrl = `https://paypal.me/${paypalUsername}/${amount}`;
         
         // Remove success modal and open PayPal again
-        document.querySelector('.payment-success').remove();
+        const successModal = document.querySelector('.payment-success');
+        if (successModal) {
+            successModal.remove();
+        }
         window.open(paypalUrl, '_blank');
         
         // Show the payment in progress modal again
