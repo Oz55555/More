@@ -1,6 +1,6 @@
 // Donation Selection Page JavaScript
-let selectedAmount = 0;
-let selectedMethod = '';
+let donationAmount = 0;
+let donationMethod = '';
 
 document.addEventListener('DOMContentLoaded', function() {
     // Set current year in footer
@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', function() {
         customAmountInput.addEventListener('input', function() {
             const amount = parseFloat(this.value) || 0;
             if (amount > 0) {
-                selectedAmount = amount;
+                donationAmount = amount;
                 updateSelectedSummary();
             }
         });
@@ -69,7 +69,7 @@ function selectAmount(amount, buttonElement) {
             customInput.style.display = 'none';
         }
         
-        selectedAmount = parseFloat(amount);
+        donationAmount = parseFloat(amount);
         updateSelectedSummary();
     }
 }
@@ -83,7 +83,7 @@ function selectPaymentMethod(method, cardElement) {
     // Add active class to selected card
     cardElement.classList.add('active');
 
-    selectedMethod = method;
+    donationMethod = method;
     updateSelectedSummary();
 }
 
@@ -92,14 +92,14 @@ function updateSelectedSummary() {
     const amountElement = document.getElementById('selected-amount');
     const methodElement = document.getElementById('selected-method');
 
-    if (selectedAmount > 0 && selectedMethod) {
+    if (donationAmount > 0 && donationMethod) {
         // Show summary
         if (summaryElement) {
             summaryElement.style.display = 'block';
         }
         
         if (amountElement) {
-            amountElement.textContent = `$${selectedAmount}`;
+            amountElement.textContent = `$${donationAmount}`;
         }
         
         if (methodElement) {
@@ -108,7 +108,7 @@ function updateSelectedSummary() {
                 'mastercard': 'Mastercard',
                 'paypal': 'PayPal'
             };
-            methodElement.textContent = methodNames[selectedMethod] || selectedMethod;
+            methodElement.textContent = methodNames[donationMethod] || donationMethod;
         }
     } else {
         // Hide summary
@@ -119,21 +119,21 @@ function updateSelectedSummary() {
 }
 
 function proceedToPayment() {
-    if (selectedAmount <= 0) {
+    if (donationAmount <= 0) {
         alert('Por favor selecciona un monto de donación.');
         return;
     }
 
-    if (!selectedMethod) {
+    if (!donationMethod) {
         alert('Por favor selecciona un método de pago.');
         return;
     }
 
     // Redirect to payment page with selected parameters
-    const paymentMethod = selectedMethod === 'visa' ? 'Visa' : 
-                         selectedMethod === 'mastercard' ? 'Mastercard' : 'PayPal';
+    const paymentMethod = donationMethod === 'visa' ? 'Visa' : 
+                         donationMethod === 'mastercard' ? 'Mastercard' : 'PayPal';
     
-    window.location.href = `/payment.html?amount=${selectedAmount}&method=${paymentMethod}`;
+    window.location.href = `/payment.html?amount=${donationAmount}&method=${paymentMethod}`;
 }
 
 // Mobile menu functionality (inherited from main.js)
