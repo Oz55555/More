@@ -57,8 +57,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Payment method button event listeners
     document.querySelectorAll('[data-payment]').forEach(btn => {
         btn.addEventListener('click', function() {
-            const method = this.getAttribute('data-payment');
-            openPaymentMethod(method);
+            // Redirect to donation selection page
+            window.location.href = '/donation-select.html';
         });
     });
 });
