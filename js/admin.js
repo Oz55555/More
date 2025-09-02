@@ -36,12 +36,29 @@ class ToneAnalysisDashboard {
             this.resetTokenStats();
         });
 
+        // Enhanced analysis controls
+        document.getElementById('analyzeAllBtn').addEventListener('click', () => {
+            this.reanalyzeAllMessages();
+        });
+
+        document.getElementById('exportAnalysisBtn').addEventListener('click', () => {
+            this.exportAnalysisData();
+        });
+
         // Filter controls
         document.getElementById('sentimentFilter').addEventListener('change', () => {
             this.applyFilters();
         });
 
         document.getElementById('emotionFilter').addEventListener('change', () => {
+            this.applyFilters();
+        });
+
+        document.getElementById('toxicityFilter').addEventListener('change', () => {
+            this.applyFilters();
+        });
+
+        document.getElementById('languageFilter').addEventListener('change', () => {
             this.applyFilters();
         });
     }
@@ -82,6 +99,7 @@ class ToneAnalysisDashboard {
 
             this.renderCharts();
             this.renderTable();
+            this.updateEnhancedStats();
 
         } catch (error) {
             console.error('Error loading data:', error);
@@ -145,7 +163,7 @@ class ToneAnalysisDashboard {
     showLoading() {
         document.getElementById('messagesTableBody').innerHTML = `
             <tr>
-                <td colspan="8" class="loading">
+                <td colspan="13" class="loading">
                     <i class="fas fa-spinner fa-spin"></i> Loading messages...
                 </td>
             </tr>
@@ -155,7 +173,7 @@ class ToneAnalysisDashboard {
     showError(message) {
         document.getElementById('messagesTableBody').innerHTML = `
             <tr>
-                <td colspan="8" class="loading">
+                <td colspan="13" class="loading">
                     <i class="fas fa-exclamation-triangle"></i> ${message}
                 </td>
             </tr>
@@ -454,18 +472,25 @@ class ToneAnalysisDashboard {
     applyFilters() {
         const sentimentFilter = document.getElementById('sentimentFilter').value;
         const emotionFilter = document.getElementById('emotionFilter').value;
+        const toxicityFilter = document.getElementById('toxicityFilter').value;
+        const languageFilter = document.getElementById('languageFilter').value;
 
         this.filteredMessages = this.messages.filter(message => {
             const sentiment = message.toneAnalysis?.sentiment || '';
             const emotion = message.toneAnalysis?.emotion || '';
+            const toxicity = message.toneAnalysis?.toxicity || 'safe';
+            const language = message.toneAnalysis?.language || 'en';
 
             const sentimentMatch = !sentimentFilter || sentiment === sentimentFilter;
             const emotionMatch = !emotionFilter || emotion === emotionFilter;
+            const toxicityMatch = !toxicityFilter || toxicity === toxicityFilter;
+            const languageMatch = !languageFilter || language === languageFilter;
 
-            return sentimentMatch && emotionMatch;
+            return sentimentMatch && emotionMatch && toxicityMatch && languageMatch;
         });
 
         this.renderTable();
+        this.updateEnhancedStats();
     }
 
     renderTable() {
@@ -478,7 +503,7 @@ class ToneAnalysisDashboard {
             console.log('No messages to display');
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="8" class="loading">
+                    <td colspan="13" class="loading">
                         <i class="fas fa-inbox"></i> No messages found matching the current filters.
                     </td>
                 </tr>
@@ -497,15 +522,23 @@ class ToneAnalysisDashboard {
 
             const sentiment = message.toneAnalysis?.sentiment || 'N/A';
             const emotion = message.toneAnalysis?.emotion || 'N/A';
+            const toxicity = message.toneAnalysis?.toxicity || 'safe';
+            const language = message.toneAnalysis?.language || 'en';
+            const keywords = message.toneAnalysis?.keywords || [];
+            const topics = message.toneAnalysis?.topics || [];
             const confidence = message.toneAnalysis?.confidence || 0;
             const summary = message.toneAnalysis?.summary || 'No analysis available';
 
             const sentimentClass = sentiment !== 'N/A' ? `sentiment-${sentiment}` : '';
             const emotionClass = emotion !== 'N/A' ? `emotion-${emotion}` : '';
+            const toxicityClass = toxicity === 'toxic' ? 'toxicity-toxic' : 'toxicity-safe';
             
             let confidenceClass = 'confidence-low';
             if (confidence >= 0.7) confidenceClass = 'confidence-high';
             else if (confidence >= 0.5) confidenceClass = 'confidence-medium';
+
+            const keywordList = keywords.slice(0, 3).map(k => k.word || k).join(', ');
+            const topicList = topics.slice(0, 2).map(t => t.label || t).join(', ');
 
             return `
                 <tr>
@@ -526,6 +559,22 @@ class ToneAnalysisDashboard {
                         </span>
                     </td>
                     <td>
+                        <span class="toxicity-badge ${toxicityClass}">
+                            ${toxicity === 'toxic' ? '⚠️ Toxic' : '✅ Safe'}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="language-badge">
+                            ${language.toUpperCase()}
+                        </span>
+                    </td>
+                    <td class="keywords-cell">
+                        ${keywordList || 'None'}
+                    </td>
+                    <td class="topics-cell">
+                        ${topicList || 'None'}
+                    </td>
+                    <td>
                         <span class="confidence-score ${confidenceClass}">
                             ${Math.round(confidence * 100)}%
                         </span>
@@ -533,9 +582,281 @@ class ToneAnalysisDashboard {
                     <td class="summary-text" title="${this.escapeHtml(summary)}">
                         ${this.escapeHtml(summary)}
                     </td>
+                    <td class="actions-cell">
+                        <button class="btn-small btn-primary" onclick="dashboard.viewDetails('${message._id}')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn-small btn-secondary" onclick="dashboard.reanalyzeMessage('${message._id}')">
+                            <i class="fas fa-sync"></i>
+                        </button>
+                    </td>
                 </tr>
             `;
         }).join('');
+    }
+
+    // Enhanced analysis methods
+    async reanalyzeAllMessages() {
+        const btn = document.getElementById('analyzeAllBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Re-analyzing...';
+
+        try {
+            const response = await fetch(`${this.apiBase}/admin/reanalyze-all`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                await this.loadData();
+                alert('All messages have been re-analyzed with enhanced AI models!');
+            } else {
+                throw new Error('Failed to re-analyze messages');
+            }
+        } catch (error) {
+            console.error('Re-analysis failed:', error);
+            alert('Failed to re-analyze messages. Please try again.');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-magic"></i> Re-analyze All';
+        }
+    }
+
+    async exportAnalysisData() {
+        try {
+            const data = {
+                messages: this.filteredMessages,
+                stats: this.calculateEnhancedStats(),
+                exportDate: new Date().toISOString()
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { 
+                type: 'application/json' 
+            });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `analysis-export-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error('Export failed:', error);
+            alert('Failed to export data. Please try again.');
+        }
+    }
+
+    calculateEnhancedStats() {
+        const messages = this.filteredMessages;
+        const stats = {
+            total: messages.length,
+            toxicity: { safe: 0, toxic: 0 },
+            languages: {},
+            keywords: {},
+            topics: {},
+            sentimentByLanguage: {}
+        };
+
+        messages.forEach(msg => {
+            const analysis = msg.toneAnalysis || {};
+            
+            // Toxicity stats
+            const toxicity = analysis.toxicity || 'safe';
+            stats.toxicity[toxicity]++;
+            
+            // Language stats
+            const language = analysis.language || 'en';
+            stats.languages[language] = (stats.languages[language] || 0) + 1;
+            
+            // Keywords frequency
+            if (analysis.keywords) {
+                analysis.keywords.forEach(kw => {
+                    const word = kw.word || kw;
+                    stats.keywords[word] = (stats.keywords[word] || 0) + 1;
+                });
+            }
+            
+            // Topics frequency
+            if (analysis.topics) {
+                analysis.topics.forEach(topic => {
+                    const label = topic.label || topic;
+                    stats.topics[label] = (stats.topics[label] || 0) + 1;
+                });
+            }
+            
+            // Sentiment by language
+            if (!stats.sentimentByLanguage[language]) {
+                stats.sentimentByLanguage[language] = { positive: 0, negative: 0, neutral: 0 };
+            }
+            const sentiment = analysis.sentiment || 'neutral';
+            stats.sentimentByLanguage[language][sentiment]++;
+        });
+
+        return stats;
+    }
+
+    updateEnhancedStats() {
+        const stats = this.calculateEnhancedStats();
+        
+        // Update toxicity rate
+        const toxicityRate = stats.total > 0 ? 
+            Math.round((stats.toxicity.toxic / stats.total) * 100) : 0;
+        document.getElementById('toxicityRate').textContent = `${toxicityRate}%`;
+        
+        // Update language count
+        const languageCount = Object.keys(stats.languages).length;
+        document.getElementById('languageCount').textContent = languageCount;
+        
+        // Update top languages
+        const topLanguages = Object.entries(stats.languages)
+            .sort(([,a], [,b]) => b - a)
+            .slice(0, 3)
+            .map(([lang]) => lang.toUpperCase())
+            .join(', ');
+        document.getElementById('topLanguages').textContent = topLanguages || 'None';
+        
+        // Update keyword count
+        const keywordCount = Object.keys(stats.keywords).length;
+        document.getElementById('keywordCount').textContent = keywordCount;
+        
+        // Update top keywords
+        const topKeywords = Object.entries(stats.keywords)
+            .sort(([,a], [,b]) => b - a)
+            .slice(0, 3)
+            .map(([word]) => word)
+            .join(', ');
+        document.getElementById('topKeywords').textContent = topKeywords || 'None';
+        
+        // Update topic count
+        const topicCount = Object.keys(stats.topics).length;
+        document.getElementById('topicCount').textContent = topicCount;
+        
+        // Update top topics
+        const topTopics = Object.entries(stats.topics)
+            .sort(([,a], [,b]) => b - a)
+            .slice(0, 3)
+            .map(([topic]) => topic)
+            .join(', ');
+        document.getElementById('topTopics').textContent = topTopics || 'None';
+        
+        // Update keyword cloud
+        this.renderKeywordCloud(stats.keywords);
+        
+        // Update advanced charts
+        this.renderAdvancedCharts(stats);
+    }
+
+    renderKeywordCloud(keywords) {
+        const container = document.getElementById('keywordCloud');
+        if (!container) return;
+        
+        const entries = Object.entries(keywords)
+            .sort(([,a], [,b]) => b - a)
+            .slice(0, 20);
+        
+        if (entries.length === 0) {
+            container.innerHTML = '<p class="text-muted">No keywords available</p>';
+            return;
+        }
+        
+        const maxCount = entries[0][1];
+        
+        container.innerHTML = entries.map(([word, count]) => {
+            const size = Math.ceil((count / maxCount) * 5);
+            return `<span class="keyword-tag size-${size}" title="${count} occurrences">${word}</span>`;
+        }).join('');
+    }
+
+    renderAdvancedCharts(stats) {
+        this.renderLanguageChart(stats.languages);
+        this.renderToxicitySentimentChart(stats);
+    }
+
+    renderLanguageChart(languages) {
+        const ctx = document.getElementById('languageChart');
+        if (!ctx) return;
+        
+        if (this.charts.language) {
+            this.charts.language.destroy();
+        }
+        
+        const entries = Object.entries(languages);
+        if (entries.length === 0) return;
+        
+        this.charts.language = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: entries.map(([lang]) => lang.toUpperCase()),
+                datasets: [{
+                    data: entries.map(([,count]) => count),
+                    backgroundColor: [
+                        '#667eea', '#764ba2', '#f093fb', '#f5576c',
+                        '#4facfe', '#00f2fe', '#43e97b', '#38f9d7'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    }
+
+    renderToxicitySentimentChart(stats) {
+        const ctx = document.getElementById('toxicitySentimentChart');
+        if (!ctx) return;
+        
+        if (this.charts.toxicitySentiment) {
+            this.charts.toxicitySentiment.destroy();
+        }
+        
+        this.charts.toxicitySentiment = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Safe Messages', 'Toxic Messages'],
+                datasets: [{
+                    label: 'Count',
+                    data: [stats.toxicity.safe, stats.toxicity.toxic],
+                    backgroundColor: ['#38a169', '#e53e3e']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    }
+
+    async viewDetails(messageId) {
+        // Implementation for viewing detailed analysis
+        console.log('View details for message:', messageId);
+    }
+
+    async reanalyzeMessage(messageId) {
+        try {
+            const response = await fetch(`${this.apiBase}/admin/reanalyze/${messageId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                await this.loadData();
+            } else {
+                throw new Error('Failed to re-analyze message');
+            }
+        } catch (error) {
+            console.error('Re-analysis failed:', error);
+            alert('Failed to re-analyze message. Please try again.');
+        }
     }
 
     async logout() {
@@ -572,5 +893,5 @@ class ToneAnalysisDashboard {
 
 // Initialize dashboard when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    new ToneAnalysisDashboard();
+    window.dashboard = new ToneAnalysisDashboard();
 });

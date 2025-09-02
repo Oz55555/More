@@ -42,77 +42,247 @@ class ToneAnalysisService {
 
   async analyzeWithHuggingFace(message) {
     try {
-      // First, try enhanced keyword analysis for better accuracy
-      const enhancedAnalysis = await this.analyzeMessageToneEnhanced(message);
+      // Run multiple HF models in parallel for comprehensive analysis
+      const analysisPromises = {
+        sentiment: this.analyzeSentiment(message),
+        emotion: this.analyzeEmotion(message),
+        toxicity: this.analyzeToxicity(message),
+        keywords: this.extractKeywords(message),
+        language: this.detectLanguage(message),
+        topics: this.classifyTopics(message)
+      };
+
+      const results = await Promise.allSettled(Object.values(analysisPromises));
+      const analysis = {};
       
-      // If enhanced analysis gives a strong result, use it
-      if (enhancedAnalysis.confidence > 0.7) {
-        console.log('Using enhanced keyword analysis due to high confidence');
-        return {
-          ...enhancedAnalysis,
-          summary: `Enhanced analysis: ${enhancedAnalysis.sentiment} sentiment (${Math.round(enhancedAnalysis.confidence * 100)}%), ${enhancedAnalysis.emotion} emotion`
+      // Process results
+      const keys = Object.keys(analysisPromises);
+      results.forEach((result, index) => {
+        const key = keys[index];
+        if (result.status === 'fulfilled') {
+          analysis[key] = result.value;
+        } else {
+          console.warn(`${key} analysis failed:`, result.reason?.message);
+          analysis[key] = null;
+        }
+      });
+
+      // Fallback to enhanced analysis if HF models fail
+      if (!analysis.sentiment) {
+        const enhancedAnalysis = await this.analyzeMessageToneEnhanced(message);
+        analysis.sentiment = {
+          label: enhancedAnalysis.sentiment.toUpperCase(),
+          score: enhancedAnalysis.confidence
+        };
+        analysis.emotion = {
+          label: enhancedAnalysis.emotion,
+          score: enhancedAnalysis.confidence
         };
       }
 
-      // Otherwise, try Hugging Face models as backup
-      let sentimentResult = null;
-      const sentimentModels = [
-        'cardiffnlp/twitter-roberta-base-sentiment-latest',
-        'cardiffnlp/twitter-roberta-base-sentiment'
-      ];
+      // Process comprehensive results
+      const sentiment = this.processSentimentResult(analysis.sentiment);
+      const emotion = this.processEmotionResult(analysis.emotion);
+      const toxicity = this.processToxicityResult(analysis.toxicity);
+      const language = analysis.language?.label || 'en';
+      const keywords = analysis.keywords || [];
+      const topics = analysis.topics || [];
 
-      for (const model of sentimentModels) {
-        try {
-          sentimentResult = await this.callHuggingFaceAPI(message, model);
-          console.log(`Sentiment analysis successful with model: ${model}`, sentimentResult);
-          break;
-        } catch (error) {
-          console.warn(`Sentiment model ${model} failed:`, error.message);
-          continue;
-        }
-      }
-
-      // Process Hugging Face results
-      let sentiment = enhancedAnalysis.sentiment;
-      let sentimentScore = enhancedAnalysis.confidence;
-      let emotion = enhancedAnalysis.emotion;
-      let emotionScore = enhancedAnalysis.confidence;
-
-      if (sentimentResult && Array.isArray(sentimentResult) && sentimentResult.length > 0) {
-        console.log('Processing Hugging Face sentiment result:', sentimentResult);
-        const topSentiment = sentimentResult[0];
-        const sentimentLabel = topSentiment.label?.toLowerCase() || '';
-        const hfScore = topSentiment.score || 0.5;
-        
-        // Map various sentiment label formats
-        let hfSentiment = 'neutral';
-        if (sentimentLabel.includes('positive') || sentimentLabel === 'label_2' || sentimentLabel === 'pos') {
-          hfSentiment = 'positive';
-        } else if (sentimentLabel.includes('negative') || sentimentLabel === 'label_0' || sentimentLabel === 'neg') {
-          hfSentiment = 'negative';
-        }
-
-        // Use Hugging Face result if it has higher confidence
-        if (hfScore > sentimentScore) {
-          sentiment = hfSentiment;
-          sentimentScore = hfScore;
-        }
-      }
-
-      const confidence = Math.max(sentimentScore, emotionScore);
+      const confidence = Math.max(
+        sentiment.score || 0.5,
+        emotion.score || 0.5,
+        toxicity.score || 0.5
+      );
 
       return {
-        sentiment,
-        emotion,
+        sentiment: sentiment.label,
+        emotion: emotion.label,
         confidence,
-        summary: `Hybrid analysis: ${sentiment} sentiment (${Math.round(sentimentScore * 100)}%), ${emotion} emotion (${Math.round(emotionScore * 100)}%)`,
-        analyzedAt: new Date()
+        toxicity: toxicity.label,
+        toxicityScore: toxicity.score,
+        language,
+        keywords: keywords.slice(0, 5), // Top 5 keywords
+        topics: topics.slice(0, 3), // Top 3 topics
+        summary: this.generateComprehensiveSummary({
+          sentiment,
+          emotion,
+          toxicity,
+          language,
+          keywords,
+          topics
+        }),
+        analyzedAt: new Date(),
+        fullAnalysis: analysis // Store complete results
       };
 
     } catch (error) {
-      console.error('Hugging Face analysis failed, using enhanced fallback:', error.message);
-      return await this.analyzeMessageToneEnhanced(message);
+      console.error('Comprehensive HF analysis failed, using enhanced fallback:', error.message);
+      const fallback = await this.analyzeMessageToneEnhanced(message);
+      return {
+        ...fallback,
+        toxicity: 'safe',
+        toxicityScore: 0.1,
+        language: 'en',
+        keywords: [],
+        topics: [],
+        fullAnalysis: null
+      };
     }
+  }
+
+  async analyzeSentiment(text) {
+    const models = [
+      'cardiffnlp/twitter-roberta-base-sentiment-latest',
+      'nlptown/bert-base-multilingual-uncased-sentiment'
+    ];
+    
+    for (const model of models) {
+      try {
+        return await this.callHuggingFaceAPI(text, model);
+      } catch (error) {
+        continue;
+      }
+    }
+    throw new Error('All sentiment models failed');
+  }
+
+  async analyzeEmotion(text) {
+    const models = [
+      'bhadresh-savani/distilbert-base-uncased-emotion',
+      'j-hartmann/emotion-english-distilroberta-base'
+    ];
+    
+    for (const model of models) {
+      try {
+        return await this.callHuggingFaceAPI(text, model);
+      } catch (error) {
+        continue;
+      }
+    }
+    throw new Error('All emotion models failed');
+  }
+
+  async analyzeToxicity(text) {
+    const models = [
+      'unitary/toxic-bert',
+      'martin-ha/toxic-comment-model'
+    ];
+    
+    for (const model of models) {
+      try {
+        return await this.callHuggingFaceAPI(text, model);
+      } catch (error) {
+        continue;
+      }
+    }
+    throw new Error('All toxicity models failed');
+  }
+
+  async extractKeywords(text) {
+    try {
+      return await this.callHuggingFaceAPI(text, 'yanekyuk/bert-keyword-extractor');
+    } catch (error) {
+      // Fallback to simple keyword extraction
+      return this.extractKeywordsSimple(text);
+    }
+  }
+
+  async detectLanguage(text) {
+    try {
+      return await this.callHuggingFaceAPI(text, 'papluca/xlm-roberta-base-language-detection');
+    } catch (error) {
+      return { label: 'en', score: 0.5 };
+    }
+  }
+
+  async classifyTopics(text) {
+    try {
+      return await this.callHuggingFaceAPI(text, 'facebook/bart-large-mnli');
+    } catch (error) {
+      return [];
+    }
+  }
+
+  processSentimentResult(result) {
+    if (!result || !Array.isArray(result) || result.length === 0) {
+      return { label: 'neutral', score: 0.5 };
+    }
+    
+    const top = result[0];
+    let label = 'neutral';
+    
+    if (top.label) {
+      const labelLower = top.label.toLowerCase();
+      if (labelLower.includes('positive') || labelLower === 'label_2' || labelLower === 'pos') {
+        label = 'positive';
+      } else if (labelLower.includes('negative') || labelLower === 'label_0' || labelLower === 'neg') {
+        label = 'negative';
+      }
+    }
+    
+    return { label, score: top.score || 0.5 };
+  }
+
+  processEmotionResult(result) {
+    if (!result || !Array.isArray(result) || result.length === 0) {
+      return { label: 'neutral', score: 0.5 };
+    }
+    
+    const top = result[0];
+    return { 
+      label: top.label?.toLowerCase() || 'neutral', 
+      score: top.score || 0.5 
+    };
+  }
+
+  processToxicityResult(result) {
+    if (!result || !Array.isArray(result) || result.length === 0) {
+      return { label: 'safe', score: 0.1 };
+    }
+    
+    const top = result[0];
+    const isToxic = top.label?.toLowerCase().includes('toxic') || top.score > 0.5;
+    
+    return {
+      label: isToxic ? 'toxic' : 'safe',
+      score: top.score || 0.1
+    };
+  }
+
+  extractKeywordsSimple(text) {
+    const words = text.toLowerCase().match(/\b\w{4,}\b/g) || [];
+    const frequency = {};
+    
+    words.forEach(word => {
+      frequency[word] = (frequency[word] || 0) + 1;
+    });
+    
+    return Object.entries(frequency)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 5)
+      .map(([word]) => ({ word, score: 1 }));
+  }
+
+  generateComprehensiveSummary({ sentiment, emotion, toxicity, language, keywords, topics }) {
+    const parts = [];
+    
+    parts.push(`${sentiment.label} sentiment (${Math.round(sentiment.score * 100)}%)`);
+    parts.push(`${emotion.label} emotion (${Math.round(emotion.score * 100)}%)`);
+    
+    if (toxicity.label === 'toxic') {
+      parts.push(`⚠️ toxicity detected (${Math.round(toxicity.score * 100)}%)`);
+    }
+    
+    if (language !== 'en') {
+      parts.push(`language: ${language}`);
+    }
+    
+    if (keywords.length > 0) {
+      const keywordList = keywords.map(k => k.word || k).join(', ');
+      parts.push(`keywords: ${keywordList}`);
+    }
+    
+    return `Comprehensive analysis: ${parts.join(', ')}`;
   }
 
   async callHuggingFaceAPI(text, model) {

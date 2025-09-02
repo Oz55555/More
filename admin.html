@@ -160,10 +160,89 @@
                 </div>
             </section>
 
+            <!-- Enhanced Analysis Section -->
+            <section class="enhanced-analysis-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-brain"></i> Advanced AI Analysis Dashboard</h2>
+                    <div class="analysis-controls">
+                        <button id="analyzeAllBtn" class="btn btn-primary">
+                            <i class="fas fa-magic"></i> Re-analyze All
+                        </button>
+                        <button id="exportAnalysisBtn" class="btn btn-secondary">
+                            <i class="fas fa-download"></i> Export Data
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Analysis Overview Cards -->
+                <div class="analysis-overview">
+                    <div class="analysis-card">
+                        <div class="card-icon toxicity">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3 id="toxicityRate">-</h3>
+                            <p>Toxicity Rate</p>
+                            <span class="trend" id="toxicityTrend">↓ 12% vs last week</span>
+                        </div>
+                    </div>
+                    <div class="analysis-card">
+                        <div class="card-icon language">
+                            <i class="fas fa-globe"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3 id="languageCount">-</h3>
+                            <p>Languages Detected</p>
+                            <span class="languages-list" id="topLanguages">EN, ES, FR</span>
+                        </div>
+                    </div>
+                    <div class="analysis-card">
+                        <div class="card-icon keywords">
+                            <i class="fas fa-tags"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3 id="keywordCount">-</h3>
+                            <p>Unique Keywords</p>
+                            <span class="top-keywords" id="topKeywords">project, help, question</span>
+                        </div>
+                    </div>
+                    <div class="analysis-card">
+                        <div class="card-icon topics">
+                            <i class="fas fa-lightbulb"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3 id="topicCount">-</h3>
+                            <p>Topic Categories</p>
+                            <span class="top-topics" id="topTopics">Technical, Business, Personal</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Advanced Charts -->
+                <div class="advanced-charts">
+                    <div class="chart-card">
+                        <h3>Toxicity vs Sentiment Correlation</h3>
+                        <canvas id="toxicitySentimentChart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Language Distribution</h3>
+                        <canvas id="languageChart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Keyword Cloud Analysis</h3>
+                        <div id="keywordCloud" class="keyword-cloud"></div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Topic Evolution Over Time</h3>
+                        <canvas id="topicTimelineChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
             <!-- Messages Table -->
             <section class="messages-section">
                 <div class="section-header">
-                    <h2>Recent Messages with Tone Analysis</h2>
+                    <h2>Recent Messages with Comprehensive Analysis</h2>
                     <div class="filter-controls">
                         <select id="sentimentFilter">
                             <option value="">All Sentiments</option>
@@ -181,6 +260,18 @@
                             <option value="disgust">Disgust</option>
                             <option value="neutral">Neutral</option>
                         </select>
+                        <select id="toxicityFilter">
+                            <option value="">All Safety Levels</option>
+                            <option value="safe">Safe</option>
+                            <option value="toxic">Toxic</option>
+                        </select>
+                        <select id="languageFilter">
+                            <option value="">All Languages</option>
+                            <option value="en">English</option>
+                            <option value="es">Spanish</option>
+                            <option value="fr">French</option>
+                            <option value="de">German</option>
+                        </select>
                     </div>
                 </div>
                 <div class="table-container">
@@ -193,13 +284,18 @@
                                 <th>Message</th>
                                 <th>Sentiment</th>
                                 <th>Emotion</th>
+                                <th>Toxicity</th>
+                                <th>Language</th>
+                                <th>Keywords</th>
+                                <th>Topics</th>
                                 <th>Confidence</th>
                                 <th>Summary</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="messagesTableBody">
                             <tr>
-                                <td colspan="8" class="loading">
+                                <td colspan="13" class="loading">
                                     <i class="fas fa-spinner fa-spin"></i> Loading messages...
                                 </td>
                             </tr>

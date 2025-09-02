@@ -341,6 +341,91 @@ app.get('/api/contacts', requireAuth, async (req, res) => {
   }
 });
 
+// Admin dashboard endpoint
+app.get('/api/admin/dashboard', requireAuth, async (req, res) => {
+  try {
+    const totalContacts = await Contact.countDocuments();
+    const recentContacts = await Contact.find()
+      .sort({ submittedAt: -1 })
+      .limit(10)
+      .lean();
+
+    res.json({
+      success: true,
+      data: {
+        totalContacts,
+        recentContacts
+      }
+    });
+  } catch (error) {
+    console.error('Dashboard error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error loading dashboard data'
+    });
+  }
+});
+
+// Re-analyze all messages endpoint
+app.post('/api/admin/reanalyze-all', requireAuth, async (req, res) => {
+  try {
+    const contacts = await Contact.find({});
+    let processed = 0;
+    
+    for (const contact of contacts) {
+      try {
+        const analysis = await analyzeTone(contact.message);
+        contact.toneAnalysis = analysis;
+        await contact.save();
+        processed++;
+      } catch (error) {
+        console.error(`Failed to reanalyze contact ${contact._id}:`, error);
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `Successfully re-analyzed ${processed} messages`,
+      data: { processed, total: contacts.length }
+    });
+  } catch (error) {
+    console.error('Re-analyze all error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error re-analyzing messages'
+    });
+  }
+});
+
+// Re-analyze single message endpoint
+app.post('/api/admin/reanalyze/:messageId', requireAuth, async (req, res) => {
+  try {
+    const contact = await Contact.findById(req.params.messageId);
+    if (!contact) {
+      return res.status(404).json({
+        success: false,
+        message: 'Message not found'
+      });
+    }
+
+    const analysis = await analyzeTone(contact.message);
+    contact.toneAnalysis = analysis;
+    await contact.save();
+
+    res.json({
+      success: true,
+      message: 'Message re-analyzed successfully',
+      data: contact
+    });
+  } catch (error) {
+    console.error('Re-analyze message error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error re-analyzing message'
+    });
+  }
+});
+
 // Get tone analysis statistics (admin endpoint)
 app.get('/api/contacts/tone-stats', requireAuth, async (req, res) => {
   try {
