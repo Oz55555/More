@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tone Analysis Dashboard - Admin</title>
+    <title>DeepSeek AI Analysis Dashboard - Admin</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="stylesheet" href="css/admin.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -13,7 +13,7 @@
 <body>
     <div class="admin-container">
         <header class="admin-header">
-            <h1><i class="fas fa-chart-line"></i> Tone Analysis Dashboard</h1>
+            <h1><i class="fas fa-brain"></i> DeepSeek AI Analysis Dashboard</h1>
             <div class="header-actions">
                 <button id="refreshBtn" class="btn btn-primary">
                     <i class="fas fa-sync-alt"></i> Refresh
@@ -68,16 +68,264 @@
                 </div>
             </section>
 
-            <!-- OpenAI Token Usage Section -->
+            <!-- Enhanced Risk Assessment Section -->
+            <section class="risk-assessment-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-shield-virus"></i> Centro de Análisis de Riesgos y Alertas</h2>
+                    <div class="risk-actions">
+                        <button id="refreshRisksBtn" class="btn btn-primary">
+                            <i class="fas fa-sync-alt"></i> Actualizar
+                        </button>
+                        <button id="exportRisksBtn" class="btn btn-warning">
+                            <i class="fas fa-download"></i> Exportar Riesgos
+                        </button>
+                        <button id="realTimeAnalysisBtn" class="btn btn-success">
+                            <i class="fas fa-play"></i> Análisis en Tiempo Real
+                        </button>
+                        <button id="emergencyProtocolBtn" class="btn btn-danger">
+                            <i class="fas fa-phone"></i> Protocolo de Emergencia
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Risk Level Indicator -->
+                <div class="risk-level-indicator">
+                    <div class="risk-meter">
+                        <div class="meter-background">
+                            <div class="meter-fill" id="riskMeterFill"></div>
+                        </div>
+                        <div class="meter-labels">
+                            <span class="safe">Seguro</span>
+                            <span class="moderate">Moderado</span>
+                            <span class="high">Alto Riesgo</span>
+                            <span class="critical">Crítico</span>
+                        </div>
+                    </div>
+                    <div class="current-risk-level">
+                        <h3 id="currentRiskLevel">EVALUANDO...</h3>
+                        <p id="riskLevelDescription">Analizando patrones de riesgo...</p>
+                    </div>
+                </div>
+                
+                <!-- Enhanced Risk Overview Cards -->
+                <div class="risk-overview">
+                    <div class="risk-card high-risk" data-risk="high">
+                        <div class="risk-icon">
+                            <i class="fas fa-skull-crossbones"></i>
+                            <div class="pulse-ring"></div>
+                        </div>
+                        <div class="risk-content">
+                            <div class="risk-number">
+                                <h3 id="highRiskCount">-</h3>
+                                <span class="risk-change" id="highRiskChange">+0</span>
+                            </div>
+                            <p>Mensajes Críticos</p>
+                            <span class="risk-detail">Suicidio, violencia, autolesión</span>
+                            <div class="risk-actions-mini">
+                                <button class="btn-mini btn-danger" onclick="dashboard.viewHighRiskMessages()">
+                                    <i class="fas fa-eye"></i> Ver Todos
+                                </button>
+                                <button class="btn-mini btn-warning" onclick="dashboard.notifySupport('high')">
+                                    <i class="fas fa-bell"></i> Notificar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="risk-card medium-risk" data-risk="medium">
+                        <div class="risk-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="risk-content">
+                            <div class="risk-number">
+                                <h3 id="mediumRiskCount">-</h3>
+                                <span class="risk-change" id="mediumRiskChange">+0</span>
+                            </div>
+                            <p>Riesgo Moderado</p>
+                            <span class="risk-detail">Depresión, ansiedad, estrés</span>
+                            <div class="risk-actions-mini">
+                                <button class="btn-mini btn-warning" onclick="dashboard.viewMediumRiskMessages()">
+                                    <i class="fas fa-eye"></i> Ver Todos
+                                </button>
+                                <button class="btn-mini btn-info" onclick="dashboard.scheduleFollowUp('medium')">
+                                    <i class="fas fa-calendar"></i> Seguimiento
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="risk-card low-risk" data-risk="low">
+                        <div class="risk-icon">
+                            <i class="fas fa-shield-check"></i>
+                        </div>
+                        <div class="risk-content">
+                            <div class="risk-number">
+                                <h3 id="lowRiskCount">-</h3>
+                                <span class="risk-change" id="lowRiskChange">+0</span>
+                            </div>
+                            <p>Mensajes Seguros</p>
+                            <span class="risk-detail">Sin indicadores de riesgo</span>
+                            <div class="risk-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="safetyProgress"></div>
+                                </div>
+                                <span class="progress-text" id="safetyPercentage">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="risk-card mood-trend" data-trend="stable">
+                        <div class="risk-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="risk-content">
+                            <div class="trend-indicator">
+                                <h3 id="moodTrend">-</h3>
+                                <div class="trend-arrow" id="trendArrow">→</div>
+                            </div>
+                            <p>Tendencia Emocional</p>
+                            <span class="risk-detail">Últimas 24 horas</span>
+                            <div class="mini-chart">
+                                <canvas id="trendMiniChart" width="120" height="40"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Risk Timeline and Patterns -->
+                <div class="risk-analytics">
+                    <div class="analytics-card">
+                        <h3><i class="fas fa-clock"></i> Línea de Tiempo de Riesgos</h3>
+                        <div class="timeline-container">
+                            <canvas id="riskTimelineChart" width="800" height="200"></canvas>
+                        </div>
+                        <div class="timeline-controls">
+                            <button class="btn-small" onclick="dashboard.setTimelineRange('24h')">24h</button>
+                            <button class="btn-small" onclick="dashboard.setTimelineRange('7d')">7d</button>
+                            <button class="btn-small" onclick="dashboard.setTimelineRange('30d')">30d</button>
+                        </div>
+                    </div>
+                    
+                    <div class="analytics-card">
+                        <h3><i class="fas fa-brain"></i> Patrones de Riesgo IA</h3>
+                        <div class="patterns-grid">
+                            <div class="pattern-item">
+                                <div class="pattern-icon">
+                                    <i class="fas fa-calendar-times"></i>
+                                </div>
+                                <div class="pattern-info">
+                                    <h4 id="peakRiskTime">--:--</h4>
+                                    <p>Hora Pico de Riesgo</p>
+                                </div>
+                            </div>
+                            <div class="pattern-item">
+                                <div class="pattern-icon">
+                                    <i class="fas fa-language"></i>
+                                </div>
+                                <div class="pattern-info">
+                                    <h4 id="riskLanguage">--</h4>
+                                    <p>Idioma Más Riesgoso</p>
+                                </div>
+                            </div>
+                            <div class="pattern-item">
+                                <div class="pattern-icon">
+                                    <i class="fas fa-hashtag"></i>
+                                </div>
+                                <div class="pattern-info">
+                                    <h4 id="riskKeyword">--</h4>
+                                    <p>Palabra Clave Crítica</p>
+                                </div>
+                            </div>
+                            <div class="pattern-item">
+                                <div class="pattern-icon">
+                                    <i class="fas fa-percentage"></i>
+                                </div>
+                                <div class="pattern-info">
+                                    <h4 id="riskAccuracy">--%</h4>
+                                    <p>Precisión del Modelo</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Enhanced Alert System -->
+                <div class="alert-section" id="alertSection">
+                    <div class="alert-header">
+                        <h3><i class="fas fa-siren-on"></i> Sistema de Alertas Inteligente</h3>
+                        <div class="alert-controls">
+                            <button class="btn-small btn-success" id="alertsEnabled">
+                                <i class="fas fa-bell"></i> Activadas
+                            </button>
+                            <button class="btn-small btn-secondary" onclick="dashboard.configureAlerts()">
+                                <i class="fas fa-cog"></i> Configurar
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="alerts-container">
+                        <div id="alertsList" class="alerts-list">
+                            <div class="no-alerts" id="noAlertsMessage">
+                                <i class="fas fa-shield-check"></i>
+                                <p>No hay alertas activas</p>
+                                <small>Sistema monitoreando en tiempo real</small>
+                            </div>
+                        </div>
+                        
+                        <div class="alert-summary">
+                            <div class="summary-item">
+                                <span class="label">Alertas Hoy:</span>
+                                <span class="value" id="todayAlerts">0</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">Tiempo Respuesta Promedio:</span>
+                                <span class="value" id="avgResponseTime">--</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">Casos Resueltos:</span>
+                                <span class="value" id="resolvedCases">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Action Panel -->
+                <div class="quick-actions-panel">
+                    <h3><i class="fas fa-bolt"></i> Acciones Rápidas</h3>
+                    <div class="quick-actions-grid">
+                        <button class="quick-action-btn" onclick="dashboard.generateRiskReport()">
+                            <i class="fas fa-file-medical"></i>
+                            <span>Generar Reporte</span>
+                        </button>
+                        <button class="quick-action-btn" onclick="dashboard.contactEmergencyServices()">
+                            <i class="fas fa-ambulance"></i>
+                            <span>Servicios de Emergencia</span>
+                        </button>
+                        <button class="quick-action-btn" onclick="dashboard.scheduleWellnessCheck()">
+                            <i class="fas fa-heartbeat"></i>
+                            <span>Chequeo de Bienestar</span>
+                        </button>
+                        <button class="quick-action-btn" onclick="dashboard.exportRiskData()">
+                            <i class="fas fa-database"></i>
+                            <span>Exportar Datos</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- DeepSeek Token Usage Section -->
             <section class="token-usage-section">
                 <div class="section-header">
-                    <h2><i class="fas fa-coins"></i> OpenAI Token Usage</h2>
+                    <h2><i class="fas fa-coins"></i> DeepSeek API Usage</h2>
                     <div class="token-actions">
                         <button id="refreshTokensBtn" class="btn btn-primary">
                             <i class="fas fa-sync-alt"></i> Refresh
                         </button>
                         <button id="resetTokensBtn" class="btn btn-warning">
                             <i class="fas fa-trash-alt"></i> Reset Stats
+                        </button>
+                        <button id="realTimeAnalysisBtn" class="btn btn-success">
+                            <i class="fas fa-play"></i> Análisis en Tiempo Real
                         </button>
                     </div>
                 </div>
@@ -166,10 +414,16 @@
                     <h2><i class="fas fa-brain"></i> Advanced AI Analysis Dashboard</h2>
                     <div class="analysis-controls">
                         <button id="analyzeAllBtn" class="btn btn-primary">
-                            <i class="fas fa-magic"></i> Re-analyze All
+                            <i class="fas fa-magic"></i> Re-analizar con DeepSeek
                         </button>
                         <button id="exportAnalysisBtn" class="btn btn-secondary">
-                            <i class="fas fa-download"></i> Export Data
+                            <i class="fas fa-download"></i> Exportar Datos
+                        </button>
+                        <button id="moodAnalysisBtn" class="btn btn-info">
+                            <i class="fas fa-smile"></i> Análisis de Humor
+                        </button>
+                        <button id="riskAssessmentBtn" class="btn btn-danger">
+                            <i class="fas fa-shield-alt"></i> Evaluación de Riesgos
                         </button>
                     </div>
                 </div>
@@ -242,7 +496,7 @@
             <!-- Messages Table -->
             <section class="messages-section">
                 <div class="section-header">
-                    <h2>Recent Messages with Comprehensive Analysis</h2>
+                    <h2><i class="fas fa-comments"></i> Mensajes con Análisis Integral de DeepSeek</h2>
                     <div class="filter-controls">
                         <select id="sentimentFilter">
                             <option value="">All Sentiments</option>
@@ -261,16 +515,18 @@
                             <option value="neutral">Neutral</option>
                         </select>
                         <select id="toxicityFilter">
-                            <option value="">All Safety Levels</option>
-                            <option value="safe">Safe</option>
-                            <option value="toxic">Toxic</option>
+                            <option value="">Todos los Niveles</option>
+                            <option value="safe">Seguro</option>
+                            <option value="toxic">Tóxico</option>
                         </select>
                         <select id="languageFilter">
-                            <option value="">All Languages</option>
-                            <option value="en">English</option>
-                            <option value="es">Spanish</option>
-                            <option value="fr">French</option>
-                            <option value="de">German</option>
+                            <option value="">Todos los Idiomas</option>
+                            <option value="en">Inglés</option>
+                            <option value="es">Español</option>
+                            <option value="fr">Francés</option>
+                            <option value="de">Alemán</option>
+                            <option value="pt">Portugués</option>
+                            <option value="it">Italiano</option>
                         </select>
                     </div>
                 </div>
@@ -278,19 +534,20 @@
                     <table id="messagesTable">
                         <thead>
                             <tr>
-                                <th>Date</th>
-                                <th>Name</th>
+                                <th>Fecha</th>
+                                <th>Nombre</th>
                                 <th>Email</th>
-                                <th>Message</th>
-                                <th>Sentiment</th>
-                                <th>Emotion</th>
-                                <th>Toxicity</th>
-                                <th>Language</th>
-                                <th>Keywords</th>
-                                <th>Topics</th>
-                                <th>Confidence</th>
-                                <th>Summary</th>
-                                <th>Actions</th>
+                                <th>Mensaje</th>
+                                <th>Sentimiento</th>
+                                <th>Emoción</th>
+                                <th>Nivel de Riesgo</th>
+                                <th>Toxicidad</th>
+                                <th>Idioma</th>
+                                <th>Palabras Clave</th>
+                                <th>Temas</th>
+                                <th>Confianza</th>
+                                <th>Resumen IA</th>
+                                <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="messagesTableBody">

@@ -45,6 +45,14 @@ class ToneAnalysisDashboard {
             this.exportAnalysisData();
         });
 
+        document.getElementById('moodAnalysisBtn')?.addEventListener('click', () => this.performMoodAnalysis());
+        document.getElementById('riskAssessmentBtn')?.addEventListener('click', () => this.performRiskAssessment());
+        document.getElementById('realTimeToggle')?.addEventListener('click', () => this.toggleRealTimeAnalysis());
+        document.getElementById('refreshRisksBtn')?.addEventListener('click', () => this.performRiskAssessment());
+        document.getElementById('exportRisksBtn')?.addEventListener('click', () => this.exportRiskData());
+        document.getElementById('realTimeAnalysisBtn')?.addEventListener('click', () => this.toggleRealTimeAnalysis());
+        document.getElementById('emergencyProtocolBtn')?.addEventListener('click', () => this.activateEmergencyProtocol());
+
         // Filter controls
         document.getElementById('sentimentFilter').addEventListener('change', () => {
             this.applyFilters();
@@ -163,7 +171,7 @@ class ToneAnalysisDashboard {
     showLoading() {
         document.getElementById('messagesTableBody').innerHTML = `
             <tr>
-                <td colspan="13" class="loading">
+                <td colspan="14" class="loading">
                     <i class="fas fa-spinner fa-spin"></i> Loading messages...
                 </td>
             </tr>
@@ -173,7 +181,7 @@ class ToneAnalysisDashboard {
     showError(message) {
         document.getElementById('messagesTableBody').innerHTML = `
             <tr>
-                <td colspan="13" class="loading">
+                <td colspan="14" class="loading">
                     <i class="fas fa-exclamation-triangle"></i> ${message}
                 </td>
             </tr>
@@ -496,14 +504,10 @@ class ToneAnalysisDashboard {
     renderTable() {
         const tbody = document.getElementById('messagesTableBody');
         
-        console.log('Rendering table with messages:', this.filteredMessages.length);
-        console.log('Filtered messages:', this.filteredMessages);
-        
         if (!this.filteredMessages || this.filteredMessages.length === 0) {
-            console.log('No messages to display');
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="13" class="loading">
+                    <td colspan="14" class="loading">
                         <i class="fas fa-inbox"></i> No messages found matching the current filters.
                     </td>
                 </tr>
@@ -512,7 +516,7 @@ class ToneAnalysisDashboard {
         }
 
         tbody.innerHTML = this.filteredMessages.map(message => {
-            const date = new Date(message.submittedAt).toLocaleDateString('en-US', {
+            const date = new Date(message.submittedAt).toLocaleDateString('es-ES', {
                 year: 'numeric',
                 month: 'short',
                 day: 'numeric',
@@ -529,9 +533,13 @@ class ToneAnalysisDashboard {
             const confidence = message.toneAnalysis?.confidence || 0;
             const summary = message.toneAnalysis?.summary || 'No analysis available';
 
+            // Calculate risk level based on DeepSeek analysis
+            const riskLevel = this.calculateRiskLevel(message.toneAnalysis);
+            
             const sentimentClass = sentiment !== 'N/A' ? `sentiment-${sentiment}` : '';
             const emotionClass = emotion !== 'N/A' ? `emotion-${emotion}` : '';
             const toxicityClass = toxicity === 'toxic' ? 'toxicity-toxic' : 'toxicity-safe';
+            const riskClass = `risk-${riskLevel}`;
             
             let confidenceClass = 'confidence-low';
             if (confidence >= 0.7) confidenceClass = 'confidence-high';
@@ -540,8 +548,14 @@ class ToneAnalysisDashboard {
             const keywordList = keywords.slice(0, 3).map(k => k.word || k).join(', ');
             const topicList = topics.slice(0, 2).map(t => t.label || t).join(', ');
 
+            const riskEmoji = {
+                'alto': '🔴',
+                'medio': '🟡',
+                'bajo': '🟢'
+            }[riskLevel] || '⚪';
+
             return `
-                <tr>
+                <tr class="${riskLevel === 'alto' ? 'high-risk-row' : ''}">
                     <td>${date}</td>
                     <td>${this.escapeHtml(message.name)}</td>
                     <td>${this.escapeHtml(message.email)}</td>
@@ -550,29 +564,34 @@ class ToneAnalysisDashboard {
                     </td>
                     <td>
                         <span class="sentiment-badge ${sentimentClass}">
-                            ${sentiment}
+                            ${this.translateSentiment(sentiment)}
                         </span>
                     </td>
                     <td>
                         <span class="emotion-badge ${emotionClass}">
-                            ${emotion}
+                            ${this.translateEmotion(emotion)}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="risk-badge ${riskClass}">
+                            ${riskEmoji} ${this.translateRiskLevel(riskLevel)}
                         </span>
                     </td>
                     <td>
                         <span class="toxicity-badge ${toxicityClass}">
-                            ${toxicity === 'toxic' ? '⚠️ Toxic' : '✅ Safe'}
+                            ${toxicity === 'toxic' ? '⚠️ Tóxico' : '✅ Seguro'}
                         </span>
                     </td>
                     <td>
                         <span class="language-badge">
-                            ${language.toUpperCase()}
+                            ${this.getLanguageName(language)}
                         </span>
                     </td>
                     <td class="keywords-cell">
-                        ${keywordList || 'None'}
+                        ${keywordList || 'Ninguna'}
                     </td>
                     <td class="topics-cell">
-                        ${topicList || 'None'}
+                        ${topicList || 'Ninguno'}
                     </td>
                     <td>
                         <span class="confidence-score ${confidenceClass}">
@@ -583,16 +602,367 @@ class ToneAnalysisDashboard {
                         ${this.escapeHtml(summary)}
                     </td>
                     <td class="actions-cell">
-                        <button class="btn-small btn-primary" onclick="dashboard.viewDetails('${message._id}')">
+                        <button class="btn-small btn-primary" onclick="dashboard.viewDetails('${message._id}')" title="Ver detalles">
                             <i class="fas fa-eye"></i>
                         </button>
-                        <button class="btn-small btn-secondary" onclick="dashboard.reanalyzeMessage('${message._id}')">
+                        <button class="btn-small btn-secondary" onclick="dashboard.reanalyzeMessage('${message._id}')" title="Re-analizar">
                             <i class="fas fa-sync"></i>
                         </button>
+                        ${riskLevel === 'alto' ? `<button class="btn-small btn-danger" onclick="dashboard.flagHighRisk('${message._id}')" title="Marcar como urgente"><i class="fas fa-flag"></i></button>` : ''}
                     </td>
                 </tr>
             `;
         }).join('');
+    }
+
+    // Enhanced alert system with better UI
+    showRiskAlerts(alerts) {
+        const alertsList = document.getElementById('alertsList');
+        const noAlertsMessage = document.getElementById('noAlertsMessage');
+        
+        if (alerts.length === 0) {
+            this.showNoAlerts();
+            return;
+        }
+        
+        noAlertsMessage.style.display = 'none';
+        alertsList.innerHTML = alerts.map(alert => `
+            <div class="alert-item ${alert.severity}" data-alert-id="${alert.id}">
+                <div class="alert-priority">
+                    <div class="priority-indicator ${alert.severity}"></div>
+                </div>
+                <div class="alert-icon">
+                    <i class="fas ${this.getAlertIcon(alert.severity)}"></i>
+                </div>
+                <div class="alert-content">
+                    <div class="alert-header">
+                        <h4>${alert.title}</h4>
+                        <span class="alert-time">${this.formatTimeAgo(alert.timestamp)}</span>
+                    </div>
+                    <p class="alert-message">${alert.message}</p>
+                    <div class="alert-meta">
+                        <span class="risk-score">Riesgo: ${alert.riskScore}/100</span>
+                        <span class="confidence">Confianza: ${alert.confidence}%</span>
+                    </div>
+                </div>
+                <div class="alert-actions">
+                    <button class="btn-alert btn-view" onclick="dashboard.viewMessage('${alert.messageId}')" title="Ver mensaje completo">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn-alert btn-flag" onclick="dashboard.flagMessage('${alert.messageId}')" title="Marcar como revisado">
+                        <i class="fas fa-flag"></i>
+                    </button>
+                    <button class="btn-alert btn-contact" onclick="dashboard.contactUser('${alert.userId}')" title="Contactar usuario">
+                        <i class="fas fa-phone"></i>
+                    </button>
+                    <button class="btn-alert btn-dismiss" onclick="dashboard.dismissAlert('${alert.id}')" title="Descartar alerta">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // Show no alerts message
+    showNoAlerts() {
+        const alertsList = document.getElementById('alertsList');
+        const noAlertsMessage = document.getElementById('noAlertsMessage');
+        
+        if (noAlertsMessage) {
+            noAlertsMessage.style.display = 'block';
+        }
+        
+        // Clear any existing alerts
+        const existingAlerts = alertsList.querySelectorAll('.alert-item');
+        existingAlerts.forEach(alert => alert.remove());
+    }
+
+    // Update individual risk count with animation
+    updateRiskCount(elementId, newValue, change) {
+        const element = document.getElementById(elementId);
+        const changeElement = document.getElementById(elementId.replace('Count', 'Change'));
+        
+        if (element) {
+            // Animate count change
+            const currentValue = parseInt(element.textContent) || 0;
+            this.animateNumber(element, currentValue, newValue);
+        }
+        
+        if (changeElement && change !== 0) {
+            changeElement.textContent = change > 0 ? `+${change}` : `${change}`;
+            changeElement.className = `risk-change ${change > 0 ? 'increase' : 'decrease'}`;
+        }
+    }
+
+    // Animate number changes
+    animateNumber(element, start, end, duration = 1000) {
+        const startTime = performance.now();
+        const animate = (currentTime) => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const current = Math.floor(start + (end - start) * progress);
+            element.textContent = current;
+            
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            }
+        };
+        requestAnimationFrame(animate);
+    }
+
+    // Update trend arrow based on direction
+    updateTrendArrow(direction) {
+        const trendArrow = document.getElementById('trendArrow');
+        if (!trendArrow) return;
+        
+        const arrows = {
+            'up': '↗',
+            'down': '↘',
+            'stable': '→'
+        };
+        
+        const colors = {
+            'up': '#e74c3c',
+            'down': '#27ae60',
+            'stable': '#3498db'
+        };
+        
+        trendArrow.textContent = arrows[direction] || '→';
+        trendArrow.style.color = colors[direction] || '#3498db';
+    }
+
+    // Update risk meter
+    updateRiskMeter(riskLevel) {
+        const meterFill = document.getElementById('riskMeterFill');
+        const currentRiskLevel = document.getElementById('currentRiskLevel');
+        const riskLevelDescription = document.getElementById('riskLevelDescription');
+        
+        if (meterFill) {
+            meterFill.style.width = `${riskLevel}%`;
+        }
+        
+        if (currentRiskLevel && riskLevelDescription) {
+            if (riskLevel < 25) {
+                currentRiskLevel.textContent = 'SEGURO';
+                currentRiskLevel.style.color = '#27ae60';
+                riskLevelDescription.textContent = 'Nivel de riesgo bajo, situación controlada';
+            } else if (riskLevel < 50) {
+                currentRiskLevel.textContent = 'MODERADO';
+                currentRiskLevel.style.color = '#f39c12';
+                riskLevelDescription.textContent = 'Nivel de riesgo moderado, requiere atención';
+            } else if (riskLevel < 75) {
+                currentRiskLevel.textContent = 'ALTO RIESGO';
+                currentRiskLevel.style.color = '#e74c3c';
+                riskLevelDescription.textContent = 'Nivel de riesgo alto, intervención necesaria';
+            } else {
+                currentRiskLevel.textContent = 'CRÍTICO';
+                currentRiskLevel.style.color = '#8e44ad';
+                riskLevelDescription.textContent = 'Nivel crítico, acción inmediata requerida';
+            }
+        }
+    }
+
+    // Update AI patterns
+    updateAIPatterns(patterns) {
+        const elements = {
+            'peakRiskTime': patterns.peakRiskTime || '--:--',
+            'riskLanguage': patterns.riskLanguage || '--',
+            'riskKeyword': patterns.riskKeyword || '--',
+            'riskAccuracy': patterns.riskAccuracy ? `${patterns.riskAccuracy}%` : '--%'
+        };
+        
+        Object.entries(elements).forEach(([id, value]) => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.textContent = value;
+            }
+        });
+    }
+
+    // Update alert summary
+    updateAlertSummary(summary) {
+        const elements = {
+            'todayAlerts': summary.todayAlerts || 0,
+            'avgResponseTime': summary.avgResponseTime || '--',
+            'resolvedCases': summary.resolvedCases || 0
+        };
+        
+        Object.entries(elements).forEach(([id, value]) => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.textContent = value;
+            }
+        });
+    }
+
+    // Update risk timeline chart
+    updateRiskTimeline(timelineData) {
+        const canvas = document.getElementById('riskTimelineChart');
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext('2d');
+        
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        if (timelineData.length === 0) return;
+        
+        // Simple line chart implementation
+        const padding = 40;
+        const chartWidth = canvas.width - 2 * padding;
+        const chartHeight = canvas.height - 2 * padding;
+        
+        // Find max value for scaling
+        const maxValue = Math.max(...timelineData.map(d => d.value));
+        
+        // Draw axes
+        ctx.strokeStyle = '#ddd';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(padding, padding);
+        ctx.lineTo(padding, canvas.height - padding);
+        ctx.lineTo(canvas.width - padding, canvas.height - padding);
+        ctx.stroke();
+        
+        // Draw data line
+        if (timelineData.length > 1) {
+            ctx.strokeStyle = '#e74c3c';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            timelineData.forEach((point, index) => {
+                const x = padding + (index / (timelineData.length - 1)) * chartWidth;
+                const y = canvas.height - padding - (point.value / maxValue) * chartHeight;
+                
+                if (index === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            
+            ctx.stroke();
+        }
+    }
+
+    // Format time ago
+    formatTimeAgo(timestamp) {
+        const now = new Date();
+        const time = new Date(timestamp);
+        const diffMs = now - time;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+        
+        if (diffMins < 1) return 'Ahora';
+        if (diffMins < 60) return `${diffMins}m`;
+        if (diffHours < 24) return `${diffHours}h`;
+        return `${diffDays}d`;
+    }
+
+    // Emergency protocol activation
+    activateEmergencyProtocol() {
+        if (confirm('¿Está seguro de que desea activar el protocolo de emergencia? Esto notificará a los servicios de emergencia.')) {
+            this.showNotification('Protocolo de emergencia activado', 'warning');
+            // Here you would implement actual emergency protocol logic
+            console.log('Emergency protocol activated');
+        }
+    }
+
+    // View high risk messages
+    viewHighRiskMessages() {
+        this.applyFilter('riskLevel', 'high');
+        document.querySelector('.messages-section').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // View medium risk messages
+    viewMediumRiskMessages() {
+        this.applyFilter('riskLevel', 'medium');
+        document.querySelector('.messages-section').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Notify support
+    notifySupport(riskLevel) {
+        this.showNotification(`Notificación enviada para mensajes de riesgo ${riskLevel}`, 'info');
+        // Implement actual notification logic
+    }
+
+    // Schedule follow up
+    scheduleFollowUp(riskLevel) {
+        this.showNotification(`Seguimiento programado para mensajes de riesgo ${riskLevel}`, 'success');
+        // Implement actual scheduling logic
+    }
+
+    // Set timeline range
+    setTimelineRange(range) {
+        // Remove active class from all buttons
+        document.querySelectorAll('.timeline-controls .btn-small').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        // Add active class to clicked button
+        event.target.classList.add('active');
+        
+        // Load data for the selected range
+        this.loadTimelineData(range);
+    }
+
+    // Load timeline data
+    async loadTimelineData(range) {
+        try {
+            const response = await fetch(`/api/admin/timeline-data?range=${range}`, {
+                credentials: 'include'
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                this.updateRiskTimeline(data.timeline || []);
+            }
+        } catch (error) {
+            console.error('Error loading timeline data:', error);
+        }
+    }
+
+    // Configure alerts
+    configureAlerts() {
+        // Open alert configuration modal
+        this.showNotification('Configuración de alertas próximamente', 'info');
+    }
+
+    // Generate risk report
+    generateRiskReport() {
+        this.showNotification('Generando reporte de riesgos...', 'info');
+        // Implement report generation
+    }
+
+    // Contact emergency services
+    contactEmergencyServices() {
+        if (confirm('¿Desea contactar a los servicios de emergencia? Esta acción se registrará.')) {
+            this.showNotification('Contactando servicios de emergencia...', 'warning');
+            // Implement emergency contact logic
+        }
+    }
+
+    // Schedule wellness check
+    scheduleWellnessCheck() {
+        this.showNotification('Chequeo de bienestar programado', 'success');
+        // Implement wellness check scheduling
+    }
+
+    // Contact user
+    contactUser(userId) {
+        this.showNotification(`Iniciando contacto con usuario ${userId}`, 'info');
+        // Implement user contact logic
+    }
+
+    // Dismiss alert
+    dismissAlert(alertId) {
+        const alertElement = document.querySelector(`[data-alert-id="${alertId}"]`);
+        if (alertElement) {
+            alertElement.style.opacity = '0.5';
+            alertElement.style.pointerEvents = 'none';
+        }
+        this.showNotification('Alerta descartada', 'success');
     }
 
     // Enhanced analysis methods
@@ -856,6 +1226,211 @@ class ToneAnalysisDashboard {
         } catch (error) {
             console.error('Re-analysis failed:', error);
             alert('Failed to re-analyze message. Please try again.');
+        }
+    }
+
+    // New DeepSeek-enhanced methods
+    calculateRiskLevel(toneAnalysis) {
+        if (!toneAnalysis) return 'bajo';
+        
+        const { emotion, sentiment, toxicity, toxicityScore, keywords = [], summary = '' } = toneAnalysis;
+        
+        // High-risk indicators
+        const highRiskKeywords = ['suicide', 'kill', 'death', 'die', 'murder', 'hurt', 'pain'];
+        const mediumRiskKeywords = ['depressed', 'sad', 'hopeless', 'anxious', 'worried', 'scared'];
+        
+        const messageText = summary.toLowerCase();
+        const hasHighRiskKeywords = highRiskKeywords.some(word => 
+            keywords.some(k => (k.word || k).toLowerCase().includes(word)) || messageText.includes(word)
+        );
+        const hasMediumRiskKeywords = mediumRiskKeywords.some(word => 
+            keywords.some(k => (k.word || k).toLowerCase().includes(word)) || messageText.includes(word)
+        );
+        
+        if (hasHighRiskKeywords || (toxicity === 'toxic' && toxicityScore > 0.8) || 
+            (emotion === 'sadness' && sentiment === 'negative')) {
+            return 'alto';
+        }
+        
+        if (hasMediumRiskKeywords || (toxicity === 'toxic' && toxicityScore > 0.5) || 
+            (emotion === 'anger' && sentiment === 'negative')) {
+            return 'medio';
+        }
+        
+        return 'bajo';
+    }
+
+    translateSentiment(sentiment) {
+        const translations = {
+            'positive': 'Positivo',
+            'negative': 'Negativo',
+            'neutral': 'Neutral'
+        };
+        return translations[sentiment] || sentiment;
+    }
+
+    translateEmotion(emotion) {
+        const translations = {
+            'joy': 'Alegría',
+            'sadness': 'Tristeza',
+            'anger': 'Ira',
+            'fear': 'Miedo',
+            'surprise': 'Sorpresa',
+            'disgust': 'Disgusto',
+            'neutral': 'Neutral'
+        };
+        return translations[emotion] || emotion;
+    }
+
+    translateRiskLevel(level) {
+        const translations = {
+            'alto': 'Alto Riesgo',
+            'medio': 'Riesgo Medio',
+            'bajo': 'Bajo Riesgo'
+        };
+        return translations[level] || level;
+    }
+
+    getLanguageName(code) {
+        const languages = {
+            'en': 'Inglés',
+            'es': 'Español',
+            'fr': 'Francés',
+            'de': 'Alemán',
+            'pt': 'Portugués',
+            'it': 'Italiano'
+        };
+        return languages[code] || code.toUpperCase();
+    }
+
+    async performMoodAnalysis() {
+        const btn = document.getElementById('moodAnalysisBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analizando...';
+
+        try {
+            const response = await fetch(`${this.apiBase}/admin/mood-analysis`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                this.displayMoodAnalysis(data.analysis);
+            }
+        } catch (error) {
+            console.error('Mood analysis failed:', error);
+            alert('Error en análisis de humor. Intente nuevamente.');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-smile"></i> Análisis de Humor';
+        }
+    }
+
+    async performRiskAssessment() {
+        const btn = document.getElementById('riskAssessmentBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Evaluando...';
+
+        try {
+            const response = await fetch(`${this.apiBase}/admin/risk-assessment`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                this.displayRiskAssessment(data.assessment);
+                this.updateRiskCards(data.assessment);
+            }
+        } catch (error) {
+            console.error('Risk assessment failed:', error);
+            alert('Error en evaluación de riesgos. Intente nuevamente.');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-shield-alt"></i> Evaluación de Riesgos';
+        }
+    }
+
+    updateRiskCards(assessment) {
+        document.getElementById('highRiskCount').textContent = assessment.highRisk || 0;
+        document.getElementById('mediumRiskCount').textContent = assessment.mediumRisk || 0;
+        document.getElementById('lowRiskCount').textContent = assessment.lowRisk || 0;
+        document.getElementById('moodTrend').textContent = assessment.moodTrend || 'Estable';
+        
+        // Show alerts if there are high-risk messages
+        if (assessment.highRisk > 0 && assessment.alerts) {
+            this.showRiskAlerts(assessment.alerts);
+        }
+    }
+
+    showRiskAlerts(alerts) {
+        const alertSection = document.getElementById('alertSection');
+        const alertsList = document.getElementById('alertsList');
+        
+        if (alerts.length > 0) {
+            alertSection.style.display = 'block';
+            alertsList.innerHTML = alerts.map(alert => `
+                <div class="alert-item ${alert.level}">
+                    <div class="alert-icon">
+                        <i class="fas fa-${alert.level === 'high' ? 'skull-crossbones' : 'exclamation-triangle'}"></i>
+                    </div>
+                    <div class="alert-content">
+                        <h4>${alert.title}</h4>
+                        <p>${alert.message}</p>
+                        <span class="alert-time">${new Date(alert.timestamp).toLocaleString('es-ES')}</span>
+                    </div>
+                    <div class="alert-actions">
+                        <button class="btn-small btn-primary" onclick="dashboard.viewDetails('${alert.messageId}')">
+                            Ver Mensaje
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            alertSection.style.display = 'none';
+        }
+    }
+
+    async flagHighRisk(messageId) {
+        if (!confirm('¿Marcar este mensaje como urgente y notificar al equipo de soporte?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`${this.apiBase}/admin/flag-risk/${messageId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                alert('Mensaje marcado como urgente. Se ha notificado al equipo de soporte.');
+                await this.loadData();
+            }
+        } catch (error) {
+            console.error('Flag risk failed:', error);
+            alert('Error al marcar mensaje. Intente nuevamente.');
+        }
+    }
+
+    toggleRealTimeAnalysis() {
+        const btn = document.getElementById('realTimeAnalysisBtn');
+        if (this.realTimeInterval) {
+            clearInterval(this.realTimeInterval);
+            this.realTimeInterval = null;
+            btn.innerHTML = '<i class="fas fa-play"></i> Análisis en Tiempo Real';
+            btn.classList.remove('btn-danger');
+            btn.classList.add('btn-success');
+        } else {
+            this.realTimeInterval = setInterval(() => {
+                this.loadData();
+            }, 30000); // Update every 30 seconds
+            btn.innerHTML = '<i class="fas fa-stop"></i> Detener Análisis';
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-danger');
         }
     }
 

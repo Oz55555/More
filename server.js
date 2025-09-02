@@ -59,7 +59,7 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: false, // Set to false for local development
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
@@ -67,6 +67,35 @@ app.use(session({
 
 // Serve static files
 app.use(express.static('.'));
+
+// Helper function for server-side risk calculation
+function calculateMessageRisk(toneAnalysis, message) {
+  if (!toneAnalysis) return 'bajo';
+  
+  const { emotion, sentiment, toxicity, toxicityScore, keywords = [], summary = '' } = toneAnalysis;
+  const highRiskKeywords = ['suicide', 'kill', 'death', 'die', 'murder', 'hurt', 'pain'];
+  const mediumRiskKeywords = ['depressed', 'sad', 'hopeless', 'anxious', 'worried', 'scared'];
+  
+  const messageText = (message + ' ' + summary).toLowerCase();
+  const hasHighRiskKeywords = highRiskKeywords.some(word => 
+    keywords.some(k => (k.word || k).toLowerCase().includes(word)) || messageText.includes(word)
+  );
+  const hasMediumRiskKeywords = mediumRiskKeywords.some(word => 
+    keywords.some(k => (k.word || k).toLowerCase().includes(word)) || messageText.includes(word)
+  );
+  
+  if (hasHighRiskKeywords || (toxicity === 'toxic' && toxicityScore > 0.8) || 
+      (emotion === 'sadness' && sentiment === 'negative')) {
+    return 'alto';
+  }
+  
+  if (hasMediumRiskKeywords || (toxicity === 'toxic' && toxicityScore > 0.5) || 
+      (emotion === 'anger' && sentiment === 'negative')) {
+    return 'medio';
+  }
+  
+  return 'bajo';
+}
 
 // Database connection
 const connectDB = async () => {
@@ -292,405 +321,493 @@ app.post('/api/admin/logout', (req, res) => {
   });
 });
 
-// Check authentication status
-app.get('/api/admin/status', (req, res) => {
-  res.json({
-    isAuthenticated: !!(req.session && req.session.isAuthenticated),
-    username: req.session ? req.session.username : null
-  });
-});
-
-// Get all contact submissions (admin endpoint)
+// Get contacts with tone analysis for admin dashboard
 app.get('/api/contacts', requireAuth, async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
-    const includeTone = req.query.includeTone === 'true';
-
-    let selectFields = '-ipAddress -userAgent';
-    if (!includeTone) {
-      selectFields += ' -toneAnalysis';
-    }
-
-    const contacts = await Contact.find()
+    const { includeTone } = req.query;
+    const query = includeTone === 'true' ? {} : {};
+    
+    const contacts = await Contact.find(query)
       .sort({ submittedAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .select(selectFields);
-
-    const total = await Contact.countDocuments();
-
+      .limit(100);
+    
     res.json({
       success: true,
-      data: contacts,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit)
-      }
+      data: contacts
     });
-
   } catch (error) {
     console.error('Error fetching contacts:', error);
     res.status(500).json({
       success: false,
-      message: 'Error fetching contacts'
+      message: 'Error obteniendo contactos'
     });
   }
 });
 
-// Admin dashboard endpoint
-app.get('/api/admin/dashboard', requireAuth, async (req, res) => {
+// Get tone analysis statistics
+app.get('/api/contacts/tone-stats', requireAuth, async (req, res) => {
   try {
-    const totalContacts = await Contact.countDocuments();
-    const recentContacts = await Contact.find()
-      .sort({ submittedAt: -1 })
-      .limit(10)
-      .lean();
+    const contacts = await Contact.find({ toneAnalysis: { $exists: true } });
+    
+    const stats = {
+      totalAnalyzed: contacts.length,
+      sentimentStats: { positive: 0, negative: 0, neutral: 0 },
+      emotionStats: {},
+      averageConfidence: 0,
+      languageStats: {},
+      toxicityStats: { safe: 0, toxic: 0 }
+    };
+    
+    let totalConfidence = 0;
+    
+    contacts.forEach(contact => {
+      const analysis = contact.toneAnalysis;
+      if (analysis) {
+        // Sentiment stats
+        const sentiment = analysis.sentiment || 'neutral';
+        stats.sentimentStats[sentiment]++;
+        
+        // Emotion stats
+        const emotion = analysis.emotion || 'neutral';
+        stats.emotionStats[emotion] = (stats.emotionStats[emotion] || 0) + 1;
+        
+        // Language stats
+        const language = analysis.language || 'en';
+        stats.languageStats[language] = (stats.languageStats[language] || 0) + 1;
+        
+        // Toxicity stats
+        const toxicity = analysis.toxicity || 'safe';
+        stats.toxicityStats[toxicity]++;
+        
+        // Confidence
+        totalConfidence += analysis.confidence || 0;
+      }
+    });
+    
+    stats.averageConfidence = contacts.length > 0 ? totalConfidence / contacts.length : 0;
+    
+    res.json({
+      success: true,
+      data: stats
+    });
+  } catch (error) {
+    console.error('Error fetching tone stats:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error obteniendo estadísticas de análisis'
+    });
+  }
+});
+
+// Get DeepSeek token usage statistics
+app.get('/api/token-stats', requireAuth, async (req, res) => {
+  try {
+    const toneAnalysisService = require('./services/toneAnalysis');
+    const stats = toneAnalysisService.getTokenStats();
+    
+    res.json({
+      success: true,
+      data: stats
+    });
+  } catch (error) {
+    console.error('Token stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error obteniendo estadísticas de tokens'
+    });
+  }
+});
+
+// Reset token statistics
+app.post('/api/token-stats/reset', requireAuth, async (req, res) => {
+  try {
+    const toneAnalysisService = require('./services/toneAnalysis');
+    toneAnalysisService.resetTokenStats();
+    
+    res.json({
+      success: true,
+      message: 'DeepSeek token statistics have been reset'
+    });
+  } catch (error) {
+    console.error('Token stats reset error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error resetting DeepSeek token statistics'
+    });
+  }
+});
+
+// Get comprehensive risk analysis data
+app.get('/api/admin/risk-data', requireAuth, async (req, res) => {
+  try {
+    const contacts = await Contact.find({ toneAnalysis: { $exists: true } })
+      .sort({ submittedAt: -1 });
+
+    const riskData = {
+      totalMessages: contacts.length,
+      riskDistribution: { alto: 0, medio: 0, bajo: 0 },
+      recentAlerts: [],
+      moodTrend: 'stable'
+    };
+
+    const highRiskKeywords = ['suicide', 'kill', 'death', 'die', 'murder', 'hurt', 'pain'];
+    const mediumRiskKeywords = ['depressed', 'sad', 'hopeless', 'anxious', 'worried', 'scared'];
+
+    contacts.forEach(contact => {
+      const analysis = contact.toneAnalysis;
+      if (!analysis) return;
+
+      const { emotion, sentiment, toxicity, toxicityScore, keywords = [], summary = '' } = analysis;
+      const messageText = (contact.message + ' ' + summary).toLowerCase();
+      
+      const hasHighRiskKeywords = highRiskKeywords.some(word => 
+        keywords.some(k => (k.word || k).toLowerCase().includes(word)) || messageText.includes(word)
+      );
+      const hasMediumRiskKeywords = mediumRiskKeywords.some(word => 
+        keywords.some(k => (k.word || k).toLowerCase().includes(word)) || messageText.includes(word)
+      );
+      
+      if (hasHighRiskKeywords || (toxicity === 'toxic' && toxicityScore > 0.8) || 
+          (emotion === 'sadness' && sentiment === 'negative')) {
+        riskData.riskDistribution.alto++;
+        
+        // Add to recent alerts if within last 7 days
+        const daysDiff = (new Date() - new Date(contact.submittedAt)) / (1000 * 60 * 60 * 24);
+        if (daysDiff <= 7) {
+          riskData.recentAlerts.push({
+            level: 'high',
+            title: 'Mensaje de Alto Riesgo',
+            message: `Indicadores de riesgo detectados en mensaje de ${contact.name}`,
+            timestamp: contact.submittedAt,
+            messageId: contact._id,
+            email: contact.email
+          });
+        }
+      } else if (hasMediumRiskKeywords || (toxicity === 'toxic' && toxicityScore > 0.5) || 
+                 (emotion === 'anger' && sentiment === 'negative')) {
+        riskData.riskDistribution.medio++;
+      } else {
+        riskData.riskDistribution.bajo++;
+      }
+    });
 
     res.json({
       success: true,
-      data: {
-        totalContacts,
-        recentContacts
-      }
+      data: riskData
     });
   } catch (error) {
-    console.error('Dashboard error:', error);
+    console.error('Risk data error:', error);
     res.status(500).json({
       success: false,
-      message: 'Error loading dashboard data'
+      message: 'Error obteniendo datos de riesgo'
     });
   }
 });
 
-// Re-analyze all messages endpoint
+// Flag high-risk message endpoint
+app.post('/api/admin/flag-risk/:messageId', requireAuth, async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    
+    const contact = await Contact.findById(messageId);
+    if (!contact) {
+      return res.status(404).json({
+        success: false,
+        message: 'Mensaje no encontrado'
+      });
+    }
+
+    // Mark as flagged and log for notification
+    contact.flaggedAsHighRisk = true;
+    contact.flaggedAt = new Date();
+    await contact.save();
+    
+    console.log(`HIGH RISK MESSAGE FLAGGED: ${contact.name} (${contact.email}) - Message ID: ${messageId}`);
+    // TODO: Implement actual notification system (email, Slack, etc.)
+    
+    res.json({
+      success: true,
+      message: 'Mensaje marcado como alto riesgo y equipo notificado'
+    });
+  } catch (error) {
+    console.error('Flag risk error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al marcar mensaje de riesgo'
+    });
+  }
+});
+
+// DeepSeek-enhanced mood analysis endpoint
+app.post('/api/admin/mood-analysis', requireAuth, async (req, res) => {
+  try {
+    console.log('Starting mood analysis...');
+    
+    // Get all contacts and filter those with analysis
+    const allContacts = await Contact.find({}).sort({ submittedAt: -1 }).limit(50);
+    console.log(`Found ${allContacts.length} total contacts`);
+    
+    const contactsWithAnalysis = allContacts.filter(contact => contact.toneAnalysis);
+    console.log(`Found ${contactsWithAnalysis.length} contacts with tone analysis`);
+
+    const moodAnalysis = {
+      overallMood: 'neutral',
+      moodTrend: 'stable',
+      riskIndicators: [],
+      recommendations: [],
+      timeframe: '24h',
+      totalAnalyzed: contactsWithAnalysis.length
+    };
+
+    if (contactsWithAnalysis.length === 0) {
+      // No data available, return default values
+      moodAnalysis.recommendations.push('No hay suficientes datos para análisis');
+      console.log('No contacts with analysis found, returning default mood analysis');
+      
+      return res.json({
+        success: true,
+        analysis: moodAnalysis
+      });
+    }
+
+    const emotions = {};
+    const sentiments = { positive: 0, negative: 0, neutral: 0 };
+    let totalConfidence = 0;
+    
+    contactsWithAnalysis.forEach(contact => {
+      const analysis = contact.toneAnalysis;
+      if (analysis) {
+        // Count emotions
+        const emotion = analysis.emotion || 'neutral';
+        emotions[emotion] = (emotions[emotion] || 0) + 1;
+        
+        // Count sentiments
+        const sentiment = analysis.sentiment || 'neutral';
+        sentiments[sentiment] = (sentiments[sentiment] || 0) + 1;
+        
+        // Sum confidence
+        totalConfidence += analysis.confidence || 0;
+      }
+    });
+
+    const totalMessages = contactsWithAnalysis.length;
+    const negativeRatio = sentiments.negative / totalMessages;
+    const positiveRatio = sentiments.positive / totalMessages;
+    
+    // Determine overall mood
+    if (negativeRatio > 0.4) {
+      moodAnalysis.overallMood = 'concerning';
+      moodAnalysis.moodTrend = 'declining';
+      moodAnalysis.riskIndicators.push('Alto porcentaje de sentimientos negativos');
+      moodAnalysis.recommendations.push('Revisar mensajes recientes para identificar problemas');
+    } else if (positiveRatio > 0.6) {
+      moodAnalysis.overallMood = 'positive';
+      moodAnalysis.moodTrend = 'improving';
+      moodAnalysis.recommendations.push('Tendencia positiva en las comunicaciones');
+    } else {
+      moodAnalysis.overallMood = 'neutral';
+      moodAnalysis.moodTrend = 'stable';
+      moodAnalysis.recommendations.push('Estado emocional estable');
+    }
+    
+    // Calculate average confidence
+    moodAnalysis.confidence = totalMessages > 0 ? totalConfidence / totalMessages : 0;
+    
+    // Add emotion breakdown to recommendations
+    const topEmotion = Object.entries(emotions).sort(([,a], [,b]) => b - a)[0];
+    if (topEmotion) {
+      moodAnalysis.recommendations.push(`Emoción predominante: ${topEmotion[0]} (${topEmotion[1]} mensajes)`);
+    }
+
+    console.log('Mood analysis completed:', moodAnalysis);
+
+    res.json({
+      success: true,
+      analysis: moodAnalysis
+    });
+  } catch (error) {
+    console.error('Mood analysis error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error en análisis de humor: ' + error.message
+    });
+  }
+});
+
+// DeepSeek-enhanced risk assessment endpoint
+app.post('/api/admin/risk-assessment', requireAuth, async (req, res) => {
+  try {
+    console.log('Starting risk assessment...');
+    
+    // Get all contacts, not just those with tone analysis
+    const allContacts = await Contact.find({}).sort({ submittedAt: -1 });
+    console.log(`Found ${allContacts.length} total contacts`);
+    
+    const contactsWithAnalysis = allContacts.filter(contact => contact.toneAnalysis);
+    console.log(`Found ${contactsWithAnalysis.length} contacts with tone analysis`);
+
+    const riskAssessment = {
+      highRisk: 0,
+      mediumRisk: 0,
+      lowRisk: 0,
+      alerts: [],
+      moodTrend: 'Estable →'
+    };
+
+    const highRiskKeywords = ['suicide', 'kill', 'death', 'die', 'murder', 'hurt', 'pain', 'suicidio', 'muerte', 'matar', 'dolor'];
+    const mediumRiskKeywords = ['depressed', 'sad', 'hopeless', 'anxious', 'worried', 'scared', 'depresión', 'triste', 'ansiedad'];
+
+    // Process contacts with analysis
+    contactsWithAnalysis.forEach(contact => {
+      const analysis = contact.toneAnalysis;
+      const { emotion, sentiment, toxicity, toxicityScore = 0, keywords = [], summary = '' } = analysis;
+      const messageText = (contact.message + ' ' + (summary || '')).toLowerCase();
+      
+      // Check for high-risk keywords in message text
+      const hasHighRiskKeywords = highRiskKeywords.some(word => messageText.includes(word));
+      const hasMediumRiskKeywords = mediumRiskKeywords.some(word => messageText.includes(word));
+      
+      // Also check in keywords array if it exists
+      const keywordRisk = keywords.some(k => {
+        const keywordText = (typeof k === 'string' ? k : k.word || '').toLowerCase();
+        return highRiskKeywords.some(word => keywordText.includes(word));
+      });
+      
+      const keywordMediumRisk = keywords.some(k => {
+        const keywordText = (typeof k === 'string' ? k : k.word || '').toLowerCase();
+        return mediumRiskKeywords.some(word => keywordText.includes(word));
+      });
+      
+      // Determine risk level
+      if (hasHighRiskKeywords || keywordRisk || 
+          (toxicity === 'toxic' && toxicityScore > 0.8) || 
+          (emotion === 'sadness' && sentiment === 'negative')) {
+        riskAssessment.highRisk++;
+        
+        // Add to alerts if recent (last 7 days)
+        const daysDiff = (new Date() - new Date(contact.submittedAt)) / (1000 * 60 * 60 * 24);
+        if (daysDiff <= 7) {
+          riskAssessment.alerts.push({
+            level: 'high',
+            title: 'Mensaje de Alto Riesgo',
+            message: `Indicadores de riesgo detectados en mensaje de ${contact.name}`,
+            timestamp: contact.submittedAt,
+            messageId: contact._id,
+            email: contact.email
+          });
+        }
+      } else if (hasMediumRiskKeywords || keywordMediumRisk ||
+                 (toxicity === 'toxic' && toxicityScore > 0.5) || 
+                 (emotion === 'anger' && sentiment === 'negative')) {
+        riskAssessment.mediumRisk++;
+      } else {
+        riskAssessment.lowRisk++;
+      }
+    });
+
+    // Calculate mood trend from recent messages
+    const recentMessages = contactsWithAnalysis.slice(0, Math.min(10, contactsWithAnalysis.length));
+    if (recentMessages.length > 0) {
+      const negativeCount = recentMessages.filter(m => 
+        m.toneAnalysis?.sentiment === 'negative'
+      ).length;
+      
+      const negativeRatio = negativeCount / recentMessages.length;
+      
+      if (negativeRatio > 0.6) {
+        riskAssessment.moodTrend = 'Preocupante ↓';
+      } else if (negativeRatio < 0.3) {
+        riskAssessment.moodTrend = 'Positiva ↑';
+      } else {
+        riskAssessment.moodTrend = 'Estable →';
+      }
+    }
+
+    console.log('Risk assessment completed:', riskAssessment);
+
+    res.json({
+      success: true,
+      assessment: riskAssessment
+    });
+  } catch (error) {
+    console.error('Risk assessment error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error en evaluación de riesgos: ' + error.message
+    });
+  }
+});
+
+// Re-analyze single message with DeepSeek
+app.post('/api/admin/reanalyze/:messageId', requireAuth, async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    
+    const contact = await Contact.findById(messageId);
+    if (!contact) {
+      return res.status(404).json({
+        success: false,
+        message: 'Mensaje no encontrado'
+      });
+    }
+
+    const toneAnalysis = await require('./services/toneAnalysis').analyzeMessageTone(contact.message);
+    
+    contact.toneAnalysis = toneAnalysis;
+    await contact.save();
+    
+    res.json({
+      success: true,
+      message: 'Mensaje re-analizado exitosamente',
+      analysis: toneAnalysis
+    });
+  } catch (error) {
+    console.error('Re-analyze error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al re-analizar mensaje'
+    });
+  }
+});
+
+// Re-analyze all messages with DeepSeek
 app.post('/api/admin/reanalyze-all', requireAuth, async (req, res) => {
   try {
     const contacts = await Contact.find({});
     let processed = 0;
-    
+    let errors = 0;
+
     for (const contact of contacts) {
       try {
-        const analysis = await analyzeTone(contact.message);
-        contact.toneAnalysis = analysis;
+        const toneAnalysis = await require('./services/toneAnalysis').analyzeMessageTone(contact.message);
+        contact.toneAnalysis = toneAnalysis;
         await contact.save();
         processed++;
       } catch (error) {
-        console.error(`Failed to reanalyze contact ${contact._id}:`, error);
+        console.error(`Error re-analyzing message ${contact._id}:`, error);
+        errors++;
       }
     }
-
+    
     res.json({
       success: true,
-      message: `Successfully re-analyzed ${processed} messages`,
-      data: { processed, total: contacts.length }
+      message: `Re-análisis completado: ${processed} procesados, ${errors} errores`,
+      processed,
+      errors
     });
   } catch (error) {
     console.error('Re-analyze all error:', error);
     res.status(500).json({
       success: false,
-      message: 'Error re-analyzing messages'
+      message: 'Error en re-análisis masivo'
     });
   }
 });
 
-// Re-analyze single message endpoint
-app.post('/api/admin/reanalyze/:messageId', requireAuth, async (req, res) => {
-  try {
-    const contact = await Contact.findById(req.params.messageId);
-    if (!contact) {
-      return res.status(404).json({
-        success: false,
-        message: 'Message not found'
-      });
-    }
-
-    const analysis = await analyzeTone(contact.message);
-    contact.toneAnalysis = analysis;
-    await contact.save();
-
-    res.json({
-      success: true,
-      message: 'Message re-analyzed successfully',
-      data: contact
-    });
-  } catch (error) {
-    console.error('Re-analyze message error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error re-analyzing message'
-    });
-  }
-});
-
-// Get tone analysis statistics (admin endpoint)
-app.get('/api/contacts/tone-stats', requireAuth, async (req, res) => {
-  try {
-    const stats = await Contact.aggregate([
-      {
-        $match: {
-          'toneAnalysis.sentiment': { $exists: true }
-        }
-      },
-      {
-        $group: {
-          _id: null,
-          totalAnalyzed: { $sum: 1 },
-          sentimentBreakdown: {
-            $push: '$toneAnalysis.sentiment'
-          },
-          emotionBreakdown: {
-            $push: '$toneAnalysis.emotion'
-          },
-          averageConfidence: {
-            $avg: '$toneAnalysis.confidence'
-          }
-        }
-      }
-    ]);
-
-    if (stats.length === 0) {
-      return res.json({
-        success: true,
-        data: {
-          totalAnalyzed: 0,
-          sentimentStats: {},
-          emotionStats: {},
-          averageConfidence: 0
-        }
-      });
-    }
-
-    const result = stats[0];
-    
-    // Count sentiment occurrences
-    const sentimentStats = result.sentimentBreakdown.reduce((acc, sentiment) => {
-      acc[sentiment] = (acc[sentiment] || 0) + 1;
-      return acc;
-    }, {});
-
-    // Count emotion occurrences
-    const emotionStats = result.emotionBreakdown.reduce((acc, emotion) => {
-      acc[emotion] = (acc[emotion] || 0) + 1;
-      return acc;
-    }, {});
-
-    res.json({
-      success: true,
-      data: {
-        totalAnalyzed: result.totalAnalyzed,
-        sentimentStats,
-        emotionStats,
-        averageConfidence: Math.round(result.averageConfidence * 100) / 100
-      }
-    });
-
-  } catch (error) {
-    console.error('Error fetching tone statistics:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching tone statistics'
-    });
-  }
-});
-
-// Get OpenAI token usage statistics (admin endpoint)
-app.get('/api/token-stats', requireAuth, async (req, res) => {
-  try {
-    const tokenStats = toneAnalysisService.getTokenStats();
-    
-    res.json({
-      success: true,
-      data: tokenStats
-    });
-
-  } catch (error) {
-    console.error('Error fetching token statistics:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching token statistics'
-    });
-  }
-});
-
-// Reset token statistics (admin endpoint)
-app.post('/api/token-stats/reset', requireAuth, async (req, res) => {
-  try {
-    toneAnalysisService.resetTokenStats();
-    
-    res.json({
-      success: true,
-      message: 'Token statistics have been reset'
-    });
-
-  } catch (error) {
-    console.error('Error resetting token statistics:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error resetting token statistics'
-    });
-  }
-});
-
-// Stripe payment routes
-
-// Create payment intent
-app.post('/api/create-payment-intent', async (req, res) => {
-  try {
-    console.log('🔄 Creating payment intent with data:', req.body);
-    
-    // Check if Stripe is configured
-    if (!process.env.STRIPE_SECRET_KEY) {
-      console.error('❌ STRIPE_SECRET_KEY not configured');
-      return res.status(500).json({
-        success: false,
-        message: 'Payment system not configured'
-      });
-    }
-    
-    const { amount, currency = 'usd', paymentMethodType = 'card' } = req.body;
-    console.log('💰 Payment details:', { amount, currency, paymentMethodType });
-
-    if (!amount || amount < 0.50) { // Minimum $0.50
-      console.log('❌ Invalid amount:', amount);
-      return res.status(400).json({
-        success: false,
-        message: 'Amount must be at least $0.50'
-      });
-    }
-
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(amount * 100), // Convert to cents
-      currency: currency,
-      payment_method_types: [paymentMethodType],
-      metadata: {
-        type: 'donation',
-        website: 'personal-website'
-      }
-    });
-
-    res.json({
-      success: true,
-      clientSecret: paymentIntent.client_secret,
-      paymentIntentId: paymentIntent.id
-    });
-
-  } catch (error) {
-    console.error('Error creating payment intent:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error creating payment intent'
-    });
-  }
-});
-
-// Confirm payment and save donation info
-app.post('/api/confirm-payment', async (req, res) => {
-  try {
-    const {
-      paymentIntentId,
-      donorInfo,
-      amount,
-      message
-    } = req.body;
-
-    // Retrieve the payment intent from Stripe
-    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-
-    if (paymentIntent.status === 'succeeded') {
-      // Create or update customer in Stripe and database
-      const customer = await CustomerService.createOrUpdateCustomer({
-        name: `${donorInfo.firstName} ${donorInfo.lastName}`,
-        email: donorInfo.email,
-        phone: donorInfo.phone || '',
-        address: {
-          line1: donorInfo.address,
-          city: donorInfo.city,
-          state: donorInfo.state,
-          postalCode: donorInfo.zipCode,
-          country: donorInfo.country
-        },
-        metadata: {
-          source: 'donation_form',
-          anonymous: donorInfo.anonymous || false
-        }
-      });
-
-      // Record payment in payment history
-      await CustomerService.recordPayment({
-        stripePaymentIntentId: paymentIntent.id,
-        stripeCustomerId: customer.stripeCustomerId,
-        amount: amount,
-        currency: paymentIntent.currency,
-        status: paymentIntent.status,
-        paymentMethod: {
-          type: 'card',
-          brand: paymentIntent.charges?.data[0]?.payment_method_details?.card?.brand || 'unknown',
-          last4: paymentIntent.charges?.data[0]?.payment_method_details?.card?.last4 || 'unknown'
-        },
-        description: message || 'Donation via credit card',
-        receiptEmail: donorInfo.email,
-        billingAddress: {
-          line1: donorInfo.address,
-          city: donorInfo.city,
-          state: donorInfo.state,
-          postalCode: donorInfo.zipCode,
-          country: donorInfo.country
-        },
-        metadata: {
-          type: 'donation',
-          anonymous: donorInfo.anonymous || false,
-          source: 'website'
-        }
-      });
-
-      // Also save as contact for backward compatibility
-      const donationRecord = new Contact({
-        name: `${donorInfo.firstName} ${donorInfo.lastName}`,
-        email: donorInfo.email,
-        message: message || 'Donation via credit card',
-        metadata: {
-          type: 'donation',
-          amount: amount,
-          paymentMethod: 'credit_card',
-          paymentIntentId: paymentIntentId,
-          stripeChargeId: paymentIntent.latest_charge,
-          stripeCustomerId: customer.stripeCustomerId
-        }
-      });
-
-      await donationRecord.save();
-
-      res.json({
-        success: true,
-        message: 'Payment confirmed and donation recorded',
-        transactionId: paymentIntent.id,
-        chargeId: paymentIntent.latest_charge,
-        customerId: customer._id
-      });
-    } else {
-      res.status(400).json({
-        success: false,
-        message: 'Payment not successful',
-        status: paymentIntent.status
-      });
-    }
-
-  } catch (error) {
-    console.error('Error confirming payment:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error confirming payment'
-    });
-  }
-});
-
-// Stripe webhook endpoint
-app.post('/api/stripe-webhook', express.raw({type: 'application/json'}), (req, res) => {
+// Webhook endpoint for Stripe
+app.post('/webhook', express.raw({type: 'application/json'}), async (req, res) => {
   const sig = req.headers['stripe-signature'];
+
   let event;
 
   try {
@@ -705,7 +822,6 @@ app.post('/api/stripe-webhook', express.raw({type: 'application/json'}), (req, r
     case 'payment_intent.succeeded':
       const paymentIntent = event.data.object;
       console.log('Payment succeeded:', paymentIntent.id);
-      // Additional processing can be done here
       break;
     case 'payment_intent.payment_failed':
       const failedPayment = event.data.object;
