@@ -393,24 +393,56 @@ textarea {
 /* Donation Section */
 .donation {
     padding: 5rem 0;
-    background: linear-gradient(135deg, var(--light-bg) 0%, #e5e7eb 100%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    text-align: center;
 }
 
 .donation h2 {
-    text-align: center;
-    margin-bottom: 1rem;
-    color: var(--text-color);
+    margin-bottom: 2rem;
     font-size: 2.5rem;
-    font-weight: 600;
 }
 
-.donation > .container > p {
-    text-align: center;
-    max-width: 600px;
-    margin: 0 auto 3rem;
-    color: var(--light-text);
+.donation-cta {
+    margin: 3rem 0;
+}
+
+.primary-donation-btn {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    padding: 1.2rem 3rem;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    font-size: 1.2rem;
+    backdrop-filter: blur(10px);
+}
+
+.primary-donation-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-3px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+.primary-donation-btn i {
+    margin-right: 0.8rem;
     font-size: 1.1rem;
-    line-height: 1.7;
+}
+
+.donation-message {
+    margin-top: 2rem;
+}
+
+.donation-message p {
+    font-size: 1rem;
+    opacity: 0.9;
+    margin: 0;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .donation-methods {
