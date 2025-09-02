@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     setupPaymentMethodListeners();
     
     // Form validation and submission
-    setupFormHandling();
+    setupFormSubmission();
     
     // Card number formatting (only for non-Stripe fields)
     setupCardFormatting();
