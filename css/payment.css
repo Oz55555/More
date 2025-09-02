@@ -385,37 +385,134 @@
 }
 
 @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+from { transform: rotate(0deg); }
+to { transform: rotate(360deg); }
+}
+
+/* Payment Form Section */
+.payment-form-section {
+background: white;
+padding: 2rem;
+border-radius: 15px;
+margin-top: 2rem;
+box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.donation-summary {
+background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+color: white;
+padding: 1rem;
+border-radius: 10px;
+margin-bottom: 2rem;
+text-align: center;
+}
+
+.donation-summary p {
+margin: 0;
+font-size: 1.2rem;
+}
+
+.form-section {
+margin-bottom: 2rem;
+}
+
+.form-section h4 {
+color: #2d3748;
+margin-bottom: 1rem;
+font-size: 1.2rem;
+}
+
+.form-row {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 1rem;
+margin-bottom: 1rem;
+}
+
+.form-group {
+margin-bottom: 1rem;
+}
+
+.form-group label {
+display: block;
+margin-bottom: 0.5rem;
+color: #4a5568;
+font-weight: 500;
+}
+
+.form-group input {
+width: 100%;
+padding: 0.75rem;
+border: 2px solid #e2e8f0;
+border-radius: 8px;
+font-size: 1rem;
+transition: border-color 0.3s ease;
+}
+
+.form-group input:focus {
+outline: none;
+border-color: #667eea;
+}
+
+.stripe-element {
+padding: 0.75rem;
+border: 2px solid #e2e8f0;
+border-radius: 8px;
+background: white;
+}
+
+.error-message {
+color: #e53e3e;
+font-size: 0.9rem;
+margin-top: 0.5rem;
+}
+
+.paypal-info {
+text-align: center;
+padding: 2rem;
+background: #f7fafc;
+border-radius: 10px;
+border: 2px dashed #cbd5e0;
+}
+
+.paypal-info i {
+font-size: 3rem;
+color: #0070ba;
+margin-bottom: 1rem;
+}
+
+.paypal-info p {
+color: #4a5568;
+font-size: 1.1rem;
+}
+
+.form-actions {
+display: flex;
+gap: 1rem;
+justify-content: space-between;
+margin-top: 2rem;
+}
+
+.btn-secondary {
+background: #e2e8f0;
+color: #4a5568;
+border: none;
+padding: 1rem 2rem;
+border-radius: 8px;
+font-weight: 600;
+cursor: pointer;
+transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+background: #cbd5e0;
+transform: translateY(-2px);
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
-    .payment-section {
-        padding: 6rem 1rem 2rem;
-    }
-
-    .payment-container {
-        grid-template-columns: 1fr;
-        gap: 2rem;
-    }
-
-    .payment-summary {
-        position: static;
-        order: 2;
-    }
-
-    .payment-form-container {
-        padding: 1.5rem;
-        order: 1;
-    }
-
-    .form-row {
-        grid-template-columns: 1fr;
-    }
-
-    .form-actions {
-        flex-direction: column;
+.payment-section {
+padding: 6rem 1rem 2rem;
     }
 
     .payment-header h1 {

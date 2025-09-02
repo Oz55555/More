@@ -1,6 +1,9 @@
 // Donation Selection Page JavaScript
 let donationAmount = 0;
 let donationMethod = '';
+let stripe;
+let cardElement;
+let isStripeLoaded = false;
 
 document.addEventListener('DOMContentLoaded', function() {
     // Set current year in footer
@@ -32,16 +35,17 @@ document.addEventListener('DOMContentLoaded', function() {
             const amount = parseFloat(this.value) || 0;
             if (amount > 0) {
                 donationAmount = amount;
-                updateSelectedSummary();
+                checkIfReadyToShowForm();
             }
         });
     }
 
-    // Proceed button
-    const proceedBtn = document.getElementById('proceed-btn');
-    if (proceedBtn) {
-        proceedBtn.addEventListener('click', function() {
-            proceedToPayment();
+    // Form submission
+    const donationForm = document.getElementById('donation-form');
+    if (donationForm) {
+        donationForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            processDonation();
         });
     }
 });
@@ -70,7 +74,7 @@ function selectAmount(amount, buttonElement) {
         }
         
         donationAmount = parseFloat(amount);
-        updateSelectedSummary();
+        checkIfReadyToShowForm();
     }
 }
 
@@ -84,56 +88,194 @@ function selectPaymentMethod(method, cardElement) {
     cardElement.classList.add('active');
 
     donationMethod = method;
-    updateSelectedSummary();
+    showPaymentForm();
 }
 
-function updateSelectedSummary() {
-    const summaryElement = document.querySelector('.selected-summary');
-    const amountElement = document.getElementById('selected-amount');
-    const methodElement = document.getElementById('selected-method');
-
+function showPaymentForm() {
     if (donationAmount > 0 && donationMethod) {
-        // Show summary
-        if (summaryElement) {
-            summaryElement.style.display = 'block';
+        const formSection = document.querySelector('.payment-form-section');
+        const summaryAmount = document.getElementById('summary-amount');
+        const summaryMethod = document.getElementById('summary-method');
+        
+        // Update summary
+        if (summaryAmount) {
+            summaryAmount.textContent = `$${donationAmount}`;
         }
         
-        if (amountElement) {
-            amountElement.textContent = `$${donationAmount}`;
-        }
-        
-        if (methodElement) {
+        if (summaryMethod) {
             const methodNames = {
                 'visa': 'Visa',
                 'mastercard': 'Mastercard',
                 'paypal': 'PayPal'
             };
-            methodElement.textContent = methodNames[donationMethod] || donationMethod;
+            summaryMethod.textContent = methodNames[donationMethod] || donationMethod;
         }
-    } else {
-        // Hide summary
-        if (summaryElement) {
-            summaryElement.style.display = 'none';
+        
+        // Show form section
+        if (formSection) {
+            formSection.style.display = 'block';
+        }
+        
+        // Show/hide payment method specific sections
+        const cardSection = document.querySelector('.card-payment-section');
+        const paypalSection = document.querySelector('.paypal-payment-section');
+        
+        if (donationMethod === 'visa' || donationMethod === 'mastercard') {
+            if (cardSection) cardSection.style.display = 'block';
+            if (paypalSection) paypalSection.style.display = 'none';
+            setupStripeElements();
+        } else if (donationMethod === 'paypal') {
+            if (cardSection) cardSection.style.display = 'none';
+            if (paypalSection) paypalSection.style.display = 'block';
+        }
+        
+        // Scroll to form
+        formSection.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+async function setupStripeElements() {
+    if (!window.Stripe) {
+        console.error('Stripe.js not loaded');
+        return;
+    }
+    
+    if (!isStripeLoaded) {
+        try {
+            const response = await fetch('/stripe-config');
+            const { publishableKey } = await response.json();
+            stripe = Stripe(publishableKey);
+            
+            const elements = stripe.elements();
+            cardElement = elements.create('card', {
+                style: {
+                    base: {
+                        fontSize: '16px',
+                        color: '#424770',
+                        '::placeholder': {
+                            color: '#aab7c4',
+                        },
+                    },
+                },
+            });
+            
+            cardElement.mount('#card-element');
+            
+            cardElement.on('change', function(event) {
+                const displayError = document.getElementById('card-errors');
+                if (event.error) {
+                    displayError.textContent = event.error.message;
+                } else {
+                    displayError.textContent = '';
+                }
+            });
+            
+            isStripeLoaded = true;
+        } catch (error) {
+            console.error('Error setting up Stripe:', error);
         }
     }
 }
 
-function proceedToPayment() {
-    if (donationAmount <= 0) {
-        alert('Por favor selecciona un monto de donación.');
-        return;
+function checkIfReadyToShowForm() {
+    if (donationAmount > 0 && donationMethod) {
+        showPaymentForm();
     }
+}
 
-    if (!donationMethod) {
-        alert('Por favor selecciona un método de pago.');
-        return;
-    }
-
-    // Redirect to payment page with selected parameters
-    const paymentMethod = donationMethod === 'visa' ? 'Visa' : 
-                         donationMethod === 'mastercard' ? 'Mastercard' : 'PayPal';
+async function processDonation() {
+    const submitBtn = document.getElementById('submit-donation');
     
-    window.location.href = `/payment.html?amount=${donationAmount}&method=${paymentMethod}`;
+    if (donationMethod === 'paypal') {
+        // Redirect to PayPal
+        const paypalUrl = `https://paypal.me/oscarmedina/${donationAmount}`;
+        window.open(paypalUrl, '_blank');
+        return;
+    }
+    
+    // Process Stripe payment
+    if (!stripe || !cardElement) {
+        alert('Payment system not ready. Please try again.');
+        return;
+    }
+    
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+    
+    try {
+        // Get form data
+        const formData = new FormData(document.getElementById('donation-form'));
+        const paymentData = {
+            amount: donationAmount,
+            firstName: formData.get('firstName'),
+            lastName: formData.get('lastName'),
+            email: formData.get('email'),
+            phone: formData.get('phone'),
+            address: formData.get('address'),
+            city: formData.get('city'),
+            state: formData.get('state'),
+            zipCode: formData.get('zipCode'),
+            paymentMethod: donationMethod === 'visa' ? 'Visa' : 'Mastercard'
+        };
+        
+        // Create payment intent
+        const response = await fetch('/create-payment-intent', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(paymentData)
+        });
+        
+        const { clientSecret } = await response.json();
+        
+        // Confirm payment
+        const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+            payment_method: {
+                card: cardElement,
+                billing_details: {
+                    name: `${paymentData.firstName} ${paymentData.lastName}`,
+                    email: paymentData.email,
+                    phone: paymentData.phone || undefined,
+                    address: {
+                        line1: paymentData.address || undefined,
+                        city: paymentData.city || undefined,
+                        state: paymentData.state || undefined,
+                        postal_code: paymentData.zipCode || undefined,
+                        country: 'US'
+                    }
+                }
+            }
+        });
+        
+        if (error) {
+            throw new Error(error.message);
+        }
+        
+        // Payment successful
+        alert('¡Donación exitosa! Gracias por tu apoyo.');
+        window.location.href = '/index.html#donation';
+        
+    } catch (error) {
+        alert(`Error en el pago: ${error.message}`);
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-heart"></i> Complete Donation';
+    }
+}
+
+function goBack() {
+    const formSection = document.querySelector('.payment-form-section');
+    if (formSection) {
+        formSection.style.display = 'none';
+    }
+    
+    // Clear selections
+    document.querySelectorAll('.payment-method-card').forEach(card => {
+        card.classList.remove('active');
+    });
+    
+    donationMethod = '';
 }
 
 // Mobile menu functionality (inherited from main.js)
