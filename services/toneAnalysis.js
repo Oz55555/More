@@ -130,9 +130,9 @@ Respond only with valid JSON.`
         ...fallback,
         toxicity: 'safe',
         toxicityScore: 0.1,
-        language: 'en',
-        keywords: [],
-        topics: [],
+        language: this.detectLanguage(message),
+        keywords: this.extractKeywords(message),
+        topics: this.extractTopics(message),
         fullAnalysis: null
       };
     }
@@ -411,9 +411,9 @@ Respond only with valid JSON.`;
 
   // Alternative analysis using a simpler keyword-based approach (fallback)
   async analyzeMessageToneSimple(message) {
-    const positiveWords = ['thank', 'great', 'excellent', 'amazing', 'love', 'wonderful', 'fantastic', 'awesome', 'happy', 'excited'];
-    const negativeWords = ['hate', 'terrible', 'awful', 'bad', 'horrible', 'angry', 'frustrated', 'disappointed', 'sad', 'upset'];
-    const questionWords = ['help', 'question', 'how', 'what', 'when', 'where', 'why', 'can you', 'could you'];
+    const positiveWords = ['thank', 'great', 'excellent', 'amazing', 'love', 'wonderful', 'fantastic', 'awesome', 'happy', 'excited', 'feliz', 'excelente', 'increíble', 'maravilloso', 'fantástico', 'genial', 'bueno', 'perfecto', 'contento', 'alegre'];
+    const negativeWords = ['hate', 'terrible', 'awful', 'bad', 'horrible', 'angry', 'frustrated', 'disappointed', 'sad', 'upset', 'odio', 'terrible', 'malo', 'horrible', 'enojado', 'frustrado', 'decepcionado', 'triste', 'molesto', 'deprimido', 'desesperado'];
+    const questionWords = ['help', 'question', 'how', 'what', 'when', 'where', 'why', 'can you', 'could you', 'ayuda', 'pregunta', 'cómo', 'qué', 'cuándo', 'dónde', 'por qué', 'puedes', 'podrías'];
 
     const lowerMessage = message.toLowerCase();
     
@@ -453,9 +453,9 @@ Respond only with valid JSON.`;
       confidence,
       toxicity: 'safe',
       toxicityScore: 0.1,
-      language: 'en',
-      keywords: [],
-      topics: [],
+      language: this.detectLanguage(message),
+      keywords: this.extractKeywords(message),
+      topics: this.extractTopics(message),
       summary: `Simple keyword-based analysis: ${positiveCount} positive, ${negativeCount} negative, ${questionCount} question indicators`,
       analyzedAt: new Date()
     };
@@ -552,6 +552,109 @@ Respond only with valid JSON.`;
       dailyUsage: new Map(),
       lastReset: new Date().toDateString()
     };
+  }
+
+  // Detect language based on common words and patterns
+  detectLanguage(text) {
+    const spanishWords = [
+      'el', 'la', 'de', 'que', 'y', 'a', 'en', 'un', 'es', 'se', 'no', 'te', 'lo', 'le', 'da', 'su', 'por', 'son', 'con', 'para', 'al', 'del', 'los', 'las', 'una', 'está', 'muy', 'todo', 'pero', 'más', 'hacer', 'ser', 'tiene', 'ya', 'me', 'cuando', 'puede', 'tiempo', 'cada', 'uno', 'vida', 'sobre', 'después', 'sin', 'lugar', 'años', 'trabajo', 'gobierno', 'día', 'grupo', 'durante', 'siempre', 'hasta', 'desde', 'tanto', 'menos', 'según', 'donde', 'mientras', 'quien', 'además', 'modo', 'bien', 'estado', 'forma', 'caso', 'nada', 'hacer', 'general', 'mismo', 'aunque', 'mucho', 'antes', 'mejor', 'aquí', 'sólo', 'frente', 'proceso', 'medio', 'social', 'realizar', 'llegar', 'pasar', 'punto', 'mayor', 'crear', 'seguir', 'tratarse', 'volver', 'vivir', 'momento', 'dar', 'gran', 'bajo', 'país', 'problema', 'mano', 'sistema', 'programa', 'cuestión', 'hacia', 'política', 'real', 'decir', 'si', 'nuestro', 'primer', 'encontrar', 'contra', 'cualquier', 'ciudad', 'estas', 'algunos', 'service', 'manera', 'tipo', 'parte', 'mundo', 'año', 'conseguir', 'presente', 'empresa', 'proyecto', 'producir', 'esperar', 'existir', 'considerar', 'resultado', 'igual', 'historia', 'comunidad', 'dentro', 'nivel', 'utilizar', 'precio', 'aparecer', 'valor', 'internacional', 'cambio', 'sentir', 'número', 'agua', 'llamar', 'desarrollo', 'parte', 'mayor', 'mercado', 'importante', 'activity', 'llevar', 'conocer', 'razón', 'mes', 'hombre', 'través', 'pueblo', 'mostrar', 'propio', 'empezar', 'creer', 'zona', 'colores', 'papá', 'mamá', 'hijo', 'hija', 'hermano', 'hermana', 'abuelo', 'abuela', 'tío', 'tía', 'primo', 'prima', 'esposo', 'esposa', 'novio', 'novia', 'amigo', 'amiga', 'casa', 'hogar', 'familia', 'amor', 'corazón', 'feliz', 'triste', 'contento', 'alegre', 'enojado', 'preocupado', 'nervioso', 'tranquilo', 'cansado', 'enfermo', 'sano', 'fuerte', 'débil', 'joven', 'viejo', 'nuevo', 'viejo', 'grande', 'pequeño', 'alto', 'bajo', 'gordo', 'flaco', 'bonito', 'feo', 'bueno', 'malo', 'rico', 'pobre', 'rápido', 'lento', 'fácil', 'difícil', 'cerca', 'lejos', 'arriba', 'abajo', 'adelante', 'atrás', 'izquierda', 'derecha', 'dentro', 'fuera', 'encima', 'debajo', 'delante', 'detrás', 'entre', 'junto', 'separado', 'abierto', 'cerrado', 'lleno', 'vacío', 'limpio', 'sucio', 'caliente', 'frío', 'seco', 'mojado', 'duro', 'blando', 'suave', 'áspero', 'liso', 'rugoso', 'claro', 'oscuro', 'brillante', 'opaco', 'transparente', 'opaco', 'pesado', 'liviano', 'grueso', 'delgado', 'ancho', 'estrecho', 'largo', 'corto', 'profundo', 'superficial', 'alto', 'bajo', 'caro', 'barato', 'gratis', 'pagado', 'público', 'privado', 'común', 'raro', 'normal', 'extraño', 'conocido', 'desconocido', 'seguro', 'peligroso', 'útil', 'inútil', 'necesario', 'innecesario', 'posible', 'imposible', 'probable', 'improbable', 'cierto', 'falso', 'verdadero', 'mentira', 'correcto', 'incorrecto', 'perfecto', 'imperfecto', 'completo', 'incompleto', 'total', 'parcial', 'entero', 'roto', 'sano', 'enfermo', 'vivo', 'muerto', 'activo', 'inactivo', 'ocupado', 'libre', 'disponible', 'indisponible', 'presente', 'ausente', 'temprano', 'tarde', 'puntual', 'impuntual', 'rápido', 'lento', 'inmediato', 'tardío', 'actual', 'pasado', 'futuro', 'moderno', 'antiguo', 'reciente', 'viejo', 'fresco', 'rancio', 'maduro', 'verde', 'crudo', 'cocido', 'dulce', 'salado', 'amargo', 'ácido', 'picante', 'suave'
+    ];
+    
+    const englishWords = [
+      'the', 'of', 'and', 'to', 'a', 'in', 'is', 'it', 'you', 'that', 'he', 'was', 'for', 'on', 'are', 'as', 'with', 'his', 'they', 'i', 'at', 'be', 'this', 'have', 'from', 'or', 'one', 'had', 'by', 'word', 'but', 'not', 'what', 'all', 'were', 'we', 'when', 'your', 'can', 'said', 'there', 'each', 'which', 'she', 'do', 'how', 'their', 'if', 'will', 'up', 'other', 'about', 'out', 'many', 'then', 'them', 'these', 'so', 'some', 'her', 'would', 'make', 'like', 'into', 'him', 'has', 'two', 'more', 'very', 'after', 'words', 'first', 'where', 'much', 'through', 'back', 'years', 'work', 'came', 'right', 'used', 'take', 'three', 'states', 'himself', 'few', 'house', 'use', 'during', 'without', 'again', 'place', 'american', 'around', 'however', 'home', 'small', 'found', 'mrs', 'thought', 'went', 'say', 'part', 'once', 'general', 'high', 'upon', 'school', 'every', 'don', 'does', 'got', 'united', 'left', 'number', 'course', 'war', 'until', 'always', 'away', 'something', 'fact', 'though', 'water', 'less', 'public', 'put', 'think', 'almost', 'hand', 'enough', 'far', 'took', 'head', 'yet', 'government', 'system', 'better', 'set', 'told', 'nothing', 'night', 'end', 'why', 'called', 'didn', 'eyes', 'find', 'going', 'look', 'asked', 'later', 'knew', 'let', 'great', 'year', 'come', 'since', 'against', 'go', 'came', 'right', 'used', 'take', 'three'
+    ];
+
+    const lowerText = text.toLowerCase();
+    let spanishCount = 0;
+    let englishCount = 0;
+
+    // Count Spanish words
+    spanishWords.forEach(word => {
+      if (lowerText.includes(' ' + word + ' ') || lowerText.startsWith(word + ' ') || lowerText.endsWith(' ' + word)) {
+        spanishCount++;
+      }
+    });
+
+    // Count English words
+    englishWords.forEach(word => {
+      if (lowerText.includes(' ' + word + ' ') || lowerText.startsWith(word + ' ') || lowerText.endsWith(' ' + word)) {
+        englishCount++;
+      }
+    });
+
+    // Check for Spanish-specific patterns
+    const spanishPatterns = [
+      /ñ/, /á|é|í|ó|ú/, /¿/, /¡/, /ll/, /rr/, /ch/,
+      /ción$/, /sión$/, /mente$/, /ando$/, /iendo$/
+    ];
+    
+    let spanishPatternCount = 0;
+    spanishPatterns.forEach(pattern => {
+      if (pattern.test(lowerText)) {
+        spanishPatternCount++;
+      }
+    });
+
+    // Determine language
+    if (spanishCount > englishCount || spanishPatternCount > 0) {
+      return 'es';
+    } else if (englishCount > spanishCount) {
+      return 'en';
+    } else {
+      // Default fallback - try to detect by character patterns
+      if (/[ñáéíóúü¿¡]/.test(text)) {
+        return 'es';
+      }
+      return 'en';
+    }
+  }
+
+  // Extract basic keywords from text
+  extractKeywords(text) {
+    const words = text.toLowerCase()
+      .replace(/[^\w\sáéíóúüñ]/g, ' ')
+      .split(/\s+/)
+      .filter(word => word.length > 3);
+    
+    // Remove common stop words
+    const stopWords = ['that', 'with', 'have', 'this', 'will', 'your', 'from', 'they', 'know', 'want', 'been', 'good', 'much', 'some', 'time', 'very', 'when', 'come', 'here', 'just', 'like', 'long', 'make', 'many', 'over', 'such', 'take', 'than', 'them', 'well', 'were', 'para', 'esta', 'todo', 'pero', 'más', 'hacer', 'ser', 'tiene', 'cuando', 'puede', 'tiempo', 'cada', 'vida', 'sobre', 'después', 'lugar', 'años', 'trabajo', 'día', 'durante', 'siempre', 'hasta', 'desde', 'tanto', 'menos', 'según', 'donde', 'mientras', 'quien', 'además', 'modo', 'bien', 'estado', 'forma', 'caso', 'nada', 'hacer', 'general', 'mismo', 'aunque', 'mucho', 'antes', 'mejor', 'aquí', 'sólo', 'frente'];
+    
+    const keywords = words.filter(word => !stopWords.includes(word));
+    
+    // Return top 5 most frequent keywords
+    const wordCount = {};
+    keywords.forEach(word => {
+      wordCount[word] = (wordCount[word] || 0) + 1;
+    });
+    
+    return Object.entries(wordCount)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 5)
+      .map(([word]) => word);
+  }
+
+  // Extract basic topics from text
+  extractTopics(text) {
+    const lowerText = text.toLowerCase();
+    const topics = [];
+    
+    // Define topic keywords
+    const topicKeywords = {
+      'technology': ['computer', 'software', 'app', 'website', 'digital', 'online', 'internet', 'tech', 'sistema', 'aplicación', 'sitio web', 'digital', 'tecnología'],
+      'business': ['work', 'job', 'company', 'business', 'money', 'pay', 'salary', 'career', 'trabajo', 'empresa', 'negocio', 'dinero', 'salario', 'carrera'],
+      'health': ['health', 'doctor', 'medicine', 'sick', 'pain', 'hospital', 'treatment', 'salud', 'médico', 'medicina', 'enfermo', 'dolor', 'hospital', 'tratamiento'],
+      'education': ['school', 'student', 'teacher', 'learn', 'study', 'education', 'class', 'escuela', 'estudiante', 'maestro', 'aprender', 'estudiar', 'educación', 'clase'],
+      'family': ['family', 'mother', 'father', 'child', 'son', 'daughter', 'parent', 'familia', 'madre', 'padre', 'hijo', 'hija', 'papá', 'mamá'],
+      'emotions': ['happy', 'sad', 'angry', 'love', 'hate', 'excited', 'worried', 'feliz', 'triste', 'enojado', 'amor', 'odio', 'emocionado', 'preocupado']
+    };
+    
+    Object.entries(topicKeywords).forEach(([topic, keywords]) => {
+      if (keywords.some(keyword => lowerText.includes(keyword))) {
+        topics.push(topic);
+      }
+    });
+    
+    return topics.slice(0, 3); // Return top 3 topics
   }
 }
 

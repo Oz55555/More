@@ -252,6 +252,30 @@ body {
     border-color: #667eea;
 }
 
+.btn-small.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+}
+
+.btn-small.btn-secondary {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    border: none;
+}
+
+.btn-small.btn-danger {
+    background: linear-gradient(135deg, #ff4757 0%, #c44569 100%);
+    color: white;
+    border: none;
+}
+
+.btn-small.btn-warning {
+    background: linear-gradient(135deg, #ffa726 0%, #ff7043 100%);
+    color: white;
+    border: none;
+}
+
 .patterns-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -598,6 +622,85 @@ body {
 .risk-change.decrease {
     background: rgba(39, 174, 96, 0.1);
     color: #27ae60;
+}
+
+/* Notification styles */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 20px;
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 300px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    animation: slideIn 0.3s ease;
+}
+
+.notification-success {
+    background: #27ae60;
+}
+
+.notification-warning {
+    background: #f39c12;
+}
+
+.notification-info {
+    background: #3498db;
+}
+
+.notification-error {
+    background: #e74c3c;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Emergency Status Styles */
+.emergency-status-container {
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.emergency-inactive {
+    background: rgba(39, 174, 96, 0.1);
+    color: #27ae60;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9em;
+    display: inline-block;
+}
+
+.emergency-active {
+    background: rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9em;
+    display: inline-block;
+    animation: emergencyPulse 1.5s infinite;
+}
+
+@keyframes emergencyPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
 }
 
 /* Responsive Design */

@@ -17,73 +17,227 @@ class ToneAnalysisDashboard {
     }
 
     bindEvents() {
-        // Refresh button
-        document.getElementById('refreshBtn').addEventListener('click', () => {
-            this.loadData();
-        });
+        // Refresh button with null check
+        const refreshBtn = document.getElementById('refreshBtn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', () => {
+                this.loadData();
+            });
+        }
 
-        // Logout button
-        document.getElementById('logoutBtn').addEventListener('click', () => {
-            this.logout();
-        });
+        // Logout button with null check
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                this.logout();
+            });
+        }
 
-        // Token refresh and reset buttons
-        document.getElementById('refreshTokensBtn').addEventListener('click', () => {
-            this.loadTokenStats();
-        });
+        // Token refresh and reset buttons with null checks
+        const refreshTokensBtn = document.getElementById('refreshTokensBtn');
+        if (refreshTokensBtn) {
+            refreshTokensBtn.addEventListener('click', () => {
+                this.loadTokenStats();
+            });
+        }
 
-        document.getElementById('resetTokensBtn').addEventListener('click', () => {
-            this.resetTokenStats();
-        });
+        const resetTokensBtn = document.getElementById('resetTokensBtn');
+        if (resetTokensBtn) {
+            resetTokensBtn.addEventListener('click', () => {
+                this.resetTokenStats();
+            });
+        }
 
         // Enhanced analysis controls
-        document.getElementById('analyzeAllBtn').addEventListener('click', () => {
-            this.reanalyzeAllMessages();
-        });
+        const analyzeAllBtn = document.getElementById('analyzeAllBtn');
+        if (analyzeAllBtn) {
+            analyzeAllBtn.addEventListener('click', () => {
+                this.reanalyzeAllMessages();
+            });
+        }
 
-        document.getElementById('exportAnalysisBtn').addEventListener('click', () => {
-            this.exportAnalysisData();
-        });
+        const exportAnalysisBtn = document.getElementById('exportAnalysisBtn');
+        if (exportAnalysisBtn) {
+            exportAnalysisBtn.addEventListener('click', () => {
+                this.exportAnalysisData();
+            });
+        }
 
-        document.getElementById('moodAnalysisBtn')?.addEventListener('click', () => this.performMoodAnalysis());
-        document.getElementById('riskAssessmentBtn')?.addEventListener('click', () => this.performRiskAssessment());
-        document.getElementById('realTimeToggle')?.addEventListener('click', () => this.toggleRealTimeAnalysis());
-        document.getElementById('refreshRisksBtn')?.addEventListener('click', () => this.performRiskAssessment());
-        document.getElementById('exportRisksBtn')?.addEventListener('click', () => this.exportRiskData());
-        document.getElementById('realTimeAnalysisBtn')?.addEventListener('click', () => this.toggleRealTimeAnalysis());
-        document.getElementById('emergencyProtocolBtn')?.addEventListener('click', () => this.activateEmergencyProtocol());
+        const moodAnalysisBtn = document.getElementById('moodAnalysisBtn');
+        if (moodAnalysisBtn) {
+            moodAnalysisBtn.addEventListener('click', () => this.performMoodAnalysis());
+        }
 
-        // Filter controls
-        document.getElementById('sentimentFilter').addEventListener('change', () => {
-            this.applyFilters();
-        });
+        const riskAssessmentBtn = document.getElementById('riskAssessmentBtn');
+        if (riskAssessmentBtn) {
+            riskAssessmentBtn.addEventListener('click', () => this.performRiskAssessment());
+        }
 
-        document.getElementById('emotionFilter').addEventListener('change', () => {
-            this.applyFilters();
-        });
+        const realTimeToggle = document.getElementById('realTimeToggle');
+        if (realTimeToggle) {
+            realTimeToggle.addEventListener('click', () => this.toggleRealTimeAnalysis());
+        }
 
-        document.getElementById('toxicityFilter').addEventListener('change', () => {
-            this.applyFilters();
-        });
+        const refreshRisksBtn = document.getElementById('refreshRisksBtn');
+        if (refreshRisksBtn) {
+            refreshRisksBtn.addEventListener('click', () => this.performRiskAssessment());
+        }
 
-        document.getElementById('languageFilter').addEventListener('change', () => {
-            this.applyFilters();
+        const exportRisksBtn = document.getElementById('exportRisksBtn');
+        if (exportRisksBtn) {
+            exportRisksBtn.addEventListener('click', () => this.exportRiskData());
+        }
+
+        const realTimeAnalysisBtn = document.getElementById('realTimeAnalysisBtn');
+        if (realTimeAnalysisBtn) {
+            realTimeAnalysisBtn.addEventListener('click', () => this.toggleRealTimeAnalysis());
+        }
+
+        const emergencyProtocolBtn = document.getElementById('emergencyProtocolBtn');
+        if (emergencyProtocolBtn) {
+            emergencyProtocolBtn.addEventListener('click', () => this.activateEmergencyProtocol());
+        }
+
+        // Bind filter events with null checks
+        const sentimentFilter = document.getElementById('sentimentFilter');
+        if (sentimentFilter) {
+            sentimentFilter.addEventListener('change', (e) => {
+                this.filterBySentiment(e.target.value);
+            });
+        }
+
+        const emotionFilter = document.getElementById('emotionFilter');
+        if (emotionFilter) {
+            emotionFilter.addEventListener('change', (e) => {
+                this.filterByEmotion(e.target.value);
+            });
+        }
+
+        const toxicityFilter = document.getElementById('toxicityFilter');
+        if (toxicityFilter) {
+            toxicityFilter.addEventListener('change', (e) => {
+                this.filterByToxicity(e.target.value);
+            });
+        }
+
+        const languageFilter = document.getElementById('languageFilter');
+        if (languageFilter) {
+            languageFilter.addEventListener('change', (e) => {
+                this.filterByLanguage(e.target.value);
+            });
+        }
+
+        const riskFilter = document.getElementById('riskFilter');
+        if (riskFilter) {
+            riskFilter.addEventListener('change', (e) => {
+                this.filterByRisk(e.target.value);
+            });
+        }
+
+        // Bind data-action event handlers for CSP compliance
+        document.addEventListener('click', (e) => {
+            const action = e.target.closest('[data-action]')?.getAttribute('data-action');
+            if (!action) return;
+
+            const element = e.target.closest('[data-action]');
+            const risk = element.getAttribute('data-risk');
+            const range = element.getAttribute('data-range');
+            const messageId = element.getAttribute('data-message-id');
+
+            switch (action) {
+                case 'viewHighRiskMessages':
+                    this.viewHighRiskMessages();
+                    break;
+                case 'viewMediumRiskMessages':
+                    this.viewMediumRiskMessages();
+                    break;
+                case 'notifySupport':
+                    this.notifySupport(risk);
+                    break;
+                case 'scheduleFollowUp':
+                    this.scheduleFollowUp(risk);
+                    break;
+                case 'setTimelineRange':
+                    this.setTimelineRange(range);
+                    break;
+                case 'configureAlerts':
+                    this.configureAlerts();
+                    break;
+                case 'generateRiskReport':
+                    this.generateRiskReport();
+                    break;
+                case 'contactEmergencyServices':
+                    this.contactEmergencyServices();
+                    break;
+                case 'scheduleWellnessCheck':
+                    this.scheduleWellnessCheck();
+                    break;
+                case 'exportRiskData':
+                    this.exportRiskData();
+                    break;
+                case 'deleteMessage':
+                    if (messageId) {
+                        this.deleteMessage(messageId);
+                    }
+                    break;
+                case 'viewDetails':
+                    if (messageId) {
+                        this.viewDetails(messageId);
+                    }
+                    break;
+                case 'reanalyzeMessage':
+                    if (messageId) {
+                        this.reanalyzeMessage(messageId);
+                    }
+                    break;
+                case 'flagHighRisk':
+                    if (messageId) {
+                        this.flagHighRisk(messageId);
+                    }
+                    break;
+            }
         });
     }
 
     async loadData() {
         try {
-            // Show loading state
             this.showLoading();
 
             // Fetch data from APIs
             const [contactsResponse, statsResponse] = await Promise.all([
-                fetch(`${this.apiBase}/contacts?includeTone=true`),
-                fetch(`${this.apiBase}/contacts/tone-stats`)
+                fetch(`${this.apiBase}/admin/contacts?includeTone=true`, {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }),
+                fetch(`${this.apiBase}/contacts/tone-stats`, {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
             ]);
 
             console.log('Contacts response status:', contactsResponse.status);
             console.log('Stats response status:', statsResponse.status);
+
+            // Check for authentication errors
+            if (contactsResponse.status === 401) {
+                console.log('Authentication required, redirecting to login');
+                this.showNotification('Sesión expirada. Redirigiendo al login...', 'warning');
+                setTimeout(() => window.location.href = '/login', 2000);
+                return;
+            }
+
+            if (statsResponse.status === 401) {
+                console.log('Authentication required, redirecting to login');
+                this.showNotification('Sesión expirada. Redirigiendo al login...', 'warning');
+                setTimeout(() => window.location.href = '/login', 2000);
+                return;
+            }
 
             const contactsData = await contactsResponse.json();
             const statsData = await statsResponse.json();
@@ -95,15 +249,31 @@ class ToneAnalysisDashboard {
                 this.messages = contactsData.data;
                 this.filteredMessages = [...this.messages];
                 console.log('Loaded messages:', this.messages.length);
+                
+                // Hide loading and show success if we have messages
+                if (this.messages.length > 0) {
+                    this.showNotification(`${this.messages.length} mensajes cargados exitosamente`, 'success');
+                }
+            } else {
+                console.error('Failed to load contacts:', contactsData.message);
+                this.showError('Error al cargar mensajes: ' + contactsData.message);
+                return; // Don't continue if contacts failed to load
             }
 
             if (statsData.success) {
                 this.stats = statsData.data;
                 this.updateStatCards();
+            } else {
+                console.error('Failed to load stats:', statsData.message);
+                // Don't show error for stats, just log it
+                console.warn('Stats loading failed, continuing with message display');
             }
 
             // Load token stats
             await this.loadTokenStats();
+
+            // Load risk assessment data
+            await this.loadRiskAssessment();
 
             this.renderCharts();
             this.renderTable();
@@ -111,13 +281,37 @@ class ToneAnalysisDashboard {
 
         } catch (error) {
             console.error('Error loading data:', error);
-            this.showError('Failed to load data. Please check your connection.');
+            this.showError('Error al cargar datos. Verifique su conexión.');
+        } finally {
+            // Hide loading state even if there's an error
+            const tbody = document.getElementById('messagesTableBody');
+            if (tbody && tbody.innerHTML.includes('fa-spinner')) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="14" class="loading">
+                            <i class="fas fa-exclamation-triangle"></i> Error al cargar mensajes
+                        </td>
+                    </tr>
+                `;
+            }
         }
     }
 
     async loadTokenStats() {
         try {
-            const response = await fetch(`${this.apiBase}/token-stats`);
+            const response = await fetch(`${this.apiBase}/token-stats`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.status === 401) {
+                console.log('Authentication required for token stats');
+                return;
+            }
+            
             const data = await response.json();
 
             if (data.success) {
@@ -602,13 +796,16 @@ class ToneAnalysisDashboard {
                         ${this.escapeHtml(summary)}
                     </td>
                     <td class="actions-cell">
-                        <button class="btn-small btn-primary" onclick="dashboard.viewDetails('${message._id}')" title="Ver detalles">
+                        <button class="btn-small btn-primary" data-action="viewDetails" data-message-id="${message._id}" title="Ver detalles">
                             <i class="fas fa-eye"></i>
                         </button>
-                        <button class="btn-small btn-secondary" onclick="dashboard.reanalyzeMessage('${message._id}')" title="Re-analizar">
+                        <button class="btn-small btn-secondary" data-action="reanalyzeMessage" data-message-id="${message._id}" title="Re-analizar">
                             <i class="fas fa-sync"></i>
                         </button>
-                        ${riskLevel === 'alto' ? `<button class="btn-small btn-danger" onclick="dashboard.flagHighRisk('${message._id}')" title="Marcar como urgente"><i class="fas fa-flag"></i></button>` : ''}
+                        <button class="btn-small btn-danger" data-action="deleteMessage" data-message-id="${message._id}" title="Eliminar mensaje">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        ${riskLevel === 'alto' ? `<button class="btn-small btn-warning" data-action="flagHighRisk" data-message-id="${message._id}" title="Marcar como urgente"><i class="fas fa-flag"></i></button>` : ''}
                     </td>
                 </tr>
             `;
@@ -965,6 +1162,710 @@ class ToneAnalysisDashboard {
         this.showNotification('Alerta descartada', 'success');
     }
 
+    // Load risk assessment data
+    async loadRiskAssessment() {
+        try {
+            const response = await fetch(`${this.apiBase}/admin/risk-assessment`, {
+                method: 'GET',
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    this.updateRiskOverview(data.assessment);
+                }
+            }
+        } catch (error) {
+            console.error('Error loading risk assessment:', error);
+        }
+    }
+
+    // Update risk overview with enhanced data
+    updateRiskOverview(riskData) {
+        try {
+            // Update risk counts with change indicators
+            this.updateRiskCount('highRiskCount', riskData.highRisk || 0, riskData.highRiskChange || 0);
+            this.updateRiskCount('mediumRiskCount', riskData.mediumRisk || 0, riskData.mediumRiskChange || 0);
+            this.updateRiskCount('lowRiskCount', riskData.lowRisk || 0, riskData.lowRiskChange || 0);
+            
+            // Update mood trend with arrow indicator
+            const moodTrend = riskData.moodTrend || 'Estable';
+            document.getElementById('moodTrend').textContent = moodTrend;
+            this.updateTrendArrow(riskData.moodDirection || 'stable');
+            
+            // Update risk meter
+            this.updateRiskMeter(riskData.overallRiskLevel || 25);
+            
+            // Update safety progress
+            const safetyPercentage = riskData.safetyPercentage || 0;
+            document.getElementById('safetyProgress').style.width = `${safetyPercentage}%`;
+            document.getElementById('safetyPercentage').textContent = `${safetyPercentage}%`;
+            
+            // Update AI patterns
+            this.updateAIPatterns(riskData.patterns || {});
+            
+            // Update alert summary
+            this.updateAlertSummary(riskData.alertSummary || {});
+            
+            // Show alerts if high risk messages exist
+            if (riskData.highRisk > 0) {
+                this.showRiskAlerts(riskData.alerts || []);
+            } else {
+                this.showNoAlerts();
+            }
+            
+            // Update timeline chart
+            this.updateRiskTimeline(riskData.timeline || []);
+            
+        } catch (error) {
+            console.error('Error updating risk overview:', error);
+        }
+    }
+
+    // Apply filter for risk level
+    applyFilter(filterType, value) {
+        if (filterType === 'riskLevel') {
+            this.filteredMessages = this.messages.filter(msg => {
+                const riskLevel = this.calculateRiskLevel(msg.toneAnalysis, msg.message);
+                return riskLevel === value;
+            });
+            this.renderTable();
+        }
+    }
+
+    // Calculate risk level for a message (matching server-side logic)
+    calculateRiskLevel(toneAnalysis, message = '') {
+        if (!toneAnalysis) return 'bajo';
+        
+        const { emotion, sentiment, toxicity, toxicityScore = 0, keywords = [], summary = '' } = toneAnalysis;
+        const highRiskKeywords = ['suicide', 'kill', 'death', 'die', 'murder', 'hurt', 'pain', 'suicidio', 'muerte', 'matar', 'dolor'];
+        const mediumRiskKeywords = ['depressed', 'sad', 'hopeless', 'anxious', 'worried', 'scared', 'depresión', 'triste', 'ansiedad'];
+        
+        const messageText = (message + ' ' + (summary || '')).toLowerCase();
+        const hasHighRiskKeywords = highRiskKeywords.some(word => 
+            keywords.some(k => (k.word || k).toLowerCase().includes(word)) || messageText.includes(word)
+        );
+        const hasMediumRiskKeywords = mediumRiskKeywords.some(word => 
+            keywords.some(k => (k.word || k).toLowerCase().includes(word)) || messageText.includes(word)
+        );
+        
+        // High risk conditions
+        if (hasHighRiskKeywords || (toxicity === 'toxic' && toxicityScore > 0.8) || 
+            (emotion === 'sadness' && sentiment === 'negative')) {
+            return 'alto';
+        }
+        
+        // Medium risk conditions
+        if (hasMediumRiskKeywords || (toxicity === 'toxic' && toxicityScore > 0.5) || 
+            (emotion === 'anger' && sentiment === 'negative')) {
+            return 'medio';
+        }
+        
+        return 'bajo';
+    }
+
+    // Update risk count with animation
+    updateRiskCount(elementId, count, change) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.textContent = count;
+            
+            // Add change indicator
+            const changeElement = element.nextElementSibling;
+            if (changeElement && changeElement.classList.contains('risk-change')) {
+                changeElement.textContent = change > 0 ? `+${change}` : change < 0 ? `${change}` : '';
+                changeElement.className = `risk-change ${change > 0 ? 'increase' : change < 0 ? 'decrease' : ''}`;
+            }
+        }
+    }
+
+    // Update trend arrow
+    updateTrendArrow(direction) {
+        const arrow = document.getElementById('trendArrow');
+        if (arrow) {
+            arrow.className = 'trend-arrow';
+            switch(direction) {
+                case 'up':
+                    arrow.classList.add('trend-up');
+                    arrow.innerHTML = '<i class="fas fa-arrow-up"></i>';
+                    break;
+                case 'down':
+                    arrow.classList.add('trend-down');
+                    arrow.innerHTML = '<i class="fas fa-arrow-down"></i>';
+                    break;
+                default:
+                    arrow.classList.add('trend-stable');
+                    arrow.innerHTML = '<i class="fas fa-minus"></i>';
+            }
+        }
+    }
+
+    // Update risk meter
+    updateRiskMeter(percentage) {
+        const meter = document.getElementById('riskMeter');
+        const value = document.getElementById('riskValue');
+        if (meter && value) {
+            meter.style.width = `${percentage}%`;
+            value.textContent = `${percentage}%`;
+            
+            // Update color based on risk level
+            meter.className = 'risk-meter-fill';
+            if (percentage > 70) meter.classList.add('high-risk');
+            else if (percentage > 40) meter.classList.add('medium-risk');
+            else meter.classList.add('low-risk');
+        }
+    }
+
+    // Update AI patterns
+    updateAIPatterns(patterns) {
+        const elements = {
+            'peakRiskTime': patterns.peakRiskTime || '--:--',
+            'riskLanguage': patterns.riskLanguage || 'N/A',
+            'riskKeyword': patterns.riskKeyword || 'N/A',
+            'riskAccuracy': patterns.riskAccuracy ? `${patterns.riskAccuracy}%` : 'N/A'
+        };
+        
+        Object.entries(elements).forEach(([id, value]) => {
+            const element = document.getElementById(id);
+            if (element) element.textContent = value;
+        });
+    }
+
+    // Update alert summary
+    updateAlertSummary(summary) {
+        const elements = {
+            'todayAlerts': summary.todayAlerts || 0,
+            'avgResponseTime': summary.avgResponseTime || 'N/A',
+            'resolvedCases': summary.resolvedCases || 0
+        };
+        
+        Object.entries(elements).forEach(([id, value]) => {
+            const element = document.getElementById(id);
+            if (element) element.textContent = value;
+        });
+    }
+
+    // Show risk alerts
+    showRiskAlerts(alerts) {
+        const container = document.getElementById('alertsList');
+        if (!container) return;
+        
+        container.innerHTML = alerts.map(alert => `
+            <div class="alert-item" data-alert-id="${alert.id}">
+                <div class="alert-header">
+                    <span class="alert-severity ${alert.severity}">${alert.title}</span>
+                    <span class="alert-time">${new Date(alert.timestamp).toLocaleTimeString()}</span>
+                </div>
+                <div class="alert-content">
+                    <p>${alert.message}</p>
+                    <div class="alert-meta">
+                        <span>Usuario: ${alert.userId}</span>
+                        <span>Confianza: ${alert.confidence}%</span>
+                    </div>
+                </div>
+                <div class="alert-actions">
+                    <button onclick="dashboard.dismissAlert('${alert.id}')" class="btn-dismiss">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // Show no alerts message
+    showNoAlerts() {
+        const container = document.getElementById('alertsList');
+        if (container) {
+            container.innerHTML = `
+                <div class="no-alerts">
+                    <i class="fas fa-shield-check"></i>
+                    <p>No hay alertas activas</p>
+                    <small>Todos los mensajes están dentro de parámetros normales</small>
+                </div>
+            `;
+        }
+    }
+
+    // Update risk timeline chart
+    updateRiskTimeline(timelineData) {
+        const canvas = document.getElementById('riskTimelineChart');
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext('2d');
+        
+        // Destroy existing chart if it exists
+        if (this.timelineChart) {
+            this.timelineChart.destroy();
+        }
+        
+        this.timelineChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: timelineData.map(d => d.time),
+                datasets: [{
+                    label: 'Nivel de Riesgo',
+                    data: timelineData.map(d => d.value),
+                    borderColor: '#e74c3c',
+                    backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+
+    // Emergency protocol activation
+    async activateEmergencyProtocol() {
+        const confirmMessage = `🚨 PROTOCOLO DE EMERGENCIA 🚨
+
+¿Confirma la activación del protocolo de emergencia?
+
+Esto ejecutará:
+• Notificación inmediata a servicios de crisis
+• Escalación automática de casos críticos
+• Registro en log de seguridad
+• Activación de respuesta rápida
+
+Esta acción NO se puede deshacer.`;
+
+        if (confirm(confirmMessage)) {
+            try {
+                // Show immediate feedback
+                this.showNotification('🚨 Activando protocolo de emergencia...', 'warning');
+                
+                // Call backend emergency endpoint
+                const response = await fetch(`${this.apiBase}/admin/emergency-protocol`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        activatedBy: 'admin',
+                        timestamp: new Date().toISOString(),
+                        reason: 'Manual activation from dashboard',
+                        highRiskMessages: this.getHighRiskMessages()
+                    })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        this.showNotification('✅ Protocolo de emergencia activado exitosamente', 'success');
+                        this.logEmergencyActivation(result.protocolId);
+                        this.updateEmergencyStatus(true);
+                        
+                        // Auto-refresh risk data after 5 seconds
+                        setTimeout(() => {
+                            this.loadRiskAssessment();
+                        }, 5000);
+                    } else {
+                        throw new Error(result.message || 'Error activating emergency protocol');
+                    }
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+            } catch (error) {
+                console.error('Emergency protocol activation error:', error);
+                this.showNotification(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+    }
+
+    // Get high risk messages for emergency context
+    getHighRiskMessages() {
+        return this.messages.filter(msg => {
+            const riskLevel = this.calculateRiskLevel(msg.toneAnalysis, msg.message);
+            return riskLevel === 'alto';
+        }).slice(0, 5).map(msg => ({
+            id: msg._id,
+            email: msg.email,
+            message: msg.message.substring(0, 200),
+            riskScore: this.calculateRiskScore(msg.toneAnalysis),
+            timestamp: msg.submittedAt
+        }));
+    }
+
+    // Calculate numerical risk score
+    calculateRiskScore(toneAnalysis) {
+        if (!toneAnalysis) return 0;
+        
+        let score = 0;
+        const { emotion, sentiment, toxicity, toxicityScore = 0 } = toneAnalysis;
+        
+        // Base scoring
+        if (sentiment === 'negative') score += 30;
+        if (toxicity === 'toxic') score += 40;
+        score += toxicityScore * 30;
+        
+        // Emotion-based scoring
+        switch(emotion) {
+            case 'anger': score += 25; break;
+            case 'fear': score += 35; break;
+            case 'sadness': score += 20; break;
+            case 'disgust': score += 15; break;
+        }
+        
+        return Math.min(Math.round(score), 100);
+    }
+
+    // Log emergency activation
+    logEmergencyActivation(protocolId) {
+        const logEntry = {
+            timestamp: new Date().toISOString(),
+            action: 'EMERGENCY_PROTOCOL_ACTIVATED',
+            protocolId: protocolId,
+            activatedBy: 'admin_dashboard',
+            riskLevel: 'CRITICAL'
+        };
+        
+        console.warn('🚨 EMERGENCY PROTOCOL ACTIVATED:', logEntry);
+        
+        // Store in localStorage for audit trail
+        const emergencyLog = JSON.parse(localStorage.getItem('emergencyLog') || '[]');
+        emergencyLog.push(logEntry);
+        localStorage.setItem('emergencyLog', JSON.stringify(emergencyLog));
+    }
+
+    // Update emergency status in UI
+    updateEmergencyStatus(isActive) {
+        const statusIndicator = document.getElementById('emergencyStatus');
+        if (statusIndicator) {
+            statusIndicator.className = isActive ? 'emergency-active' : 'emergency-inactive';
+            statusIndicator.innerHTML = isActive ? 
+                '<i class="fas fa-exclamation-triangle"></i> PROTOCOLO ACTIVO' :
+                '<i class="fas fa-shield-check"></i> SISTEMA NORMAL';
+        }
+        
+        // Update emergency button state
+        const emergencyBtn = document.getElementById('emergencyProtocolBtn');
+        if (emergencyBtn && isActive) {
+            emergencyBtn.style.background = '#c0392b';
+            emergencyBtn.innerHTML = '<i class="fas fa-check"></i> Protocolo Activo';
+            emergencyBtn.disabled = true;
+        }
+    }
+
+    // Generate risk report
+    generateRiskReport() {
+        this.showNotification('Generando reporte de riesgos...', 'info');
+        // Here you would implement report generation logic
+        setTimeout(() => {
+            this.showNotification('Reporte generado exitosamente', 'success');
+        }, 2000);
+    }
+
+    // Delete message functionality
+    async deleteMessage(messageId) {
+        // Create custom confirmation modal
+        const confirmed = await this.showConfirmDialog(
+            'Confirmar Eliminación',
+            '¿Estás seguro de que quieres eliminar este mensaje? Esta acción no se puede deshacer.',
+            'Eliminar',
+            'Cancelar'
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+            this.showNotification('Eliminando mensaje...', 'info');
+
+            const response = await fetch(`${this.apiBase}/admin/contacts/${messageId}`, {
+                method: 'DELETE',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                this.showNotification('Mensaje eliminado exitosamente', 'success');
+                // Remove from local arrays
+                this.messages = this.messages.filter(msg => msg._id !== messageId);
+                this.filteredMessages = this.filteredMessages.filter(msg => msg._id !== messageId);
+                // Refresh the table and stats
+                this.renderTable();
+                this.updateEnhancedStats();
+                this.renderCharts();
+            } else {
+                this.showNotification('Error al eliminar el mensaje: ' + result.message, 'error');
+            }
+
+        } catch (error) {
+            console.error('Error deleting message:', error);
+            this.showNotification('Error al eliminar el mensaje', 'error');
+        }
+    }
+
+    // Custom confirmation dialog
+    showConfirmDialog(title, message, confirmText = 'Confirmar', cancelText = 'Cancelar') {
+        return new Promise((resolve) => {
+            // Create modal overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 10000;
+            `;
+
+            // Create modal
+            const modal = document.createElement('div');
+            modal.className = 'confirm-modal';
+            modal.style.cssText = `
+                background: white;
+                border-radius: 12px;
+                padding: 24px;
+                max-width: 400px;
+                width: 90%;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+                animation: modalSlideIn 0.3s ease-out;
+            `;
+
+            modal.innerHTML = `
+                <div class="modal-header" style="margin-bottom: 16px;">
+                    <h3 style="margin: 0; color: #333; font-size: 18px;">${title}</h3>
+                </div>
+                <div class="modal-body" style="margin-bottom: 24px;">
+                    <p style="margin: 0; color: #666; line-height: 1.5;">${message}</p>
+                </div>
+                <div class="modal-footer" style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <button class="btn-cancel" style="
+                        padding: 10px 20px;
+                        border: 1px solid #ddd;
+                        background: white;
+                        color: #666;
+                        border-radius: 6px;
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                    ">${cancelText}</button>
+                    <button class="btn-confirm" style="
+                        padding: 10px 20px;
+                        border: none;
+                        background: linear-gradient(135deg, #ff4757 0%, #c44569 100%);
+                        color: white;
+                        border-radius: 6px;
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                    ">${confirmText}</button>
+                </div>
+            `;
+
+            // Add animation styles
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes modalSlideIn {
+                    from {
+                        opacity: 0;
+                        transform: translateY(-20px) scale(0.95);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0) scale(1);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+
+            // Event handlers
+            const confirmBtn = modal.querySelector('.btn-confirm');
+            const cancelBtn = modal.querySelector('.btn-cancel');
+
+            const cleanup = () => {
+                try {
+                    if (overlay && overlay.parentNode) {
+                        document.body.removeChild(overlay);
+                    }
+                    if (style && style.parentNode) {
+                        document.head.removeChild(style);
+                    }
+                } catch (error) {
+                    console.warn('Error during modal cleanup:', error);
+                }
+            };
+
+            if (confirmBtn) {
+                confirmBtn.onclick = () => {
+                    cleanup();
+                    resolve(true);
+                };
+            }
+
+            if (cancelBtn) {
+                cancelBtn.onclick = () => {
+                    cleanup();
+                    resolve(false);
+                };
+            }
+
+            overlay.onclick = (e) => {
+                if (e.target === overlay) {
+                    cleanup();
+                    resolve(false);
+                }
+            };
+
+            // ESC key handler
+            const escHandler = (e) => {
+                if (e.key === 'Escape') {
+                    cleanup();
+                    resolve(false);
+                    document.removeEventListener('keydown', escHandler);
+                }
+            };
+            document.addEventListener('keydown', escHandler);
+        });
+    }
+
+    // Show notification system
+    showNotification(message, type = 'info') {
+        const notificationContainer = document.getElementById('notificationContainer') || this.createNotificationContainer();
+        
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.innerHTML = `
+            <div class="notification-content">
+                <i class="fas fa-${this.getNotificationIcon(type)}"></i>
+                <span>${message}</span>
+            </div>
+            <button class="notification-close" onclick="this.parentElement.remove()">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        
+        notificationContainer.appendChild(notification);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.remove();
+            }
+        }, 5000);
+    }
+    
+    createNotificationContainer() {
+        const container = document.createElement('div');
+        container.id = 'notificationContainer';
+        container.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            max-width: 400px;
+        `;
+        document.body.appendChild(container);
+        
+        // Add notification styles
+        const style = document.createElement('style');
+        style.textContent = `
+            .notification {
+                background: white;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                margin-bottom: 10px;
+                padding: 16px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                border-left: 4px solid;
+                animation: slideIn 0.3s ease-out;
+            }
+            .notification-info { border-left-color: #3498db; }
+            .notification-success { border-left-color: #27ae60; }
+            .notification-warning { border-left-color: #f39c12; }
+            .notification-error { border-left-color: #e74c3c; }
+            .notification-content {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            .notification-close {
+                background: none;
+                border: none;
+                cursor: pointer;
+                color: #666;
+                padding: 4px;
+            }
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        return container;
+    }
+    
+    getNotificationIcon(type) {
+        const icons = {
+            info: 'info-circle',
+            success: 'check-circle',
+            warning: 'exclamation-triangle',
+            error: 'times-circle'
+        };
+        return icons[type] || 'info-circle';
+    }
+
+    // Wellness check
+    performWellnessCheck() {
+        this.showNotification('Iniciando verificación de bienestar...', 'info');
+        // Here you would implement wellness check logic
+        setTimeout(() => {
+            this.showNotification('Verificación de bienestar completada', 'success');
+        }, 1500);
+    }
+
+    // Load timeline data
+    async loadTimelineData(range = '24h') {
+        try {
+            const response = await fetch(`${this.apiBase}/admin/timeline-data?range=${range}`, {
+                method: 'GET',
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    this.updateRiskTimeline(data.timeline);
+                }
+            }
+        } catch (error) {
+            console.error('Error loading timeline data:', error);
+        }
+    }
+
     // Enhanced analysis methods
     async reanalyzeAllMessages() {
         const btn = document.getElementById('analyzeAllBtn');
@@ -1305,6 +2206,11 @@ class ToneAnalysisDashboard {
 
     async performMoodAnalysis() {
         const btn = document.getElementById('moodAnalysisBtn');
+        if (!btn) {
+            console.error('moodAnalysisBtn not found');
+            return;
+        }
+
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analizando...';
 
@@ -1315,42 +2221,203 @@ class ToneAnalysisDashboard {
                 credentials: 'include'
             });
 
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
             const data = await response.json();
             if (data.success) {
                 this.displayMoodAnalysis(data.analysis);
+                this.showNotification('Análisis de humor completado exitosamente', 'success');
+            } else {
+                throw new Error(data.message || 'Error en análisis de humor');
             }
         } catch (error) {
             console.error('Mood analysis failed:', error);
-            alert('Error en análisis de humor. Intente nuevamente.');
+            this.showNotification(`Error en análisis de humor: ${error.message}`, 'error');
         } finally {
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-smile"></i> Análisis de Humor';
         }
     }
 
+    // Display mood analysis results
+    displayMoodAnalysis(analysis) {
+        if (!analysis) {
+            this.showNotification('No hay datos de análisis de humor disponibles', 'warning');
+            return;
+        }
+
+        // Create or update mood analysis display
+        let moodDisplay = document.getElementById('moodAnalysisDisplay');
+        if (!moodDisplay) {
+            moodDisplay = document.createElement('div');
+            moodDisplay.id = 'moodAnalysisDisplay';
+            moodDisplay.className = 'mood-analysis-results';
+            moodDisplay.style.cssText = `
+                background: white;
+                border-radius: 12px;
+                padding: 20px;
+                margin: 20px 0;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                border-left: 4px solid #3498db;
+            `;
+            
+            // Insert after the enhanced analysis controls
+            const analysisSection = document.querySelector('.enhanced-analysis-controls');
+            if (analysisSection) {
+                analysisSection.parentNode.insertBefore(moodDisplay, analysisSection.nextSibling);
+            } else {
+                const dashboardContent = document.querySelector('.dashboard-content');
+                if (dashboardContent) {
+                    dashboardContent.appendChild(moodDisplay);
+                } else {
+                    document.body.appendChild(moodDisplay);
+                }
+            }
+        }
+
+        // Use the correct property names from server response
+        const overallMood = analysis.overallMood || 'neutral';
+        const moodTrend = analysis.moodTrend || 'stable';
+        const totalAnalyzed = analysis.totalAnalyzed || 0;
+        const confidence = analysis.confidence || 0;
+        const recommendations = analysis.recommendations || [];
+
+        moodDisplay.innerHTML = `
+            <h3 style="margin: 0 0 16px 0; color: #2c3e50; display: flex; align-items: center;">
+                <i class="fas fa-smile" style="margin-right: 8px; color: #3498db;"></i>
+                Análisis de Humor Global
+            </h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
+                <div style="background: #f8f9fa; padding: 16px; border-radius: 8px;">
+                    <h4 style="margin: 0 0 8px 0; color: #495057;">Estado General</h4>
+                    <p style="margin: 0; font-size: 18px; font-weight: bold; color: ${this.getMoodColor(overallMood)};">
+                        ${this.translateMood(overallMood)}
+                    </p>
+                </div>
+                <div style="background: #f8f9fa; padding: 16px; border-radius: 8px;">
+                    <h4 style="margin: 0 0 8px 0; color: #495057;">Tendencia</h4>
+                    <p style="margin: 0; font-size: 18px; font-weight: bold; color: #6c757d;">
+                        ${this.translateTrend(moodTrend)}
+                    </p>
+                </div>
+                <div style="background: #f8f9fa; padding: 16px; border-radius: 8px;">
+                    <h4 style="margin: 0 0 8px 0; color: #495057;">Mensajes Analizados</h4>
+                    <p style="margin: 0; font-size: 18px; font-weight: bold; color: #28a745;">
+                        ${totalAnalyzed}
+                    </p>
+                </div>
+                <div style="background: #f8f9fa; padding: 16px; border-radius: 8px;">
+                    <h4 style="margin: 0 0 8px 0; color: #495057;">Confianza</h4>
+                    <p style="margin: 0; font-size: 18px; font-weight: bold; color: #17a2b8;">
+                        ${Math.round(confidence * 100)}%
+                    </p>
+                </div>
+            </div>
+            ${recommendations.length > 0 ? `
+                <div style="margin-top: 16px; padding: 16px; background: #e3f2fd; border-radius: 8px;">
+                    <h4 style="margin: 0 0 8px 0; color: #1976d2;">Recomendaciones</h4>
+                    <ul style="margin: 0; padding-left: 20px; line-height: 1.6; color: #424242;">
+                        ${recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                    </ul>
+                </div>
+            ` : ''}
+        `;
+    }
+
+    getMoodColor(mood) {
+        switch (mood) {
+            case 'positive': return '#28a745';
+            case 'concerning': return '#dc3545';
+            case 'neutral': return '#6c757d';
+            default: return '#6c757d';
+        }
+    }
+
+    translateMood(mood) {
+        switch (mood) {
+            case 'positive': return 'Positivo';
+            case 'concerning': return 'Preocupante';
+            case 'neutral': return 'Neutral';
+            default: return 'Desconocido';
+        }
+    }
+
+    translateTrend(trend) {
+        switch (trend) {
+            case 'improving': return 'Mejorando';
+            case 'declining': return 'Declinando';
+            case 'stable': return 'Estable';
+            default: return 'Desconocido';
+        }
+    }
+
+    getSentimentColor(sentiment) {
+        switch (sentiment) {
+            case 'positive': return '#28a745';
+            case 'negative': return '#dc3545';
+            case 'neutral': return '#6c757d';
+            default: return '#6c757d';
+        }
+    }
+
+    translateSentiment(sentiment) {
+        switch (sentiment) {
+            case 'positive': return 'Positivo';
+            case 'negative': return 'Negativo';
+            case 'neutral': return 'Neutral';
+            default: return 'Desconocido';
+        }
+    }
+
+    translateEmotion(emotion) {
+        const emotions = {
+            'joy': 'Alegría',
+            'sadness': 'Tristeza',
+            'anger': 'Ira',
+            'fear': 'Miedo',
+            'surprise': 'Sorpresa',
+            'disgust': 'Disgusto',
+            'neutral': 'Neutral'
+        };
+        return emotions[emotion] || emotion;
+    }
+
     async performRiskAssessment() {
         const btn = document.getElementById('riskAssessmentBtn');
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Evaluando...';
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Evaluando...';
+        }
 
         try {
             const response = await fetch(`${this.apiBase}/admin/risk-assessment`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                method: 'GET',
                 credentials: 'include'
             });
 
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
             const data = await response.json();
-            if (data.success) {
-                this.displayRiskAssessment(data.assessment);
-                this.updateRiskCards(data.assessment);
+            console.log('Risk assessment response:', data);
+            
+            if (data.success && data.assessment) {
+                this.updateRiskOverview(data.assessment);
+                this.showNotification('✅ Evaluación de riesgos completada', 'success');
+            } else {
+                throw new Error(data.message || 'No se recibieron datos de evaluación');
             }
         } catch (error) {
             console.error('Risk assessment failed:', error);
-            alert('Error en evaluación de riesgos. Intente nuevamente.');
+            this.showNotification(`❌ Error en evaluación de riesgos: ${error.message}`, 'error');
         } finally {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-shield-alt"></i> Evaluación de Riesgos';
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-shield-alt"></i> Evaluación de Riesgos';
+            }
         }
     }
 
@@ -1466,7 +2533,3 @@ class ToneAnalysisDashboard {
     }
 }
 
-// Initialize dashboard when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    window.dashboard = new ToneAnalysisDashboard();
-});

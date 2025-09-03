@@ -72,12 +72,12 @@
             <section class="risk-assessment-section">
                 <div class="section-header">
                     <h2><i class="fas fa-shield-virus"></i> Centro de Análisis de Riesgos y Alertas</h2>
-                    <div class="risk-actions">
+                    <div class="quick-actions">
                         <button id="refreshRisksBtn" class="btn btn-primary">
-                            <i class="fas fa-sync-alt"></i> Actualizar
+                            <i class="fas fa-sync"></i> Actualizar Riesgos
                         </button>
-                        <button id="exportRisksBtn" class="btn btn-warning">
-                            <i class="fas fa-download"></i> Exportar Riesgos
+                        <button id="exportRisksBtn" class="btn btn-secondary">
+                            <i class="fas fa-download"></i> Exportar Datos
                         </button>
                         <button id="realTimeAnalysisBtn" class="btn btn-success">
                             <i class="fas fa-play"></i> Análisis en Tiempo Real
@@ -85,6 +85,13 @@
                         <button id="emergencyProtocolBtn" class="btn btn-danger">
                             <i class="fas fa-phone"></i> Protocolo de Emergencia
                         </button>
+                    </div>
+                    
+                    <!-- Emergency Status Indicator -->
+                    <div class="emergency-status-container">
+                        <div id="emergencyStatus" class="emergency-inactive">
+                            <i class="fas fa-shield-check"></i> SISTEMA NORMAL
+                        </div>
                     </div>
                 </div>
 
@@ -122,10 +129,10 @@
                             <p>Mensajes Críticos</p>
                             <span class="risk-detail">Suicidio, violencia, autolesión</span>
                             <div class="risk-actions-mini">
-                                <button class="btn-mini btn-danger" onclick="dashboard.viewHighRiskMessages()">
+                                <button class="btn-mini btn-danger" data-action="viewHighRiskMessages">
                                     <i class="fas fa-eye"></i> Ver Todos
                                 </button>
-                                <button class="btn-mini btn-warning" onclick="dashboard.notifySupport('high')">
+                                <button class="btn-mini btn-warning" data-action="notifySupport" data-risk="high">
                                     <i class="fas fa-bell"></i> Notificar
                                 </button>
                             </div>
@@ -144,10 +151,10 @@
                             <p>Riesgo Moderado</p>
                             <span class="risk-detail">Depresión, ansiedad, estrés</span>
                             <div class="risk-actions-mini">
-                                <button class="btn-mini btn-warning" onclick="dashboard.viewMediumRiskMessages()">
+                                <button class="btn-mini btn-warning" data-action="viewMediumRiskMessages">
                                     <i class="fas fa-eye"></i> Ver Todos
                                 </button>
-                                <button class="btn-mini btn-info" onclick="dashboard.scheduleFollowUp('medium')">
+                                <button class="btn-mini btn-info" data-action="scheduleFollowUp" data-risk="medium">
                                     <i class="fas fa-calendar"></i> Seguimiento
                                 </button>
                             </div>
@@ -200,9 +207,9 @@
                             <canvas id="riskTimelineChart" width="800" height="200"></canvas>
                         </div>
                         <div class="timeline-controls">
-                            <button class="btn-small" onclick="dashboard.setTimelineRange('24h')">24h</button>
-                            <button class="btn-small" onclick="dashboard.setTimelineRange('7d')">7d</button>
-                            <button class="btn-small" onclick="dashboard.setTimelineRange('30d')">30d</button>
+                            <button class="btn-small" data-action="setTimelineRange" data-range="24h">24h</button>
+                            <button class="btn-small" data-action="setTimelineRange" data-range="7d">7d</button>
+                            <button class="btn-small" data-action="setTimelineRange" data-range="30d">30d</button>
                         </div>
                     </div>
                     
@@ -257,7 +264,7 @@
                             <button class="btn-small btn-success" id="alertsEnabled">
                                 <i class="fas fa-bell"></i> Activadas
                             </button>
-                            <button class="btn-small btn-secondary" onclick="dashboard.configureAlerts()">
+                            <button class="btn-small btn-secondary" data-action="configureAlerts">
                                 <i class="fas fa-cog"></i> Configurar
                             </button>
                         </div>
@@ -293,19 +300,19 @@
                 <div class="quick-actions-panel">
                     <h3><i class="fas fa-bolt"></i> Acciones Rápidas</h3>
                     <div class="quick-actions-grid">
-                        <button class="quick-action-btn" onclick="dashboard.generateRiskReport()">
+                        <button class="quick-action-btn" data-action="generateRiskReport">
                             <i class="fas fa-file-medical"></i>
                             <span>Generar Reporte</span>
                         </button>
-                        <button class="quick-action-btn" onclick="dashboard.contactEmergencyServices()">
+                        <button class="quick-action-btn" data-action="contactEmergencyServices">
                             <i class="fas fa-ambulance"></i>
                             <span>Servicios de Emergencia</span>
                         </button>
-                        <button class="quick-action-btn" onclick="dashboard.scheduleWellnessCheck()">
+                        <button class="quick-action-btn" data-action="scheduleWellnessCheck">
                             <i class="fas fa-heartbeat"></i>
                             <span>Chequeo de Bienestar</span>
                         </button>
-                        <button class="quick-action-btn" onclick="dashboard.exportRiskData()">
+                        <button class="quick-action-btn" data-action="exportRiskData">
                             <i class="fas fa-database"></i>
                             <span>Exportar Datos</span>
                         </button>
@@ -552,7 +559,7 @@
                         </thead>
                         <tbody id="messagesTableBody">
                             <tr>
-                                <td colspan="13" class="loading">
+                                <td colspan="14" class="loading">
                                     <i class="fas fa-spinner fa-spin"></i> Loading messages...
                                 </td>
                             </tr>
@@ -564,5 +571,13 @@
     </div>
 
     <script src="js/admin.js"></script>
+    <script>
+        // Initialize dashboard after admin.js is loaded
+        if (typeof ToneAnalysisDashboard !== 'undefined') {
+            window.dashboard = new ToneAnalysisDashboard();
+        } else {
+            console.error('ToneAnalysisDashboard class not found');
+        }
+    </script>
 </body>
 </html>
