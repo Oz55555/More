@@ -40,12 +40,17 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Form submission
-    const donationForm = document.getElementById('donation-form');
-    if (donationForm) {
-        donationForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            processDonation();
+    // Form submission handler
+    document.getElementById('donation-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        processDonation();
+    });
+    
+    // Back button handler
+    const backBtn = document.getElementById('back-btn-select');
+    if (backBtn) {
+        backBtn.addEventListener('click', function() {
+            goBack();
         });
     }
 });

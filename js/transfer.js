@@ -42,10 +42,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Form submission
     const transferForm = document.getElementById('transfer-form');
-    if (transferForm) {
-        transferForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            processTransfer();
+    // Form submission handler
+    document.getElementById('transfer-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        processTransfer();
+    });
+    
+    // Back button handler
+    const backBtn = document.getElementById('back-btn-transfer');
+    if (backBtn) {
+        backBtn.addEventListener('click', function() {
+            goBack();
         });
     }
 });

@@ -26,6 +26,11 @@ document.addEventListener('DOMContentLoaded', function() {
         processDonation();
     });
     
+    // Back button handler
+    document.getElementById('back-btn').addEventListener('click', function() {
+        goBack();
+    });
+    
     // Amount input handler for real-time validation
     document.getElementById('donationAmount').addEventListener('input', function() {
         const value = parseFloat(this.value);
