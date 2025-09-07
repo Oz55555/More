@@ -134,6 +134,42 @@ class ToneAnalysisDashboard {
             });
         }
 
+        // Alert modal event listeners
+        const closeAlertModal = document.getElementById('closeAlertModal');
+        if (closeAlertModal) {
+            closeAlertModal.addEventListener('click', () => this.closeAlertModal());
+        }
+
+        const alertModal = document.getElementById('alertModal');
+        if (alertModal) {
+            alertModal.addEventListener('click', (e) => {
+                if (e.target === alertModal) {
+                    this.closeAlertModal();
+                }
+            });
+        }
+
+        // Alert action buttons
+        const markAsUrgent = document.getElementById('markAsUrgent');
+        if (markAsUrgent) {
+            markAsUrgent.addEventListener('click', () => this.markAlertAsUrgent());
+        }
+
+        const assignToSupport = document.getElementById('assignToSupport');
+        if (assignToSupport) {
+            assignToSupport.addEventListener('click', () => this.assignAlertToSupport());
+        }
+
+        const markAsResolved = document.getElementById('markAsResolved');
+        if (markAsResolved) {
+            markAsResolved.addEventListener('click', () => this.markAlertAsResolved());
+        }
+
+        const addNotes = document.getElementById('addNotes');
+        if (addNotes) {
+            addNotes.addEventListener('click', () => this.addAlertNotes());
+        }
+
         // Bind data-action event handlers for CSP compliance
         document.addEventListener('click', (e) => {
             const action = e.target.closest('[data-action]')?.getAttribute('data-action');
@@ -189,6 +225,36 @@ class ToneAnalysisDashboard {
                     if (messageId) {
                         this.reanalyzeMessage(messageId);
                     }
+                    break;
+                case 'viewMessage':
+                    if (messageId) {
+                        this.viewDetails(messageId);
+                    }
+                    break;
+                case 'flagMessage':
+                    if (messageId) {
+                        this.flagMessage(messageId);
+                    }
+                    break;
+                case 'contactUser':
+                    const userId = element.getAttribute('data-user-id');
+                    if (userId) {
+                        this.contactUser(userId);
+                    }
+                    break;
+                case 'dismissAlert':
+                    const alertId = element.getAttribute('data-alert-id');
+                    if (alertId) {
+                        this.dismissAlert(alertId);
+                    }
+                    break;
+                case 'closeNotification':
+                    if (element.closest('.notification')) {
+                        element.closest('.notification').remove();
+                    }
+                    break;
+                case 'closeMoodAnalysis':
+                    this.closeMoodAnalysis();
                     break;
                 case 'flagHighRisk':
                     if (messageId) {
@@ -843,16 +909,16 @@ class ToneAnalysisDashboard {
                     </div>
                 </div>
                 <div class="alert-actions">
-                    <button class="btn-alert btn-view" onclick="dashboard.viewMessage('${alert.messageId}')" title="Ver mensaje completo">
+                    <button class="btn-alert btn-view" data-action="viewMessage" data-message-id="${alert.messageId}" title="Ver mensaje completo">
                         <i class="fas fa-eye"></i>
                     </button>
-                    <button class="btn-alert btn-flag" onclick="dashboard.flagMessage('${alert.messageId}')" title="Marcar como revisado">
+                    <button class="btn-alert btn-flag" data-action="flagMessage" data-message-id="${alert.messageId}" title="Marcar como revisado">
                         <i class="fas fa-flag"></i>
                     </button>
-                    <button class="btn-alert btn-contact" onclick="dashboard.contactUser('${alert.userId}')" title="Contactar usuario">
+                    <button class="btn-alert btn-contact" data-action="contactUser" data-user-id="${alert.userId}" title="Contactar usuario">
                         <i class="fas fa-phone"></i>
                     </button>
-                    <button class="btn-alert btn-dismiss" onclick="dashboard.dismissAlert('${alert.id}')" title="Descartar alerta">
+                    <button class="btn-alert btn-dismiss" data-action="dismissAlert" data-alert-id="${alert.id}" title="Descartar alerta">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
@@ -1365,7 +1431,7 @@ class ToneAnalysisDashboard {
                     </div>
                 </div>
                 <div class="alert-actions">
-                    <button onclick="dashboard.dismissAlert('${alert.id}')" class="btn-dismiss">
+                    <button data-action="dismissAlert" data-alert-id="${alert.id}" class="btn-dismiss">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
@@ -1717,25 +1783,25 @@ Esta acción NO se puede deshacer.`;
             };
 
             if (confirmBtn) {
-                confirmBtn.onclick = () => {
+                confirmBtn.addEventListener('click', () => {
                     cleanup();
                     resolve(true);
-                };
+                });
             }
 
             if (cancelBtn) {
-                cancelBtn.onclick = () => {
+                cancelBtn.addEventListener('click', () => {
                     cleanup();
                     resolve(false);
-                };
+                });
             }
 
-            overlay.onclick = (e) => {
+            overlay.addEventListener('click', (e) => {
                 if (e.target === overlay) {
                     cleanup();
                     resolve(false);
                 }
-            };
+            });
 
             // ESC key handler
             const escHandler = (e) => {
@@ -1760,7 +1826,7 @@ Esta acción NO se puede deshacer.`;
                 <i class="fas fa-${this.getNotificationIcon(type)}"></i>
                 <span>${message}</span>
             </div>
-            <button class="notification-close" onclick="this.parentElement.remove()">
+            <button class="notification-close" data-action="closeNotification">
                 <i class="fas fa-times"></i>
             </button>
         `;
@@ -2285,9 +2351,14 @@ Esta acción NO se puede deshacer.`;
         const recommendations = analysis.recommendations || [];
 
         moodDisplay.innerHTML = `
-            <h3 style="margin: 0 0 16px 0; color: #2c3e50; display: flex; align-items: center;">
-                <i class="fas fa-smile" style="margin-right: 8px; color: #3498db;"></i>
-                Análisis de Humor Global
+            <h3 style="margin: 0 0 16px 0; color: #2c3e50; display: flex; align-items: center; justify-content: space-between;">
+                <span style="display: flex; align-items: center;">
+                    <i class="fas fa-smile" style="margin-right: 8px; color: #3498db;"></i>
+                    Análisis de Humor Global
+                </span>
+                <button data-action="closeMoodAnalysis" style="background: none; border: none; color: #6c757d; font-size: 18px; cursor: pointer; padding: 4px; border-radius: 4px; transition: all 0.2s;" title="Cerrar análisis">
+                    <i class="fas fa-times"></i>
+                </button>
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
                 <div style="background: #f8f9fa; padding: 16px; border-radius: 8px;">
@@ -2450,7 +2521,7 @@ Esta acción NO se puede deshacer.`;
                         <span class="alert-time">${new Date(alert.timestamp).toLocaleString('es-ES')}</span>
                     </div>
                     <div class="alert-actions">
-                        <button class="btn-small btn-primary" onclick="dashboard.viewDetails('${alert.messageId}')">
+                        <button class="btn-small btn-primary" data-action="viewDetails" data-message-id="${alert.messageId}">
                             Ver Mensaje
                         </button>
                     </div>
@@ -2530,6 +2601,241 @@ Esta acción NO se puede deshacer.`;
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    // Alert Modal Functions
+    showAlertModal(alertData) {
+        const modal = document.getElementById('alertModal');
+        if (!modal) return;
+
+        // Populate modal with alert data
+        document.getElementById('alertRiskLevel').textContent = this.translateRiskLevel(alertData.riskLevel);
+        document.getElementById('alertRiskLevel').className = `risk-badge ${alertData.riskLevel}`;
+        
+        // Fix date formatting
+        const timestamp = this.formatDate(alertData.timestamp);
+        document.getElementById('alertTimestamp').textContent = timestamp;
+        document.getElementById('alertType').textContent = alertData.type || 'Alerta de Riesgo';
+        document.getElementById('alertStatus').textContent = alertData.status || 'Activa';
+        document.getElementById('alertStatus').className = `status-badge ${alertData.status || 'active'}`;
+        
+        document.getElementById('alertOriginalMessage').textContent = alertData.message || 'No disponible';
+        document.getElementById('alertAnalysis').textContent = alertData.analysis || 'Análisis no disponible';
+        
+        // Keywords
+        const keywordsContainer = document.getElementById('alertKeywords');
+        if (alertData.keywords && alertData.keywords.length > 0) {
+            keywordsContainer.innerHTML = alertData.keywords.map(keyword => 
+                `<span class="keyword-tag">${keyword}</span>`
+            ).join('');
+        } else {
+            keywordsContainer.textContent = 'No se detectaron palabras clave específicas';
+        }
+        
+        // Contact info
+        document.getElementById('alertContactName').textContent = alertData.contactName || 'No disponible';
+        document.getElementById('alertContactEmail').textContent = alertData.contactEmail || 'No disponible';
+        
+        // Store current alert data for actions
+        this.currentAlert = alertData;
+        
+        // Show modal
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    closeAlertModal() {
+        const modal = document.getElementById('alertModal');
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+            this.currentAlert = null;
+        }
+    }
+
+    translateRiskLevel(level) {
+        const levels = {
+            'low': 'Bajo',
+            'medium': 'Medio', 
+            'high': 'Alto',
+            'critical': 'Crítico'
+        };
+        return levels[level] || level;
+    }
+
+    formatDate(dateInput) {
+        console.log('formatDate called with:', dateInput, 'Type:', typeof dateInput);
+        
+        if (!dateInput) {
+            console.log('No dateInput provided, returning default message');
+            return 'Fecha no disponible';
+        }
+        
+        try {
+            let date;
+            
+            // Handle different date formats
+            if (typeof dateInput === 'string') {
+                console.log('Parsing string date:', dateInput);
+                // Try parsing ISO string or other formats
+                date = new Date(dateInput);
+            } else if (dateInput instanceof Date) {
+                console.log('Date object provided');
+                date = dateInput;
+            } else if (typeof dateInput === 'number') {
+                console.log('Parsing timestamp:', dateInput);
+                // Unix timestamp
+                date = new Date(dateInput);
+            } else {
+                console.log('Unknown date format:', typeof dateInput, dateInput);
+                return 'Formato de fecha inválido';
+            }
+            
+            console.log('Parsed date:', date);
+            
+            // Check if date is valid
+            if (isNaN(date.getTime())) {
+                console.log('Invalid date detected');
+                return 'Fecha inválida';
+            }
+            
+            // Format date in Spanish locale
+            const formatted = date.toLocaleString('es-ES', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            
+            console.log('Formatted date:', formatted);
+            return formatted;
+        } catch (error) {
+            console.error('Error formatting date:', error, 'Input:', dateInput);
+            return 'Error en formato de fecha';
+        }
+    }
+
+    // Alert Action Functions
+    async markAlertAsUrgent() {
+        if (!this.currentAlert) return;
+        
+        try {
+            const response = await fetch(`${this.apiBase}/admin/alerts/${this.currentAlert.id}/urgent`, {
+                method: 'POST',
+                credentials: 'include'
+            });
+            
+            if (response.ok) {
+                this.showNotification('Alerta marcada como urgente', 'success');
+                this.closeAlertModal();
+                this.performRiskAssessment(); // Refresh alerts
+            }
+        } catch (error) {
+            console.error('Error marking alert as urgent:', error);
+            this.showNotification('Error al marcar como urgente', 'error');
+        }
+    }
+
+    async assignAlertToSupport() {
+        if (!this.currentAlert) return;
+        
+        try {
+            const response = await fetch(`${this.apiBase}/admin/alerts/${this.currentAlert.id}/assign`, {
+                method: 'POST',
+                credentials: 'include'
+            });
+            
+            if (response.ok) {
+                this.showNotification('Alerta asignada al equipo de soporte', 'success');
+                this.closeAlertModal();
+                this.performRiskAssessment();
+            }
+        } catch (error) {
+            console.error('Error assigning alert:', error);
+            this.showNotification('Error al asignar alerta', 'error');
+        }
+    }
+
+    async markAlertAsResolved() {
+        if (!this.currentAlert) return;
+        
+        try {
+            const response = await fetch(`${this.apiBase}/admin/alerts/${this.currentAlert.id}/resolve`, {
+                method: 'POST',
+                credentials: 'include'
+            });
+            
+            if (response.ok) {
+                this.showNotification('Alerta marcada como resuelta', 'success');
+                this.closeAlertModal();
+                this.performRiskAssessment();
+            }
+        } catch (error) {
+            console.error('Error resolving alert:', error);
+            this.showNotification('Error al resolver alerta', 'error');
+        }
+    }
+
+    addAlertNotes() {
+        if (!this.currentAlert) return;
+        
+        const notes = prompt('Agregar notas a esta alerta:');
+        if (notes && notes.trim()) {
+            // Here you would typically send the notes to the server
+            this.showNotification('Notas agregadas a la alerta', 'success');
+        }
+    }
+
+    // Close mood analysis section
+    closeMoodAnalysis() {
+        const moodDisplay = document.getElementById('moodAnalysisDisplay');
+        if (moodDisplay) {
+            moodDisplay.style.display = 'none';
+            moodDisplay.innerHTML = '';
+        }
+        
+        // Reset button state
+        const btn = document.getElementById('moodAnalysisBtn');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-smile"></i> Análisis de Humor';
+        }
+        
+        this.showNotification('Análisis de humor cerrado', 'info');
+    }
+
+    // Enhanced viewDetails function to show alert modal
+    viewDetails(messageId) {
+        const message = this.messages.find(m => m._id === messageId);
+        if (!message) return;
+
+        // Debug: Log message data to see what's available
+        console.log('Message data for modal:', message);
+        console.log('createdAt:', message.createdAt);
+        console.log('timestamp:', message.timestamp);
+        console.log('date:', message.date);
+
+        // Try multiple possible date fields
+        const timestamp = message.createdAt || message.timestamp || message.date || new Date().toISOString();
+
+        // Create alert data from message
+        const alertData = {
+            id: messageId,
+            riskLevel: message.toneAnalysis?.riskLevel || 'medium',
+            timestamp: timestamp,
+            type: 'Análisis de Riesgo',
+            status: 'active',
+            message: message.message,
+            analysis: message.toneAnalysis?.summary || 'Análisis no disponible',
+            keywords: message.toneAnalysis?.keywords || [],
+            contactName: message.name,
+            contactEmail: message.email
+        };
+
+        console.log('Alert data being sent to modal:', alertData);
+        this.showAlertModal(alertData);
     }
 }
 

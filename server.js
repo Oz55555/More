@@ -1175,9 +1175,26 @@ app.post('/webhook', express.raw({type: 'application/json'}), async (req, res) =
 
 // Get Stripe publishable key
 app.get('/api/stripe-config', (req, res) => {
+  const publishableKey = process.env.STRIPE_PUBLISHABLE_KEY;
+  
+  if (!publishableKey) {
+    return res.status(500).json({
+      success: false,
+      error: 'Stripe publishable key not configured'
+    });
+  }
+  
+  // Validate key format
+  if (!publishableKey.startsWith('pk_')) {
+    return res.status(500).json({
+      success: false,
+      error: 'Invalid Stripe publishable key format'
+    });
+  }
+  
   res.json({
     success: true,
-    publishableKey: process.env.STRIPE_PUBLISHABLE_KEY
+    publishableKey: publishableKey
   });
 });
 

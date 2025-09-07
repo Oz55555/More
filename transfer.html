@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donation | Oscar Medina</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/payment.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <nav>
+            <div class="logo">OM</div>
+            <ul class="nav-links">
+                <li><a href="index.html#home">Home</a></li>
+                <li><a href="index.html#about">About</a></li>
+                <li><a href="index.html#projects">Projects</a></li>
+                <li><a href="transfer.html">Transfer</a></li>
+                <li><a href="index.html#contact">Contact</a></li>
+            </ul>
+            <div class="hamburger">
+                <div class="line"></div>
+                <div class="line"></div>
+                <div class="line"></div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Transfer Section -->
+    <section class="transfer-section">
+        <div class="container">
+            <div class="transfer-header">
+                <a href="index.html" class="back-btn">
+                    <i class="fas fa-arrow-left"></i> Back to Home
+                </a>
+                <h1>Money Transfer</h1>
+                <p>Send money securely using your preferred payment method.</p>
+            </div>
+
+            <div class="transfer-amount-section">
+                <h3><i class="fas fa-dollar-sign"></i> Select Transfer Amount</h3>
+                <div class="amount-buttons">
+                    <button class="amount-btn" data-amount="5">$5</button>
+                    <button class="amount-btn" data-amount="10">$10</button>
+                    <button class="amount-btn" data-amount="25">$25</button>
+                    <button class="amount-btn" data-amount="50">$50</button>
+                    <button class="amount-btn" data-amount="100">$100</button>
+                    <button class="amount-btn custom-amount-btn" data-amount="custom">
+                        Custom Amount
+                    </button>
+                </div>
+                <div class="custom-amount-input" style="display: none;">
+                    <input type="number" id="customAmount" placeholder="Enter amount" min="1" max="10000">
+                </div>
+            </div>
+
+            <div class="payment-methods-container">
+                <h3><i class="fas fa-credit-card"></i> Choose Payment Method</h3>
+                
+                <div class="payment-methods-grid">
+                    <!-- Visa Option -->
+                    <div class="payment-method-card" data-method="visa">
+                        <div class="method-icon">
+                            <i class="fab fa-cc-visa"></i>
+                        </div>
+                        <div class="method-info">
+                            <h4>Visa</h4>
+                            <p>Secure credit/debit card payment</p>
+                            <span class="method-features">
+                                <i class="fas fa-shield-alt"></i> SSL Encrypted
+                            </span>
+                        </div>
+                        <div class="method-arrow">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </div>
+
+                    <!-- Mastercard Option -->
+                    <div class="payment-method-card" data-method="mastercard">
+                        <div class="method-icon">
+                            <i class="fab fa-cc-mastercard"></i>
+                        </div>
+                        <div class="method-info">
+                            <h4>Mastercard</h4>
+                            <p>Secure credit/debit card payment</p>
+                            <span class="method-features">
+                                <i class="fas fa-shield-alt"></i> SSL Encrypted
+                            </span>
+                        </div>
+                        <div class="method-arrow">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </div>
+
+                    <!-- PayPal Option -->
+                    <div class="payment-method-card" data-method="paypal">
+                        <div class="method-icon">
+                            <i class="fab fa-paypal"></i>
+                        </div>
+                        <div class="method-info">
+                            <h4>PayPal</h4>
+                            <p>Quick and secure payment</p>
+                            <span class="method-features">
+                                <i class="fas fa-bolt"></i> Instant
+                            </span>
+                        </div>
+                        <div class="method-arrow">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Form Section -->
+                <div class="payment-form-section" style="display: none;">
+                    <h3><i class="fas fa-lock"></i> Complete Your Transfer</h3>
+                    
+                    <div class="transfer-summary">
+                        <p>Transferring <strong><span id="summary-amount">$0</span></strong> via <strong><span id="summary-method">-</span></strong></p>
+                    </div>
+
+                    <form id="transfer-form">
+                        <!-- Personal Information -->
+                        <div class="form-section">
+                            <h4>Personal Information</h4>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="firstName">First Name *</label>
+                                    <input type="text" id="firstName" name="firstName" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="lastName">Last Name *</label>
+                                    <input type="text" id="lastName" name="lastName" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Email *</label>
+                                <input type="email" id="email" name="email" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="phone">Phone</label>
+                                <input type="tel" id="phone" name="phone">
+                            </div>
+                        </div>
+
+                        <!-- Credit Card Fields (for Visa/Mastercard) -->
+                        <div class="card-payment-section" style="display: none;">
+                            <h4>Card Information</h4>
+                            <div class="form-group">
+                                <label for="card-element">Card Details *</label>
+                                <div id="card-element" class="stripe-element">
+                                    <!-- Stripe Elements will create form elements here -->
+                                </div>
+                                <div id="card-errors" role="alert" class="error-message"></div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="address">Address</label>
+                                    <input type="text" id="address" name="address">
+                                </div>
+                                <div class="form-group">
+                                    <label for="city">City</label>
+                                    <input type="text" id="city" name="city">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="state">State</label>
+                                    <input type="text" id="state" name="state">
+                                </div>
+                                <div class="form-group">
+                                    <label for="zipCode">ZIP Code</label>
+                                    <input type="text" id="zipCode" name="zipCode">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- PayPal Section -->
+                        <div class="paypal-payment-section" style="display: none;">
+                            <div class="paypal-info">
+                                <i class="fab fa-paypal"></i>
+                                <p>You will be redirected to PayPal to complete your transfer securely.</p>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="form-actions">
+                            <button type="button" class="btn-secondary" onclick="goBack()">
+                                <i class="fas fa-arrow-left"></i> Back
+                            </button>
+                            <button type="submit" id="submit-transfer" class="btn-primary">
+                                <i class="fas fa-paper-plane"></i> Complete Transfer
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Security Notice -->
+            <div class="security-notice">
+                <div class="security-content">
+                    <i class="fas fa-shield-alt"></i>
+                    <div>
+                        <h4>Secure Transaction</h4>
+                        <p>Your payment information is encrypted and secure. We use industry-standard SSL encryption to protect your data.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; <span id="year"></span> Oscar M. All rights reserved.</p>
+    </footer>
+
+    <script src="https://js.stripe.com/v3/"></script>
+    <script src="js/main.js"></script>
+    <script src="js/transfer.js"></script>
+</body>
+</html>
