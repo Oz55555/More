@@ -219,6 +219,73 @@ section {
     color: var(--text-color);
 }
 
+.experience-highlights,
+.industries {
+    margin: 2rem 0;
+}
+
+.experience-highlights h3,
+.industries h3 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.regions {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+}
+
+.region {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.8rem 1.2rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    border-radius: 25px;
+    font-weight: 500;
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2);
+    transition: var(--transition);
+}
+
+.region:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
+}
+
+.region i {
+    font-size: 1.1rem;
+}
+
+.industry-tags {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.industry-tags span {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    background: var(--light-bg);
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
+    border-radius: 20px;
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.industry-tags span:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: translateY(-1px);
+}
+
 .skills h3 {
     margin: 2rem 0 1rem;
     font-size: 1.5rem;
@@ -262,13 +329,67 @@ section {
     background: white;
     border-radius: 10px;
     overflow: hidden;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
     transition: var(--transition);
 }
 
 .project-card:hover {
     transform: translateY(-10px);
     box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+}
+
+.project-metrics,
+.project-outcome {
+    margin: 1rem 0;
+    padding: 0.8rem;
+    border-radius: 8px;
+    background: var(--light-bg);
+}
+
+.project-metrics {
+    border-left: 4px solid var(--primary-color);
+}
+
+.project-outcome {
+    border-left: 4px solid #10b981;
+}
+
+.metrics-label,
+.outcome-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--light-text);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.3rem;
+}
+
+.metrics-value,
+.outcome-value {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-color);
+    line-height: 1.4;
+}
+
+.consultation-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.8rem 1.5rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    border-radius: 25px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: var(--transition);
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2);
+}
+
+.consultation-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
+    color: white;
 }
 
 .project-img {
@@ -797,6 +918,36 @@ footer {
     .about-content {
         flex-direction: column;
         text-align: center;
+    }
+
+    .regions {
+        justify-content: center;
+        gap: 1rem;
+    }
+
+    .region {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .industry-tags {
+        justify-content: center;
+        gap: 0.8rem;
+    }
+
+    .industry-tags span {
+        padding: 0.5rem 0.8rem;
+        font-size: 0.9rem;
+    }
+
+    .skill-tags {
+        justify-content: center;
+        gap: 0.8rem;
+    }
+
+    .skill-tags span {
+        font-size: 0.9rem;
+        padding: 0.5rem 0.8rem;
     }
 
     .skill-tags {
