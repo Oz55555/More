@@ -1,7 +1,7 @@
 {
-  "name": "personal-website-backend",
+  "name": "cadence-wave-backend",
   "version": "1.0.0",
-  "description": "Backend for Oscar M's personal website",
+  "description": "Backend for Cadence Wave's corporate website",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -32,6 +32,6 @@
     "website",
     "backend"
   ],
-  "author": "Oscar M",
+  "author": "Cadence Wave",
   "license": "MIT"
 }

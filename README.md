@@ -1,6 +1,6 @@
-# Oscar M - Personal Website
+# Cadence Wave - Digital Transformation Consultancy
 
-A modern, responsive personal portfolio website with backend database integration for contact form submissions.
+A modern, responsive corporate website for Cadence Wave digital transformation consultancy with backend database integration for contact form submissions and consultancy bookings.
 
 ## Features
 
