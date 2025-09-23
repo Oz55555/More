@@ -292,28 +292,15 @@ sections.forEach(section => {
     observer.observe(section);
 });
 
-// Navbar scroll effect
-let lastScroll = 0;
+// Navbar scroll effect for transparent header
 const header = document.querySelector('header');
 
 window.addEventListener('scroll', () => {
-    const currentScroll = window.pageYOffset;
-    
-    if (currentScroll <= 0) {
-        header.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.1)';
-        return;
-    }
-    
-    if (currentScroll > lastScroll && !navLinks.classList.contains('active')) {
-        // Scrolling down
-        header.style.transform = 'translateY(-100%)';
+    if (window.scrollY > 50) {
+        header.classList.add('scrolled');
     } else {
-        // Scrolling up
-        header.style.transform = 'translateY(0)';
-        header.style.boxShadow = currentScroll > 100 ? '0 5px 20px rgba(0, 0, 0, 0.1)' : '0 2px 10px rgba(0, 0, 0, 0.1)';
+        header.classList.remove('scrolled');
     }
-    
-    lastScroll = currentScroll;
 });
 
 // Initialize
@@ -324,5 +311,65 @@ function init() {
     }
 }
 
+// Carousel functionality
+function initCarousel() {
+    const carouselImages = document.querySelectorAll('.carousel-container img');
+    const dotsContainer = document.querySelector('.carousel-dots');
+    if (carouselImages.length === 0) return;
+
+    let currentIndex = 0;
+    let intervalId;
+
+    // Create navigation dots
+    carouselImages.forEach((_, index) => {
+        const dot = document.createElement('div');
+        dot.classList.add('dot');
+        dot.addEventListener('click', () => {
+            goToImage(index);
+            resetInterval();
+        });
+        dotsContainer.appendChild(dot);
+    });
+
+    const dots = document.querySelectorAll('.carousel-dots .dot');
+
+    function updateDots() {
+        dots.forEach((dot, index) => {
+            if (index === currentIndex) {
+                dot.classList.add('active');
+            } else {
+                dot.classList.remove('active');
+            }
+        });
+    }
+
+    function goToImage(index) {
+        carouselImages[currentIndex].classList.remove('active');
+        currentIndex = index;
+        carouselImages[currentIndex].classList.add('active');
+        updateDots();
+    }
+
+    function showNextImage() {
+        goToImage((currentIndex + 1) % carouselImages.length);
+    }
+
+    function startInterval() {
+        intervalId = setInterval(showNextImage, 5000);
+    }
+
+    function resetInterval() {
+        clearInterval(intervalId);
+        startInterval();
+    }
+
+    // Initial setup
+    goToImage(0);
+    startInterval();
+}
+
 // Run when DOM is fully loaded
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', () => {
+    init();
+    initCarousel();
+});

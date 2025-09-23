@@ -1,7 +1,7 @@
 /* Base Styles */
 :root {
-    --primary-color: #2563eb;
-    --secondary-color: #1e40af;
+    --primary-color: #00539B; /* New Blue */
+    --secondary-color: #1e3a8a;
     --text-color: #1f2937;
     --light-text: #6b7280;
     --background: #ffffff;
@@ -43,24 +43,45 @@ header {
     left: 0;
     width: 100%;
     z-index: 1000;
-    background-color: rgba(255, 255, 255, 0.95);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    background-color: transparent;
+    box-shadow: none;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease, backdrop-filter 0.3s ease;
+}
+
+header.scrolled {
+    background-color: rgba(0, 83, 155, 0.85); /* Semi-transparent background for blur effect */
     backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px); /* Safari support */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
 nav {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1.5rem 5%;
+    padding: 1rem 5%;
     max-width: 1400px;
     margin: 0 auto;
 }
 
+.nav-left {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.logo-link {
+    display: inline-block;
+}
+
 .logo {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: var(--primary-color);
+    height: 65px; /* Made bigger */
+    width: auto;
+}
+
+.logo img {
+    height: 100%;
+    width: auto;
 }
 
 .nav-links {
@@ -68,10 +89,37 @@ nav {
     gap: 2rem;
 }
 
+
+.nav-link-main {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #fff;
+    padding: 0.5rem 1rem;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 50px;
+    transition: var(--transition);
+}
+
+.nav-link-main:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: #fff;
+}
+
+.nav-link-secondary {
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.8);
+    transition: var(--transition);
+}
+
+.nav-link-secondary:hover {
+    color: #fff;
+}
+
 .nav-links a {
     font-weight: 500;
-    transition: var(--transition);
+    transition: color 0.3s ease;
     position: relative;
+    color: #fff;
 }
 
 .nav-links a::after {
@@ -81,7 +129,7 @@ nav {
     height: 2px;
     bottom: -5px;
     left: 0;
-    background-color: var(--primary-color);
+    background-color: #fff;
     transition: var(--transition);
 }
 
@@ -98,37 +146,102 @@ nav {
 .hamburger .line {
     width: 25px;
     height: 2px;
-    background-color: var(--text-color);
+    background-color: #fff;
     margin: 5px 0;
     transition: var(--transition);
 }
 
+/* Hero Section */
 /* Hero Section */
 .hero {
     height: 100vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: center;
-    text-align: center;
-    padding: 0 1.5rem;
-    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    align-items: flex-start; /* Align content to the left */
+    padding: 0 5%; /* Add horizontal padding */
     position: relative;
+    overflow: hidden;
+}
+
+
+.hero-watermark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2; /* Between background and content */
+    width: 350px;
+    height: 350px;
+    opacity: 0.07; /* The key for the subconscious effect */
+}
+
+.hero-watermark img {
+    width: 100%;
+    height: 100%;
+    filter: brightness(0) invert(1); /* Make it white */
+}
+
+.hero::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 2;
+}
+
+.carousel-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+.carousel-container img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 1.5s ease-in-out;
+}
+
+.carousel-container img.active {
+    opacity: 1;
+}
+
+
+
+.hero-content {
+    position: relative;
+    z-index: 3;
+    transform: translateY(-10vh); /* Moved content further down */
+    text-align: left; /* Align text to the left */
+    max-width: 600px; /* Constrain width for better readability */
 }
 
 .hero-content h1 {
-    font-size: 3.5rem;
-    margin-bottom: 1rem;
-    background: linear-gradient(90deg, #1e40af, #3b82f6);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    font-size: 4.5rem; /* Made smaller */
+    font-weight: 700;
+    margin-bottom: 0.5rem; /* Reduced margin to bring it closer to h2 */
+    color: #fff;
+    text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.7);
+    letter-spacing: -4px; /* Made even tighter */
+    white-space: nowrap; /* Ensure it stays on one line */
 }
 
 .hero-content h2 {
     font-size: 1.8rem;
     font-weight: 400;
     margin-bottom: 2rem;
-    color: var(--light-text);
+    color: #fff;
 }
 
 .cta-button {
@@ -150,15 +263,43 @@ nav {
     box-shadow: 0 10px 20px rgba(37, 99, 235, 0.15);
 }
 
+
+.carousel-dots {
+    position: absolute;
+    bottom: 5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+    display: flex;
+    gap: 0.75rem;
+}
+
+.carousel-dots .dot {
+    width: 12px;
+    height: 12px;
+    background-color: rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.carousel-dots .dot.active {
+    background-color: #fff;
+}
+
 .scroll-down {
     position: absolute;
     bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
     flex-direction: column;
     align-items: center;
-    color: var(--light-text);
+    color: #fff;
     animation: bounce 2s infinite;
+    z-index: 3;
 }
+
 
 @keyframes bounce {
     0%, 20%, 50%, 80%, 100% {
@@ -189,6 +330,22 @@ section {
     transform: translateX(-50%);
 }
 
+.section-title::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 240px; /* Adjusted size for better fit */
+    height: 240px;
+    background-image: url('../images/cw.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    opacity: 0.05; /* Make it very subtle */
+    z-index: -1; /* Place it behind the text */
+}
+
 .section-title::after {
     content: '';
     position: absolute;
@@ -203,10 +360,27 @@ section {
 
 /* About Section */
 .about-content {
+    position: relative; /* Needed for watermark positioning */
     display: flex;
     align-items: center;
     gap: 3rem;
     margin-top: 2rem;
+}
+
+.about-text::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px; /* Adjust size as needed */
+    height: 200px;
+    background-image: url('../images/cw.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    opacity: 0.05; /* Very subtle */
+    z-index: -1; /* Behind the text */
 }
 
 .about-text {
@@ -313,6 +487,64 @@ section {
     transform: translateY(-2px);
 }
 
+/* Why Us & Our Culture Sections */
+.why-us,
+.culture {
+    background-color: var(--light-bg);
+}
+
+.culture {
+    background-color: #fff; /* Alternate background color */
+}
+
+.section-subtitle {
+    text-align: center;
+    max-width: 800px;
+    margin: -2rem auto 3rem;
+    font-size: 1.1rem;
+    color: var(--light-text);
+}
+
+.why-us-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.why-us-card {
+    background: #fff;
+    padding: 2.5rem 2rem;
+    text-align: center;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    transition: var(--transition);
+}
+
+.why-us-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.08);
+    border-color: var(--primary-color);
+}
+
+.why-us-icon {
+    font-size: 3rem;
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+    display: inline-block;
+}
+
+.why-us-card h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: var(--text-color);
+}
+
+.why-us-card p {
+    color: var(--light-text);
+    font-size: 0.95rem;
+    line-height: 1.7;
+}
+
 /* Projects Section */
 .projects {
     background-color: var(--light-bg);
@@ -377,19 +609,21 @@ section {
     align-items: center;
     gap: 0.5rem;
     padding: 0.8rem 1.5rem;
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    color: white;
+    background: #fff; /* Light background for contrast */
+    color: var(--primary-color); /* Dark text for readability */
+    border: 2px solid var(--primary-color);
     border-radius: 25px;
-    font-weight: 500;
+    font-weight: 600;
     text-decoration: none;
     transition: var(--transition);
-    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 }
 
 .consultation-btn:hover {
+    background: var(--primary-color);
+    color: #fff;
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
-    color: white;
+    box-shadow: 0 6px 20px rgba(0, 83, 155, 0.3);
 }
 
 .project-img {
@@ -863,11 +1097,12 @@ margin-right: auto;
 
 /* Footer */
 footer {
+    background-color: var(--primary-color);
+    color: #fff;
+    padding: 2rem 5%;
     text-align: center;
-    padding: 2rem;
-    background: var(--light-bg);
-    color: var(--light-text);
     font-size: 0.9rem;
+    opacity: 0.9;
 }
 
 /* Responsive Design */
