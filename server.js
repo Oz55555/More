@@ -33,17 +33,20 @@ app.use((req, res, next) => {
   }
 
   if (process.env.NODE_ENV === 'production' && !originalHost.includes('localhost')) {
-    // If a canonical host is configured, redirect all traffic to it (with HTTPS)
     const canonical = process.env.CANONICAL_HOST;
-    if (canonical && originalHost !== canonical && originalHost !== `www.${canonical}`) {
-      return res.redirect(301, `https://${canonical}${req.originalUrl}`);
-    }
-
-    // Enforce HTTPS and remove www while preserving original host
-    if (!isHttps || originalHost.startsWith('www.')) {
-      const newHost = originalHost.startsWith('www.') ? originalHost.substring(4) : originalHost;
-      const newUrl = `https://${newHost}${req.originalUrl}`;
-      return res.redirect(301, newUrl);
+    if (canonical) {
+      // Enforce canonical host and HTTPS
+      if (originalHost !== canonical) {
+        return res.redirect(301, `https://${canonical}${req.originalUrl}`);
+      }
+      if (!isHttps) {
+        return res.redirect(301, `https://${originalHost}${req.originalUrl}`);
+      }
+    } else {
+      // No canonical host configured: allow both www and non-www, only enforce HTTPS
+      if (!isHttps) {
+        return res.redirect(301, `https://${originalHost}${req.originalUrl}`);
+      }
     }
   }
 
