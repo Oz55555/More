@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -6,7 +7,6 @@ const session = require('express-session');
 const bcrypt = require('bcryptjs');
 const { body, validationResult } = require('express-validator');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-require('dotenv').config();
 
 const Contact = require('./models/Contact');
 const Customer = require('./models/Customer');
@@ -18,6 +18,23 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
+// Redirection and www removal middleware
+app.use((req, res, next) => {
+  const host = req.hostname;
+  // In production, Railway sets this header. For local, we can check req.secure.
+  const isHttps = req.secure || (req.headers['x-forwarded-proto'] === 'https');
+
+  if (process.env.NODE_ENV === 'production' && !host.includes('localhost')) {
+    if (!isHttps || host.startsWith('www.')) {
+      const newHost = host.startsWith('www.') ? host.substring(4) : host;
+      const newUrl = `https://${newHost}${req.originalUrl}`;
+      return res.redirect(301, newUrl);
+    }
+  }
+
+  next();
+});
+
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -40,6 +57,8 @@ app.use(cors({
     const allowedOrigins = [
       'http://localhost:3000',
       'https://moreeeee.up.railway.app',
+      'https://cadencewave.io',
+      'https://www.cadencewave.io',
       process.env.FRONTEND_URL
     ].filter(Boolean);
     
