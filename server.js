@@ -21,17 +21,27 @@ const PORT = process.env.PORT || 3000;
 // Redirection and www removal middleware
 app.use((req, res, next) => {
   const host = req.hostname;
-  // In production, Railway sets this header. For local, we can check req.secure.
+  // In production, Railway sets these headers. For local, we can check req.secure.
   const isHttps = req.secure || (req.headers['x-forwarded-proto'] === 'https');
+  const forwardedHost = req.headers['x-forwarded-host'];
+  // Prefer original host if provided by proxy
+  const originalHost = forwardedHost ? String(forwardedHost).split(',')[0].trim() : host;
 
   // Allow Railway healthcheck to pass without redirecting
   if (req.method === 'HEAD' || req.path === '/api/health' || req.path === '/health' || req.path === '/healthz') {
     return next();
   }
 
-  if (process.env.NODE_ENV === 'production' && !host.includes('localhost')) {
-    if (!isHttps || host.startsWith('www.')) {
-      const newHost = host.startsWith('www.') ? host.substring(4) : host;
+  if (process.env.NODE_ENV === 'production' && !originalHost.includes('localhost')) {
+    // If a canonical host is configured, redirect all traffic to it (with HTTPS)
+    const canonical = process.env.CANONICAL_HOST;
+    if (canonical && originalHost !== canonical && originalHost !== `www.${canonical}`) {
+      return res.redirect(301, `https://${canonical}${req.originalUrl}`);
+    }
+
+    // Enforce HTTPS and remove www while preserving original host
+    if (!isHttps || originalHost.startsWith('www.')) {
+      const newHost = originalHost.startsWith('www.') ? originalHost.substring(4) : originalHost;
       const newUrl = `https://${newHost}${req.originalUrl}`;
       return res.redirect(301, newUrl);
     }
