@@ -33,20 +33,19 @@ app.use((req, res, next) => {
   }
 
   if (process.env.NODE_ENV === 'production' && !originalHost.includes('localhost')) {
+    // In production, allow both www and non-www for custom domains.
+    // Only enforce HTTPS. Canonical host redirects are DISABLED by default.
+    // To explicitly enable canonical redirects, set ENFORCE_CANONICAL=true and provide CANONICAL_HOST.
+    const enforceCanonical = process.env.ENFORCE_CANONICAL === 'true';
     const canonical = process.env.CANONICAL_HOST;
-    if (canonical) {
-      // Enforce canonical host and HTTPS
-      if (originalHost !== canonical) {
-        return res.redirect(301, `https://${canonical}${req.originalUrl}`);
-      }
-      if (!isHttps) {
-        return res.redirect(301, `https://${originalHost}${req.originalUrl}`);
-      }
-    } else {
-      // No canonical host configured: allow both www and non-www, only enforce HTTPS
-      if (!isHttps) {
-        return res.redirect(301, `https://${originalHost}${req.originalUrl}`);
-      }
+
+    if (enforceCanonical && canonical && originalHost !== canonical) {
+      return res.redirect(301, `https://${canonical}${req.originalUrl}`);
+    }
+
+    // Always enforce HTTPS in production
+    if (!isHttps) {
+      return res.redirect(301, `https://${originalHost}${req.originalUrl}`);
     }
   }
 
