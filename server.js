@@ -24,6 +24,11 @@ app.use((req, res, next) => {
   // In production, Railway sets this header. For local, we can check req.secure.
   const isHttps = req.secure || (req.headers['x-forwarded-proto'] === 'https');
 
+  // Allow Railway healthcheck to pass without redirecting
+  if (req.method === 'HEAD' || req.path === '/api/health' || req.path === '/health' || req.path === '/healthz') {
+    return next();
+  }
+
   if (process.env.NODE_ENV === 'production' && !host.includes('localhost')) {
     if (!isHttps || host.startsWith('www.')) {
       const newHost = host.startsWith('www.') ? host.substring(4) : host;
@@ -1331,6 +1336,35 @@ app.get('/api/health', (req, res) => {
     message: 'Server is running',
     timestamp: new Date().toISOString()
   });
+});
+
+// Healthcheck compatibility endpoints
+app.head('/api/health', (req, res) => {
+  res.status(200).end();
+});
+
+app.get('/health', (req, res) => {
+  res.json({
+    success: true,
+    message: 'OK',
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.head('/health', (req, res) => {
+  res.status(200).end();
+});
+
+app.get('/healthz', (req, res) => {
+  res.json({
+    success: true,
+    message: 'OK',
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.head('/healthz', (req, res) => {
+  res.status(200).end();
 });
 
 // Error handling middleware
