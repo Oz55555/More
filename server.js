@@ -18,13 +18,11 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
-// Redirection and www removal middleware
+// Middleware for redirection to canonical domain (www) and HTTPS
 app.use((req, res, next) => {
   const host = req.hostname;
-  // In production, Railway sets these headers. For local, we can check req.secure.
   const isHttps = req.secure || (req.headers['x-forwarded-proto'] === 'https');
   const forwardedHost = req.headers['x-forwarded-host'];
-  // Prefer original host if provided by proxy
   const originalHost = forwardedHost ? String(forwardedHost).split(',')[0].trim() : host;
 
   // Allow Railway healthcheck to pass without redirecting
@@ -33,19 +31,11 @@ app.use((req, res, next) => {
   }
 
   if (process.env.NODE_ENV === 'production' && !originalHost.includes('localhost')) {
-    // In production, allow both www and non-www for custom domains.
-    // Only enforce HTTPS. Canonical host redirects are DISABLED by default.
-    // To explicitly enable canonical redirects, set ENFORCE_CANONICAL=true and provide CANONICAL_HOST.
-    const enforceCanonical = process.env.ENFORCE_CANONICAL === 'true';
-    const canonical = process.env.CANONICAL_HOST;
+    const canonicalHost = 'www.cadencewave.io';
 
-    if (enforceCanonical && canonical && originalHost !== canonical) {
-      return res.redirect(301, `https://${canonical}${req.originalUrl}`);
-    }
-
-    // Always enforce HTTPS in production
-    if (!isHttps) {
-      return res.redirect(301, `https://${originalHost}${req.originalUrl}`);
+    // If the host is not the canonical one or if the connection is not secure, redirect.
+    if (originalHost !== canonicalHost || !isHttps) {
+      return res.redirect(301, `https://${canonicalHost}${req.originalUrl}`);
     }
   }
 
