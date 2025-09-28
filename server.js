@@ -63,7 +63,6 @@ app.use(cors({
     
     const allowedOrigins = [
       'http://localhost:3000',
-      'https://moreeeee.up.railway.app',
       'https://cadencewave.io',
       'https://www.cadencewave.io',
       process.env.FRONTEND_URL
