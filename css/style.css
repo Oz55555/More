@@ -64,6 +64,10 @@ nav {
     margin: 0 auto;
 }
 
+.mobile-only {
+    display: none; /* Hide mobile links on desktop */
+}
+
 .nav-left {
     display: flex;
     align-items: center;
@@ -86,6 +90,7 @@ nav {
 
 .nav-links {
     display: flex;
+    align-items: center; /* Align all items vertically */
     gap: 2rem;
 }
 
@@ -189,7 +194,7 @@ nav {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+    background: linear-gradient(to right, rgba(0, 0, 0, 0.7) 20%, rgba(0, 0, 0, 0.1) 100%);
     z-index: 2;
 }
 
@@ -209,6 +214,7 @@ nav {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: center; /* Ensures the image is centered */
     opacity: 0;
     transition: opacity 1.5s ease-in-out;
 }
@@ -552,7 +558,7 @@ section {
 
 .projects-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 2rem;
     margin-top: 2rem;
 }
@@ -1106,24 +1112,105 @@ footer {
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
+@media (max-width: 1200px) {
+    .hero-content h1 {
+        font-size: 3.5rem;
+    }
+
+    .hero-content h2 {
+        font-size: 1.5rem;
+    }
+
+    .nav-links {
+        gap: 1.5rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .desktop-only {
+        display: none; /* Hide desktop-specific links */
+    }
+
+    .mobile-only {
+        display: list-item; /* Show mobile-specific links */
+    }
+
     .hamburger {
         display: block;
     }
 
     .nav-links {
+        display: none; /* Hide nav-links container initially */
+    }
+
+    .about-content {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .why-us-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .hero-content {
+        text-align: center;
+        align-items: center;
+        padding: 0 5%;
+        transform: translateY(0);
+        max-width: 100%;
+    }
+
+    .hero {
+        align-items: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero {
+        height: 80vh; /* Reduce hero height on mobile to show more of the image */
+    }
+
+    .nav-links a {
+        color: var(--text-color); /* Make mobile menu links dark */
+    }
+
+    .nav-links a.nav-link-main,
+    .nav-links a.nav-link-secondary {
+        border: none;
+        padding: 0;
+        font-size: 1.2rem;
+    }
+
+    .nav-links {
+        display: flex; /* This will be toggled by JS, but set flex here */
         position: fixed;
         top: 80px;
         left: -100%;
         width: 100%;
         height: calc(100vh - 80px);
-        background: white;
+        background-color: #fff;
         flex-direction: column;
+        isolation: isolate; /* Create a new stacking context */
         align-items: center;
         justify-content: center;
         gap: 2rem;
         transition: var(--transition);
         z-index: 999;
+    }
+
+    .nav-links::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url('../images/cw.png');
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: 250px;
+        opacity: 0.05; /* Make the logo very transparent */
+        z-index: -1; /* Place it behind the links */
     }
 
     .nav-links.active {
@@ -1357,6 +1444,12 @@ footer {
 .donation-summary p {
     font-size: 1.2rem;
     margin: 0;
+}
+
+@media (min-width: 1400px) {
+    .projects-grid {
+        grid-template-columns: repeat(3, 1fr); /* Enforce 3 columns on very large screens */
+    }
 }
 
 /* Custom Scrollbar */
