@@ -276,7 +276,7 @@ nav {
 
 .carousel-dots {
     position: absolute;
-    bottom: 5rem;
+    bottom: 8rem;
     left: 50%;
     transform: translateX(-50%);
     z-index: 3;
@@ -299,7 +299,7 @@ nav {
 
 .scroll-down {
     position: absolute;
-    bottom: 2rem;
+    bottom: 4.5rem;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
