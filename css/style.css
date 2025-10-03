@@ -1178,35 +1178,117 @@ footer {
 
 @media (max-width: 768px) {
     .hero {
-        height: 80vh; /* Reduce hero height on mobile to show more of the image */
+        height: 100vh; /* Full height on mobile */
+        min-height: 600px; /* Ensure minimum height */
     }
 
     .nav-links a {
-        color: var(--text-color); /* Make mobile menu links dark */
+        color: var(--text-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.2rem 2rem;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        font-size: 1.1rem;
+        font-weight: 500;
+        width: 280px;
+        position: relative;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+        opacity: 0;
+        animation: slideInFromLeft 0.4s ease forwards;
+        z-index: 10;
+        backdrop-filter: blur(10px);
+        border: 2px solid transparent;
+    }
+
+    .nav-links.active a {
+        opacity: 1;
+    }
+
+    .nav-links.active li:nth-child(1) a { animation-delay: 0s; }
+    .nav-links.active li:nth-child(2) a { animation-delay: 0.08s; }
+    .nav-links.active li:nth-child(3) a { animation-delay: 0.16s; }
+    .nav-links.active li:nth-child(4) a { animation-delay: 0.24s; }
+    .nav-links.active li:nth-child(5) a { animation-delay: 0.32s; }
+    .nav-links.active li:nth-child(6) a { animation-delay: 0.4s; }
+    .nav-links.active li:nth-child(7) a { animation-delay: 0.48s; }
+
+    .nav-links a::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 100%;
+        background: linear-gradient(135deg, var(--primary-color) 0%, #1e3a8a 100%);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.3s ease;
+        z-index: -1;
+    }
+
+    .nav-links a:hover,
+    .nav-links a:active {
+        color: #ffffff;
+        transform: scale(1.05);
+        box-shadow: 0 6px 20px rgba(0, 83, 155, 0.3);
+        border-color: var(--primary-color);
+    }
+
+    .nav-links a:active {
+        transform: scale(0.98);
+    }
+
+    .nav-links a:hover::before,
+    .nav-links a:active::before {
+        transform: scaleX(1);
+    }
+
+    /* Add visual separator after mobile-only items */
+    .nav-links li:has(a.mobile-only):last-of-type {
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        position: relative;
+    }
+
+    .nav-links li:has(a.mobile-only):last-of-type::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80px;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, rgba(0, 83, 155, 0.2), transparent);
     }
 
     .nav-links a.nav-link-main,
     .nav-links a.nav-link-secondary {
         border: none;
-        padding: 0;
-        font-size: 1.2rem;
+        padding: 1rem 2rem;
+        font-size: 1.1rem;
     }
 
     .nav-links {
-        display: flex; /* This will be toggled by JS, but set flex here */
+        display: flex;
         position: fixed;
         top: 80px;
         left: -100%;
         width: 100%;
         height: calc(100vh - 80px);
-        background-color: #fff;
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
         flex-direction: column;
-        isolation: isolate; /* Create a new stacking context */
+        isolation: isolate;
         align-items: center;
         justify-content: center;
-        gap: 2rem;
-        transition: var(--transition);
+        gap: 0.5rem;
+        transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         z-index: 999;
+        padding: 2rem 0;
+        overflow-y: auto;
     }
 
     .nav-links::before {
@@ -1219,13 +1301,32 @@ footer {
         background-image: url('../images/cw.png');
         background-repeat: no-repeat;
         background-position: center;
-        background-size: 250px;
-        opacity: 0.05; /* Make the logo very transparent */
-        z-index: -1; /* Place it behind the links */
+        background-size: 300px;
+        opacity: 0.02;
+        z-index: 0;
+        pointer-events: none;
+    }
+
+    .nav-links::after {
+        content: '';
+        position: absolute;
+        bottom: 2rem;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60px;
+        height: 4px;
+        background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+        border-radius: 2px;
     }
 
     .nav-links.active {
         left: 0;
+    }
+
+    /* Enhance header when menu is open */
+    .nav-links.active ~ .hamburger {
+        position: relative;
+        z-index: 1001;
     }
 
     .hamburger.active .line:nth-child(1) {
@@ -1240,17 +1341,60 @@ footer {
         transform: rotate(-45deg) translate(5px, -5px);
     }
 
+    .hero-content {
+        text-align: center;
+        margin-left: 0;
+        padding: 0 1.5rem;
+        max-width: 100%;
+        transform: translateY(-5vh); /* Less offset on mobile */
+    }
+
     .hero-content h1 {
-        font-size: 2.5rem;
+        font-size: 2.8rem;
+        letter-spacing: -2px;
+        white-space: normal; /* Allow wrapping on mobile */
+        line-height: 1.1;
+        margin-bottom: 1rem;
     }
 
     .hero-content h2 {
-        font-size: 1.4rem;
+        font-size: 1.1rem;
+        line-height: 1.4;
+        margin-bottom: 2rem;
+        padding: 0 1rem;
+    }
+
+    .cta-button {
+        padding: 0.9rem 2.5rem;
+        font-size: 1rem;
+    }
+
+    .carousel-dots {
+        bottom: 6rem; /* Move dots up to make room for scroll down */
+    }
+
+    .scroll-down {
+        bottom: 3rem;
+        font-size: 0.9rem;
+    }
+
+    .scroll-down i {
+        font-size: 1.2rem;
+        margin-top: 0.3rem;
     }
 
     .about-content {
         flex-direction: column;
         text-align: center;
+    }
+
+    section {
+        padding: 4rem 5%; /* Reduce padding on mobile */
+    }
+
+    .section-title {
+        font-size: 2rem;
+        margin-bottom: 2rem;
     }
 
     .regions {
@@ -1325,6 +1469,40 @@ footer {
     }
 }
 
+/* Extra small devices */
+@media (max-width: 480px) {
+    .hero-content h1 {
+        font-size: 2.2rem;
+        letter-spacing: -1px;
+    }
+
+    .hero-content h2 {
+        font-size: 1rem;
+        padding: 0 0.5rem;
+    }
+
+    .cta-button {
+        padding: 0.8rem 2rem;
+        font-size: 0.95rem;
+    }
+
+    .section-title {
+        font-size: 1.8rem;
+    }
+
+    section {
+        padding: 3rem 4%;
+    }
+
+    .logo {
+        height: 50px;
+    }
+
+    nav {
+        padding: 0.8rem 4%;
+    }
+}
+
 /* Animations */
 @keyframes fadeIn {
     from {
@@ -1334,6 +1512,17 @@ footer {
     to {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+
+@keyframes slideInFromLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
     }
 }
 
