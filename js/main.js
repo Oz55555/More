@@ -1,3 +1,42 @@
+// Page Loader with Connection Speed Detection
+window.addEventListener('load', function() {
+    const loader = document.getElementById('page-loader');
+    const progressFill = document.querySelector('.progress-fill');
+    
+    // Detect connection speed
+    let minLoadTime = 1000; // Default minimum load time
+    
+    if ('connection' in navigator) {
+        const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        const effectiveType = connection?.effectiveType;
+        
+        // Adjust load time based on connection speed
+        switch(effectiveType) {
+            case 'slow-2g':
+            case '2g':
+                minLoadTime = 2000;
+                break;
+            case '3g':
+                minLoadTime = 1500;
+                break;
+            case '4g':
+            default:
+                minLoadTime = 1000;
+                break;
+        }
+    }
+    
+    // Ensure minimum display time for smooth experience
+    setTimeout(() => {
+        loader.classList.add('hidden');
+        
+        // Remove from DOM after transition
+        setTimeout(() => {
+            loader.style.display = 'none';
+        }, 500);
+    }, minLoadTime);
+});
+
 // Agile Transformation Projects
 const projects = [
     {
