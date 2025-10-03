@@ -166,8 +166,12 @@ body {
     font-family: 'Poppins', sans-serif;
     line-height: 1.6;
     color: var(--text-color);
-    background-color: var(--background);
+    background-color: var(--primary-color);
     overflow-x: hidden;
+}
+
+body.loaded {
+    background-color: var(--background);
 }
 
 a {
@@ -186,7 +190,7 @@ header {
     left: 0;
     width: 100%;
     z-index: 1000;
-    background-color: transparent;
+    background-color: rgba(0, 20, 40, 0.3);
     box-shadow: none;
     transition: background-color 0.3s ease, box-shadow 0.3s ease, backdrop-filter 0.3s ease;
 }

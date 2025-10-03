@@ -29,6 +29,7 @@ window.addEventListener('load', function() {
     // Ensure minimum display time for smooth experience
     setTimeout(() => {
         loader.classList.add('hidden');
+        document.body.classList.add('loaded');
         
         // Remove from DOM after transition
         setTimeout(() => {
