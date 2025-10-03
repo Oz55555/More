@@ -313,13 +313,13 @@ nav {
 
 @keyframes bounce {
     0%, 20%, 50%, 80%, 100% {
-        transform: translateY(0);
+        transform: translateX(-50%) translateY(0);
     }
     40% {
-        transform: translateY(-10px);
+        transform: translateX(-50%) translateY(-10px);
     }
     60% {
-        transform: translateY(-5px);
+        transform: translateX(-50%) translateY(-5px);
     }
 }
 
