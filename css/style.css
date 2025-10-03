@@ -164,9 +164,11 @@ nav {
     flex-direction: column;
     justify-content: center;
     align-items: flex-start; /* Align content to the left */
-    padding: 0 5%; /* Add horizontal padding */
+    padding: 0; /* Remove padding to allow full width */
     position: relative;
     overflow: hidden;
+    width: 100%;
+    max-width: 100%;
 }
 
 
@@ -231,6 +233,8 @@ nav {
     transform: translateY(-10vh); /* Moved content further down */
     text-align: left; /* Align text to the left */
     max-width: 600px; /* Constrain width for better readability */
+    margin-left: 5%; /* Add left margin to prevent content from touching edge */
+    padding: 0 2rem; /* Add horizontal padding */
 }
 
 .hero-content h1 {
@@ -324,6 +328,13 @@ section {
     padding: 6rem 5%;
     max-width: 1400px;
     margin: 0 auto;
+}
+
+/* Hero section should be full width */
+section.hero {
+    max-width: none;
+    padding: 0;
+    margin: 0;
 }
 
 .section-title {
@@ -1458,14 +1469,14 @@ footer {
 }
 
 ::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    background: var(--primary-color); /* Same color as header */
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--primary-color);
+    background: rgba(255, 255, 255, 0.3); /* Light thumb for contrast */
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--secondary-color);
+    background: rgba(255, 255, 255, 0.5); /* Lighter on hover */
 }

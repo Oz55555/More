@@ -352,14 +352,20 @@ function initCarousel() {
 
     function showNextImage() {
         goToImage((currentIndex + 1) % carouselImages.length);
+        resetInterval(); // Reset interval after changing image to apply correct delay
     }
 
     function startInterval() {
-        intervalId = setInterval(showNextImage, 5000);
+        clearInterval(intervalId);
+        // Check if current image is wave.png (index 0)
+        const isWaveImage = currentIndex === 0;
+        const delay = isWaveImage ? 10000 : 5000; // 10 seconds for wave.png, 5 seconds for others
+        intervalId = setTimeout(() => {
+            showNextImage();
+        }, delay);
     }
 
     function resetInterval() {
-        clearInterval(intervalId);
         startInterval();
     }
 
