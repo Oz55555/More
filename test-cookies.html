@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cookie Banner Test - Cadence Wave</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/cookies.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #1e3a8a 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        
+        .test-container {
+            background: white;
+            border-radius: 20px;
+            padding: 3rem;
+            max-width: 600px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        .test-container h1 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-size: 2rem;
+        }
+        
+        .test-container p {
+            color: var(--light-text);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        
+        .test-btn {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #1e3a8a 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0.5rem;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        .test-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 83, 155, 0.4);
+        }
+        
+        .test-btn-secondary {
+            background: white;
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+        }
+        
+        .test-btn-secondary:hover {
+            background: var(--light-bg);
+        }
+        
+        .status {
+            margin-top: 2rem;
+            padding: 1rem;
+            border-radius: 12px;
+            background: var(--light-bg);
+        }
+        
+        .status h3 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .status pre {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 0.9rem;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .instructions {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        
+        .instructions h3 {
+            color: #856404;
+            margin: 0 0 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .instructions p {
+            color: #856404;
+            margin: 0;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1><i class="fas fa-cookie-bite"></i> Cookie Banner Test</h1>
+        
+        <div class="instructions">
+            <h3><i class="fas fa-info-circle"></i> Instrucciones</h3>
+            <p>Usa los botones de abajo para probar el banner de cookies. El banner debe aparecer desde la parte inferior de la pantalla.</p>
+        </div>
+        
+        <p>Esta página te permite probar el sistema de gestión de cookies sin afectar la página principal.</p>
+        
+        <div>
+            <button class="test-btn" onclick="resetCookies()">
+                <i class="fas fa-redo"></i> Resetear Cookies y Mostrar Banner
+            </button>
+            
+            <button class="test-btn test-btn-secondary" onclick="checkCookieStatus()">
+                <i class="fas fa-search"></i> Ver Estado Actual
+            </button>
+            
+            <button class="test-btn test-btn-secondary" onclick="window.location.href='index.html'">
+                <i class="fas fa-home"></i> Volver al Inicio
+            </button>
+        </div>
+        
+        <div class="status" id="status" style="display: none;">
+            <h3>Estado de Cookies:</h3>
+            <pre id="cookie-status"></pre>
+        </div>
+    </div>
+
+    <script src="js/cookies.js"></script>
+    <script>
+        function resetCookies() {
+            // Borrar la cookie de consentimiento
+            document.cookie = "cadencewave_cookie_consent=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            
+            // Mostrar mensaje
+            alert('✅ Cookie reseteada! La página se recargará y verás el banner.');
+            
+            // Recargar la página
+            location.reload();
+        }
+        
+        function checkCookieStatus() {
+            const statusDiv = document.getElementById('status');
+            const statusPre = document.getElementById('cookie-status');
+            
+            // Obtener todas las cookies
+            const cookies = document.cookie.split(';').map(c => c.trim());
+            const consentCookie = cookies.find(c => c.startsWith('cadencewave_cookie_consent='));
+            
+            if (consentCookie) {
+                try {
+                    const value = consentCookie.split('=')[1];
+                    const preferences = JSON.parse(decodeURIComponent(value));
+                    statusPre.textContent = JSON.stringify(preferences, null, 2);
+                    statusDiv.style.display = 'block';
+                } catch (e) {
+                    statusPre.textContent = 'Error al leer la cookie: ' + e.message;
+                    statusDiv.style.display = 'block';
+                }
+            } else {
+                statusPre.textContent = 'No hay preferencias guardadas.\nEl banner debería estar visible.';
+                statusDiv.style.display = 'block';
+            }
+        }
+        
+        // Verificar automáticamente al cargar
+        window.addEventListener('load', () => {
+            const consentCookie = document.cookie.split(';').find(c => c.trim().startsWith('cadencewave_cookie_consent='));
+            if (!consentCookie) {
+                console.log('✅ No hay cookie de consentimiento - El banner debería aparecer');
+            } else {
+                console.log('ℹ️ Cookie de consentimiento encontrada - El banner NO aparecerá');
+            }
+        });
+    </script>
+</body>
+</html>
