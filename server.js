@@ -25,8 +25,19 @@ app.use((req, res, next) => {
   const forwardedHost = req.headers['x-forwarded-host'];
   const originalHost = forwardedHost ? String(forwardedHost).split(',')[0].trim() : host;
 
-  // Allow Railway healthcheck to pass without redirecting
-  if (req.method === 'HEAD' || req.path === '/api/health' || req.path === '/health' || req.path === '/healthz') {
+  // Allow Railway healthcheck and static files to pass without redirecting
+  if (req.method === 'HEAD' || 
+      req.path === '/api/health' || 
+      req.path === '/health' || 
+      req.path === '/healthz' ||
+      req.path === '/robots.txt' ||
+      req.path === '/sitemap.xml' ||
+      req.path.startsWith('/css/') ||
+      req.path.startsWith('/js/') ||
+      req.path.startsWith('/images/') ||
+      req.path.endsWith('.png') ||
+      req.path.endsWith('.jpg') ||
+      req.path.endsWith('.ico')) {
     return next();
   }
 
@@ -190,6 +201,17 @@ const validateContactForm = [
     .withMessage('Message must be between 10 and 1000 characters')
 ];
 
+// SEO Routes
+app.get('/robots.txt', (req, res) => {
+  res.type('text/plain');
+  res.sendFile(__dirname + '/robots.txt');
+});
+
+app.get('/sitemap.xml', (req, res) => {
+  res.type('application/xml');
+  res.sendFile(__dirname + '/sitemap.xml');
+});
+
 // Routes
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
@@ -203,6 +225,23 @@ app.get('/login', (req, res) => {
 // Admin dashboard route (protected)
 app.get('/admin', requireAuth, (req, res) => {
   res.sendFile(__dirname + '/admin.html');
+});
+
+// Donation pages routes
+app.get('/donation', (req, res) => {
+  res.sendFile(__dirname + '/donation.html');
+});
+
+app.get('/donation-select', (req, res) => {
+  res.sendFile(__dirname + '/donation-select.html');
+});
+
+app.get('/payment', (req, res) => {
+  res.sendFile(__dirname + '/payment.html');
+});
+
+app.get('/transfer', (req, res) => {
+  res.sendFile(__dirname + '/transfer.html');
 });
 
 // Contact form submission endpoint

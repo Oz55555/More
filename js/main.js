@@ -169,7 +169,23 @@ hamburger.addEventListener('click', () => {
     hamburger.classList.toggle('active');
     navLinks.classList.toggle('active');
     document.body.style.overflow = navLinks.classList.contains('active') ? 'hidden' : 'auto';
+    
+    // Update menu background with current carousel image
+    if (navLinks.classList.contains('active')) {
+        updateMenuBackground();
+    }
 });
+
+// Function to update menu background with current carousel image
+function updateMenuBackground() {
+    const activeCarouselImage = document.querySelector('.carousel-container img.active');
+    const navLinks = document.querySelector('.nav-links');
+    
+    if (activeCarouselImage && navLinks) {
+        const imageUrl = activeCarouselImage.src;
+        navLinks.style.setProperty('--menu-bg-image', `url(${imageUrl})`);
+    }
+}
 
 // Close mobile menu when clicking on a nav link
 navLinksItems.forEach(link => {
