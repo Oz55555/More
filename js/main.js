@@ -5,41 +5,71 @@ const countryFlags = {
     'ca': 'https://flagcdn.com/w40/ca.png'
 };
 
-// Detect country from IP geolocation and show flag
-async function detectAndShowCountryFlag() {
-    try {
-        const response = await fetch('https://ipapi.co/json/');
-        const data = await response.json();
-        
-        let countryCode = 'us'; // Default
-        
-        if (data && data.country_code) {
-            const detectedCode = data.country_code.toLowerCase();
-            // Only set if it's Mexico, US, or Canada
-            if (detectedCode === 'mx' || detectedCode === 'us' || detectedCode === 'ca') {
-                countryCode = detectedCode;
-            }
-        }
-        
-        // Update flag in navigation
-        const navFlag = document.getElementById('nav-country-flag');
-        if (navFlag && countryFlags[countryCode]) {
-            navFlag.src = countryFlags[countryCode];
-            navFlag.alt = `${countryCode.toUpperCase()} Flag`;
-        }
-    } catch (error) {
-        console.log('Could not detect country, using default:', error);
-        // Set default US flag
-        const navFlag = document.getElementById('nav-country-flag');
-        if (navFlag) {
-            navFlag.src = countryFlags['us'];
-            navFlag.alt = 'US Flag';
-        }
+// Update flag display
+function updateFlagDisplay(countryCode) {
+    const navFlag = document.getElementById('nav-country-flag');
+    if (navFlag && countryFlags[countryCode]) {
+        navFlag.src = countryFlags[countryCode];
+        navFlag.alt = `${countryCode.toUpperCase()} Flag`;
+        console.log(`Flag updated to: ${countryCode.toUpperCase()}`);
     }
 }
 
-// Initialize country detection
-detectAndShowCountryFlag();
+// Detect country from IP geolocation and show flag
+async function detectAndShowCountryFlag() {
+    let countryCode = 'us'; // Default
+    
+    try {
+        // Try primary geolocation service
+        console.log('Detecting country from IP...');
+        const response = await fetch('https://ipapi.co/json/');
+        const data = await response.json();
+        
+        console.log('Geolocation data:', data);
+        
+        if (data && data.country_code) {
+            const detectedCode = data.country_code.toLowerCase();
+            console.log(`Detected country: ${detectedCode}`);
+            
+            // Only set if it's Mexico, US, or Canada
+            if (detectedCode === 'mx' || detectedCode === 'us' || detectedCode === 'ca') {
+                countryCode = detectedCode;
+            } else {
+                console.log(`Country ${detectedCode} not in list, using default US`);
+            }
+        }
+    } catch (error) {
+        console.log('Primary geolocation failed, trying backup...', error);
+        
+        // Try backup geolocation service
+        try {
+            const backupResponse = await fetch('https://api.country.is/');
+            const backupData = await backupResponse.json();
+            
+            if (backupData && backupData.country) {
+                const detectedCode = backupData.country.toLowerCase();
+                console.log(`Backup detected country: ${detectedCode}`);
+                
+                if (detectedCode === 'mx' || detectedCode === 'us' || detectedCode === 'ca') {
+                    countryCode = detectedCode;
+                }
+            }
+        } catch (backupError) {
+            console.log('Backup geolocation also failed, using default US', backupError);
+        }
+    }
+    
+    // Update the flag
+    updateFlagDisplay(countryCode);
+}
+
+// Initialize country detection when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', detectAndShowCountryFlag);
+} else {
+    // DOM is already ready
+    detectAndShowCountryFlag();
+}
 
 // Page Loader with Connection Speed Detection
 window.addEventListener('load', function() {
