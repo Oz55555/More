@@ -1,108 +1,45 @@
-// Country Detection and Banner Display
-async function detectAndShowCountry() {
+// Country Flag Auto-Detection
+const countryFlags = {
+    'mx': 'https://flagcdn.com/w40/mx.png',
+    'us': 'https://flagcdn.com/w40/us.png',
+    'ca': 'https://flagcdn.com/w40/ca.png'
+};
+
+// Detect country from IP geolocation and show flag
+async function detectAndShowCountryFlag() {
     try {
-        // Try to get country from IP geolocation
         const response = await fetch('https://ipapi.co/json/');
         const data = await response.json();
         
+        let countryCode = 'us'; // Default
+        
         if (data && data.country_code) {
-            const countryCode = data.country_code.toLowerCase();
-            const countryName = data.country_name;
-            
-            // Country messages in Spanish
-            const countryMessages = {
-                'mx': 'Visitando desde México',
-                'us': 'Visitando desde Estados Unidos',
-                'ca': 'Visitando desde Canadá',
-                'es': 'Visitando desde España',
-                'ar': 'Visitando desde Argentina',
-                'co': 'Visitando desde Colombia',
-                'cl': 'Visitando desde Chile',
-                'pe': 'Visitando desde Perú',
-                've': 'Visitando desde Venezuela',
-                'ec': 'Visitando desde Ecuador',
-                'gt': 'Visitando desde Guatemala',
-                'cu': 'Visitando desde Cuba',
-                'bo': 'Visitando desde Bolivia',
-                'do': 'Visitando desde República Dominicana',
-                'hn': 'Visitando desde Honduras',
-                'py': 'Visitando desde Paraguay',
-                'sv': 'Visitando desde El Salvador',
-                'ni': 'Visitando desde Nicaragua',
-                'cr': 'Visitando desde Costa Rica',
-                'pa': 'Visitando desde Panamá',
-                'uy': 'Visitando desde Uruguay',
-                'br': 'Visitando desde Brasil',
-                'gb': 'Visitando desde Reino Unido',
-                'de': 'Visitando desde Alemania',
-                'fr': 'Visitando desde Francia',
-                'it': 'Visitando desde Italia',
-                'pt': 'Visitando desde Portugal',
-                'nl': 'Visitando desde Países Bajos',
-                'be': 'Visitando desde Bélgica',
-                'ch': 'Visitando desde Suiza',
-                'at': 'Visitando desde Austria',
-                'se': 'Visitando desde Suecia',
-                'no': 'Visitando desde Noruega',
-                'dk': 'Visitando desde Dinamarca',
-                'fi': 'Visitando desde Finlandia',
-                'ie': 'Visitando desde Irlanda',
-                'pl': 'Visitando desde Polonia',
-                'cz': 'Visitando desde República Checa',
-                'hu': 'Visitando desde Hungría',
-                'ro': 'Visitando desde Rumania',
-                'gr': 'Visitando desde Grecia',
-                'jp': 'Visitando desde Japón',
-                'cn': 'Visitando desde China',
-                'kr': 'Visitando desde Corea del Sur',
-                'in': 'Visitando desde India',
-                'au': 'Visitando desde Australia',
-                'nz': 'Visitando desde Nueva Zelanda',
-                'za': 'Visitando desde Sudáfrica',
-                'eg': 'Visitando desde Egipto',
-                'ng': 'Visitando desde Nigeria',
-                'ke': 'Visitando desde Kenia',
-                'il': 'Visitando desde Israel',
-                'ae': 'Visitando desde Emiratos Árabes Unidos',
-                'sa': 'Visitando desde Arabia Saudita',
-                'tr': 'Visitando desde Turquía',
-                'ru': 'Visitando desde Rusia',
-                'ua': 'Visitando desde Ucrania'
-            };
-            
-            const message = countryMessages[countryCode] || `Visitando desde ${countryName}`;
-            
-            // Update banner content
-            const banner = document.getElementById('country-banner');
-            const flagImg = document.getElementById('country-flag');
-            const textSpan = document.getElementById('country-text');
-            
-            // Use flagcdn.com for high-quality flag images
-            flagImg.src = `https://flagcdn.com/w80/${countryCode}.png`;
-            flagImg.alt = `${countryName} Flag`;
-            textSpan.textContent = message;
-            
-            // Show banner
-            banner.style.display = 'block';
-            document.body.classList.add('has-country-banner');
-            
-            // Optional: Auto-hide after 10 seconds
-            setTimeout(() => {
-                banner.style.animation = 'slideDown 0.5s ease-out reverse';
-                setTimeout(() => {
-                    banner.style.display = 'none';
-                    document.body.classList.remove('has-country-banner');
-                }, 500);
-            }, 10000);
+            const detectedCode = data.country_code.toLowerCase();
+            // Only set if it's Mexico, US, or Canada
+            if (detectedCode === 'mx' || detectedCode === 'us' || detectedCode === 'ca') {
+                countryCode = detectedCode;
+            }
+        }
+        
+        // Update flag in navigation
+        const navFlag = document.getElementById('nav-country-flag');
+        if (navFlag && countryFlags[countryCode]) {
+            navFlag.src = countryFlags[countryCode];
+            navFlag.alt = `${countryCode.toUpperCase()} Flag`;
         }
     } catch (error) {
-        console.log('Could not detect country:', error);
-        // Silently fail - don't show banner if detection fails
+        console.log('Could not detect country, using default:', error);
+        // Set default US flag
+        const navFlag = document.getElementById('nav-country-flag');
+        if (navFlag) {
+            navFlag.src = countryFlags['us'];
+            navFlag.alt = 'US Flag';
+        }
     }
 }
 
-// Call country detection when page loads
-detectAndShowCountry();
+// Initialize country detection
+detectAndShowCountryFlag();
 
 // Page Loader with Connection Speed Detection
 window.addEventListener('load', function() {
