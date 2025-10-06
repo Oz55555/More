@@ -11,57 +11,120 @@ function updateFlagDisplay(countryCode) {
     if (navFlag && countryFlags[countryCode]) {
         navFlag.src = countryFlags[countryCode];
         navFlag.alt = `${countryCode.toUpperCase()} Flag`;
-        console.log(`Flag updated to: ${countryCode.toUpperCase()}`);
+        console.log(`✅ Flag updated to: ${countryCode.toUpperCase()}`);
+    } else {
+        console.log('❌ Flag element not found or invalid country code');
     }
 }
 
 // Detect country from IP geolocation and show flag
 async function detectAndShowCountryFlag() {
     let countryCode = 'us'; // Default
+    let detected = false;
     
-    try {
-        // Try primary geolocation service
-        console.log('Detecting country from IP...');
-        const response = await fetch('https://ipapi.co/json/');
-        const data = await response.json();
-        
-        console.log('Geolocation data:', data);
-        
-        if (data && data.country_code) {
-            const detectedCode = data.country_code.toLowerCase();
-            console.log(`Detected country: ${detectedCode}`);
-            
-            // Only set if it's Mexico, US, or Canada
-            if (detectedCode === 'mx' || detectedCode === 'us' || detectedCode === 'ca') {
-                countryCode = detectedCode;
-            } else {
-                console.log(`Country ${detectedCode} not in list, using default US`);
-            }
-        }
-    } catch (error) {
-        console.log('Primary geolocation failed, trying backup...', error);
-        
-        // Try backup geolocation service
+    // Service 1: ipapi.co
+    if (!detected) {
         try {
-            const backupResponse = await fetch('https://api.country.is/');
-            const backupData = await backupResponse.json();
+            console.log('🔍 Trying ipapi.co...');
+            const response = await fetch('https://ipapi.co/json/', {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
             
-            if (backupData && backupData.country) {
-                const detectedCode = backupData.country.toLowerCase();
-                console.log(`Backup detected country: ${detectedCode}`);
+            if (response.ok) {
+                const data = await response.json();
+                console.log('📍 ipapi.co response:', data);
                 
-                if (detectedCode === 'mx' || detectedCode === 'us' || detectedCode === 'ca') {
-                    countryCode = detectedCode;
+                if (data && data.country_code) {
+                    const detectedCode = data.country_code.toLowerCase();
+                    console.log(`🌍 Detected country: ${detectedCode.toUpperCase()}`);
+                    
+                    if (detectedCode === 'mx' || detectedCode === 'us' || detectedCode === 'ca') {
+                        countryCode = detectedCode;
+                        detected = true;
+                        console.log(`✅ Using detected country: ${countryCode.toUpperCase()}`);
+                    } else {
+                        console.log(`⚠️ Country ${detectedCode.toUpperCase()} not in list (MX, US, CA)`);
+                    }
                 }
             }
-        } catch (backupError) {
-            console.log('Backup geolocation also failed, using default US', backupError);
+        } catch (error) {
+            console.log('❌ ipapi.co failed:', error.message);
         }
+    }
+    
+    // Service 2: api.country.is
+    if (!detected) {
+        try {
+            console.log('🔍 Trying api.country.is...');
+            const response = await fetch('https://api.country.is/');
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log('📍 api.country.is response:', data);
+                
+                if (data && data.country) {
+                    const detectedCode = data.country.toLowerCase();
+                    console.log(`🌍 Detected country: ${detectedCode.toUpperCase()}`);
+                    
+                    if (detectedCode === 'mx' || detectedCode === 'us' || detectedCode === 'ca') {
+                        countryCode = detectedCode;
+                        detected = true;
+                        console.log(`✅ Using detected country: ${countryCode.toUpperCase()}`);
+                    }
+                }
+            }
+        } catch (error) {
+            console.log('❌ api.country.is failed:', error.message);
+        }
+    }
+    
+    // Service 3: ipinfo.io
+    if (!detected) {
+        try {
+            console.log('🔍 Trying ipinfo.io...');
+            const response = await fetch('https://ipinfo.io/json');
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log('📍 ipinfo.io response:', data);
+                
+                if (data && data.country) {
+                    const detectedCode = data.country.toLowerCase();
+                    console.log(`🌍 Detected country: ${detectedCode.toUpperCase()}`);
+                    
+                    if (detectedCode === 'mx' || detectedCode === 'us' || detectedCode === 'ca') {
+                        countryCode = detectedCode;
+                        detected = true;
+                        console.log(`✅ Using detected country: ${countryCode.toUpperCase()}`);
+                    }
+                }
+            }
+        } catch (error) {
+            console.log('❌ ipinfo.io failed:', error.message);
+        }
+    }
+    
+    if (!detected) {
+        console.log(`⚠️ All services failed or country not in list. Using default: US`);
     }
     
     // Update the flag
     updateFlagDisplay(countryCode);
 }
+
+// Manual country setter for testing (call from console: setCountry('mx'))
+window.setCountry = function(code) {
+    const validCodes = ['mx', 'us', 'ca'];
+    if (validCodes.includes(code.toLowerCase())) {
+        updateFlagDisplay(code.toLowerCase());
+        console.log(`🔧 Manually set country to: ${code.toUpperCase()}`);
+    } else {
+        console.log(`❌ Invalid country code. Use: mx, us, or ca`);
+    }
+};
 
 // Initialize country detection when DOM is ready
 if (document.readyState === 'loading') {
