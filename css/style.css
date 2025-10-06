@@ -141,6 +141,89 @@
     }
 }
 
+/* Country Banner */
+.country-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: linear-gradient(135deg, rgba(0, 83, 155, 0.95) 0%, rgba(30, 58, 138, 0.95) 100%);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 10000;
+    padding: 0.8rem 5%;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    animation: slideDown 0.5s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.country-banner-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.country-flag {
+    width: 40px;
+    height: 30px;
+    object-fit: cover;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.country-text {
+    color: white;
+    font-size: 1rem;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+}
+
+/* Adjust header position when banner is visible */
+body.has-country-banner header {
+    top: 54px;
+}
+
+body.has-country-banner .hero {
+    margin-top: 54px;
+}
+
+@media (max-width: 768px) {
+    .country-banner {
+        padding: 0.6rem 3%;
+    }
+    
+    .country-flag {
+        width: 32px;
+        height: 24px;
+    }
+    
+    .country-text {
+        font-size: 0.9rem;
+    }
+    
+    body.has-country-banner header {
+        top: 48px;
+    }
+    
+    body.has-country-banner .hero {
+        margin-top: 48px;
+    }
+}
+
 /* Base Styles */
 :root {
     --primary-color: #00539B; /* New Blue */
