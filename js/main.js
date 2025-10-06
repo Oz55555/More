@@ -1,25 +1,38 @@
 // Country Flag Auto-Detection
-const countryFlags = {
-    'mx': 'https://flagcdn.com/w40/mx.png',
-    'us': 'https://flagcdn.com/w40/us.png',
-    'ca': 'https://flagcdn.com/w40/ca.png'
-};
+// Globe icon for unknown/unsupported countries
+const globeIcon = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%2300539B" stroke-width="2"%3E%3Ccircle cx="12" cy="12" r="10"/%3E%3Cpath d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/%3E%3C/svg%3E';
+
+// Get flag URL for any country code
+function getFlagUrl(countryCode) {
+    if (!countryCode || countryCode === 'world') {
+        return globeIcon;
+    }
+    // Use flagcdn.com API which supports all countries
+    return `https://flagcdn.com/w40/${countryCode.toLowerCase()}.png`;
+}
 
 // Update flag display
 function updateFlagDisplay(countryCode) {
     const navFlag = document.getElementById('nav-country-flag');
-    if (navFlag && countryFlags[countryCode]) {
-        navFlag.src = countryFlags[countryCode];
-        navFlag.alt = `${countryCode.toUpperCase()} Flag`;
-        console.log(`✅ Flag updated to: ${countryCode.toUpperCase()}`);
+    if (navFlag) {
+        const flagUrl = getFlagUrl(countryCode);
+        navFlag.src = flagUrl;
+        navFlag.alt = countryCode === 'world' ? 'World' : `${countryCode.toUpperCase()} Flag`;
+        navFlag.onerror = function() {
+            // If flag fails to load, show globe
+            this.src = globeIcon;
+            this.alt = 'World';
+            console.log(`⚠️ Flag for ${countryCode} not found, showing globe`);
+        };
+        console.log(`✅ Flag updated to: ${countryCode === 'world' ? 'World (Globe)' : countryCode.toUpperCase()}`);
     } else {
-        console.log('❌ Flag element not found or invalid country code');
+        console.log('❌ Flag element not found');
     }
 }
 
 // Detect country from IP geolocation and show flag
 async function detectAndShowCountryFlag() {
-    let countryCode = 'us'; // Default
+    let countryCode = 'world'; // Default to globe for unknown countries
     let detected = false;
     
     // Service 1: ipapi.co
@@ -40,14 +53,9 @@ async function detectAndShowCountryFlag() {
                 if (data && data.country_code) {
                     const detectedCode = data.country_code.toLowerCase();
                     console.log(`🌍 Detected country: ${detectedCode.toUpperCase()}`);
-                    
-                    if (detectedCode === 'mx' || detectedCode === 'us' || detectedCode === 'ca') {
-                        countryCode = detectedCode;
-                        detected = true;
-                        console.log(`✅ Using detected country: ${countryCode.toUpperCase()}`);
-                    } else {
-                        console.log(`⚠️ Country ${detectedCode.toUpperCase()} not in list (MX, US, CA)`);
-                    }
+                    countryCode = detectedCode;
+                    detected = true;
+                    console.log(`✅ Using detected country: ${countryCode.toUpperCase()}`);
                 }
             }
         } catch (error) {
@@ -68,12 +76,9 @@ async function detectAndShowCountryFlag() {
                 if (data && data.country) {
                     const detectedCode = data.country.toLowerCase();
                     console.log(`🌍 Detected country: ${detectedCode.toUpperCase()}`);
-                    
-                    if (detectedCode === 'mx' || detectedCode === 'us' || detectedCode === 'ca') {
-                        countryCode = detectedCode;
-                        detected = true;
-                        console.log(`✅ Using detected country: ${countryCode.toUpperCase()}`);
-                    }
+                    countryCode = detectedCode;
+                    detected = true;
+                    console.log(`✅ Using detected country: ${countryCode.toUpperCase()}`);
                 }
             }
         } catch (error) {
@@ -94,12 +99,9 @@ async function detectAndShowCountryFlag() {
                 if (data && data.country) {
                     const detectedCode = data.country.toLowerCase();
                     console.log(`🌍 Detected country: ${detectedCode.toUpperCase()}`);
-                    
-                    if (detectedCode === 'mx' || detectedCode === 'us' || detectedCode === 'ca') {
-                        countryCode = detectedCode;
-                        detected = true;
-                        console.log(`✅ Using detected country: ${countryCode.toUpperCase()}`);
-                    }
+                    countryCode = detectedCode;
+                    detected = true;
+                    console.log(`✅ Using detected country: ${countryCode.toUpperCase()}`);
                 }
             }
         } catch (error) {
@@ -108,7 +110,8 @@ async function detectAndShowCountryFlag() {
     }
     
     if (!detected) {
-        console.log(`⚠️ All services failed or country not in list. Using default: US`);
+        console.log(`⚠️ All services failed. Using default: Globe`);
+        countryCode = 'world';
     }
     
     // Update the flag
@@ -117,12 +120,11 @@ async function detectAndShowCountryFlag() {
 
 // Manual country setter for testing (call from console: setCountry('mx'))
 window.setCountry = function(code) {
-    const validCodes = ['mx', 'us', 'ca'];
-    if (validCodes.includes(code.toLowerCase())) {
+    if (code && code.length === 2) {
         updateFlagDisplay(code.toLowerCase());
         console.log(`🔧 Manually set country to: ${code.toUpperCase()}`);
     } else {
-        console.log(`❌ Invalid country code. Use: mx, us, or ca`);
+        console.log(`❌ Invalid country code. Use a 2-letter ISO code (e.g., 'mx', 'us', 'es', 'br', 'ar', etc.)`);
     }
 };
 
