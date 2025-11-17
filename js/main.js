@@ -48,13 +48,23 @@ async function detectAndShowCountryFlag() {
             const data = await response.json();
             console.log('📍 Geolocation response:', data);
             
+            if (data.client_ip) {
+                console.log(`🌐 Your IP: ${data.client_ip}`);
+            }
+            
             if (data.success && data.country_code) {
                 const detectedCode = data.country_code.toLowerCase();
                 console.log(`🌍 Detected country: ${detectedCode.toUpperCase()}`);
+                if (data.data && data.data.city) {
+                    console.log(`📍 Location: ${data.data.city}, ${data.data.country_name || detectedCode.toUpperCase()}`);
+                }
                 countryCode = detectedCode;
                 console.log(`✅ Using detected country: ${countryCode.toUpperCase()}`);
             } else {
                 console.log(`⚠️ Geolocation failed. Using default: Globe`);
+                if (data.message) {
+                    console.log(`ℹ️ Reason: ${data.message}`);
+                }
             }
         } else {
             console.log(`❌ Backend API returned status ${response.status}`);

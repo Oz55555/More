@@ -1372,12 +1372,36 @@ app.post('/api/payments/:paymentIntentId/status', async (req, res) => {
 // Geolocation proxy endpoint
 app.get('/api/geolocation', async (req, res) => {
   try {
+    // Get the client's real IP address (support various proxy headers)
+    let clientIp = req.headers['cf-connecting-ip'] ||  // Cloudflare
+                   req.headers['x-forwarded-for'] ||   // Standard proxy
+                   req.headers['x-real-ip'] ||          // Nginx proxy
+                   req.headers['true-client-ip'] ||     // Akamai and Cloudflare
+                   req.connection.remoteAddress ||
+                   req.socket.remoteAddress ||
+                   (req.connection.socket ? req.connection.socket.remoteAddress : null);
+    
+    // Clean up the IP (remove IPv6 prefix if present)
+    if (clientIp) {
+      // If x-forwarded-for contains multiple IPs, get the first one
+      if (clientIp.includes(',')) {
+        clientIp = clientIp.split(',')[0].trim();
+      }
+      // Remove IPv6 prefix if present
+      if (clientIp.includes('::ffff:')) {
+        clientIp = clientIp.replace('::ffff:', '');
+      }
+    }
+    
+    console.log(`🌐 Client IP detected: ${clientIp}`);
+    
     let countryCode = null;
     let countryData = null;
 
-    // Try ipapi.co first
+    // Try ipapi.co first with client IP
     try {
-      const response = await fetch('https://ipapi.co/json/', {
+      const url = clientIp ? `https://ipapi.co/${clientIp}/json/` : 'https://ipapi.co/json/';
+      const response = await fetch(url, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
@@ -1390,17 +1414,18 @@ app.get('/api/geolocation', async (req, res) => {
         if (data && data.country_code) {
           countryCode = data.country_code;
           countryData = data;
-          console.log(`✅ ipapi.co succeeded: ${countryCode}`);
+          console.log(`✅ ipapi.co succeeded: ${countryCode} (IP: ${data.ip})`);
         }
       }
     } catch (error) {
       console.log('❌ ipapi.co failed:', error.message);
     }
 
-    // Try api.country.is if ipapi.co failed
+    // Try ip-api.com if ipapi.co failed (supports specific IP queries)
     if (!countryCode) {
       try {
-        const response = await fetch('https://api.country.is/', {
+        const url = clientIp ? `http://ip-api.com/json/${clientIp}` : 'http://ip-api.com/json/';
+        const response = await fetch(url, {
           method: 'GET',
           headers: {
             'Accept': 'application/json',
@@ -1410,21 +1435,22 @@ app.get('/api/geolocation', async (req, res) => {
 
         if (response.ok) {
           const data = await response.json();
-          if (data && data.country) {
-            countryCode = data.country;
+          if (data && data.status === 'success' && data.countryCode) {
+            countryCode = data.countryCode;
             countryData = data;
-            console.log(`✅ api.country.is succeeded: ${countryCode}`);
+            console.log(`✅ ip-api.com succeeded: ${countryCode} (IP: ${data.query})`);
           }
         }
       } catch (error) {
-        console.log('❌ api.country.is failed:', error.message);
+        console.log('❌ ip-api.com failed:', error.message);
       }
     }
 
-    // Try ipinfo.io as last resort
+    // Try ipinfo.io as last resort with client IP
     if (!countryCode) {
       try {
-        const response = await fetch('https://ipinfo.io/json', {
+        const url = clientIp ? `https://ipinfo.io/${clientIp}/json` : 'https://ipinfo.io/json';
+        const response = await fetch(url, {
           method: 'GET',
           headers: {
             'Accept': 'application/json',
@@ -1437,7 +1463,7 @@ app.get('/api/geolocation', async (req, res) => {
           if (data && data.country) {
             countryCode = data.country;
             countryData = data;
-            console.log(`✅ ipinfo.io succeeded: ${countryCode}`);
+            console.log(`✅ ipinfo.io succeeded: ${countryCode} (IP: ${data.ip})`);
           }
         }
       } catch (error) {
@@ -1450,12 +1476,14 @@ app.get('/api/geolocation', async (req, res) => {
       res.json({
         success: true,
         country_code: countryCode,
+        client_ip: clientIp,
         data: countryData
       });
     } else {
       res.json({
         success: false,
         country_code: 'world',
+        client_ip: clientIp,
         message: 'Could not detect country'
       });
     }
