@@ -62,7 +62,7 @@ app.use(helmet({
       imgSrc: ["'self'", "data:", "https:", "http:"],
       scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://js.stripe.com"],
       scriptSrcAttr: "'none'",
-      connectSrc: ["'self'", "https://api.stripe.com", "https://ipapi.co", "https://api.country.is", "https://ipinfo.io", "https://flagcdn.com"],
+      connectSrc: ["'self'", "https://api.stripe.com", "https://ipapi.co", "https://api.country.is", "https://ipinfo.io", "https://flagcdn.com", "https://cdn.jsdelivr.net"],
       frameSrc: ["'self'", "https://js.stripe.com", "https://hooks.stripe.com"]
     }
   }
