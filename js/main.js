@@ -32,86 +32,36 @@ function updateFlagDisplay(countryCode) {
 
 // Detect country from IP geolocation and show flag
 async function detectAndShowCountryFlag() {
+    console.log('🌎 Starting country detection...');
     let countryCode = 'world'; // Default to globe for unknown countries
-    let detected = false;
     
-    // Service 1: ipapi.co
-    if (!detected) {
-        try {
-            console.log('🔍 Trying ipapi.co...');
-            const response = await fetch('https://ipapi.co/json/', {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json'
-                }
-            });
-            
-            if (response.ok) {
-                const data = await response.json();
-                console.log('📍 ipapi.co response:', data);
-                
-                if (data && data.country_code) {
-                    const detectedCode = data.country_code.toLowerCase();
-                    console.log(`🌍 Detected country: ${detectedCode.toUpperCase()}`);
-                    countryCode = detectedCode;
-                    detected = true;
-                    console.log(`✅ Using detected country: ${countryCode.toUpperCase()}`);
-                }
+    try {
+        console.log('🔍 Calling backend geolocation API...');
+        const response = await fetch('/api/geolocation', {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json'
             }
-        } catch (error) {
-            console.log('❌ ipapi.co failed:', error.message);
-        }
-    }
-    
-    // Service 2: api.country.is
-    if (!detected) {
-        try {
-            console.log('🔍 Trying api.country.is...');
-            const response = await fetch('https://api.country.is/');
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            console.log('📍 Geolocation response:', data);
             
-            if (response.ok) {
-                const data = await response.json();
-                console.log('📍 api.country.is response:', data);
-                
-                if (data && data.country) {
-                    const detectedCode = data.country.toLowerCase();
-                    console.log(`🌍 Detected country: ${detectedCode.toUpperCase()}`);
-                    countryCode = detectedCode;
-                    detected = true;
-                    console.log(`✅ Using detected country: ${countryCode.toUpperCase()}`);
-                }
+            if (data.success && data.country_code) {
+                const detectedCode = data.country_code.toLowerCase();
+                console.log(`🌍 Detected country: ${detectedCode.toUpperCase()}`);
+                countryCode = detectedCode;
+                console.log(`✅ Using detected country: ${countryCode.toUpperCase()}`);
+            } else {
+                console.log(`⚠️ Geolocation failed. Using default: Globe`);
             }
-        } catch (error) {
-            console.log('❌ api.country.is failed:', error.message);
+        } else {
+            console.log(`❌ Backend API returned status ${response.status}`);
         }
-    }
-    
-    // Service 3: ipinfo.io
-    if (!detected) {
-        try {
-            console.log('🔍 Trying ipinfo.io...');
-            const response = await fetch('https://ipinfo.io/json');
-            
-            if (response.ok) {
-                const data = await response.json();
-                console.log('📍 ipinfo.io response:', data);
-                
-                if (data && data.country) {
-                    const detectedCode = data.country.toLowerCase();
-                    console.log(`🌍 Detected country: ${detectedCode.toUpperCase()}`);
-                    countryCode = detectedCode;
-                    detected = true;
-                    console.log(`✅ Using detected country: ${countryCode.toUpperCase()}`);
-                }
-            }
-        } catch (error) {
-            console.log('❌ ipinfo.io failed:', error.message);
-        }
-    }
-    
-    if (!detected) {
-        console.log(`⚠️ All services failed. Using default: Globe`);
-        countryCode = 'world';
+    } catch (error) {
+        console.log('❌ Geolocation API call failed:', error.message);
+        console.log(`⚠️ Using default: Globe`);
     }
     
     // Update the flag

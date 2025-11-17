@@ -1369,6 +1369,106 @@ app.post('/api/payments/:paymentIntentId/status', async (req, res) => {
   }
 });
 
+// Geolocation proxy endpoint
+app.get('/api/geolocation', async (req, res) => {
+  try {
+    let countryCode = null;
+    let countryData = null;
+
+    // Try ipapi.co first
+    try {
+      const response = await fetch('https://ipapi.co/json/', {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.country_code) {
+          countryCode = data.country_code;
+          countryData = data;
+          console.log(`✅ ipapi.co succeeded: ${countryCode}`);
+        }
+      }
+    } catch (error) {
+      console.log('❌ ipapi.co failed:', error.message);
+    }
+
+    // Try api.country.is if ipapi.co failed
+    if (!countryCode) {
+      try {
+        const response = await fetch('https://api.country.is/', {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data.country) {
+            countryCode = data.country;
+            countryData = data;
+            console.log(`✅ api.country.is succeeded: ${countryCode}`);
+          }
+        }
+      } catch (error) {
+        console.log('❌ api.country.is failed:', error.message);
+      }
+    }
+
+    // Try ipinfo.io as last resort
+    if (!countryCode) {
+      try {
+        const response = await fetch('https://ipinfo.io/json', {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data.country) {
+            countryCode = data.country;
+            countryData = data;
+            console.log(`✅ ipinfo.io succeeded: ${countryCode}`);
+          }
+        }
+      } catch (error) {
+        console.log('❌ ipinfo.io failed:', error.message);
+      }
+    }
+
+    // Return the result
+    if (countryCode) {
+      res.json({
+        success: true,
+        country_code: countryCode,
+        data: countryData
+      });
+    } else {
+      res.json({
+        success: false,
+        country_code: 'world',
+        message: 'Could not detect country'
+      });
+    }
+  } catch (error) {
+    console.error('Geolocation error:', error);
+    res.json({
+      success: false,
+      country_code: 'world',
+      error: error.message
+    });
+  }
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({
