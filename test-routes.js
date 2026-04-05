@@ -10,8 +10,6 @@ const BASE_URL = process.env.TEST_URL || 'http://localhost:3000';
 const routes = [
   { path: '/', description: 'Home page' },
   { path: '/login', description: 'Login page' },
-  { path: '/donation', description: 'Donation page' },
-  { path: '/donation-select', description: 'Donation select page' },
   { path: '/payment', description: 'Payment page' },
   { path: '/transfer', description: 'Transfer page' },
   { path: '/robots.txt', description: 'Robots.txt' },

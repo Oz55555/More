@@ -199,68 +199,6 @@ const currentYear = new Date().getFullYear();
 // Set current year in footer
 document.getElementById('year').textContent = new Date().getFullYear();
 
-// Donation functionality
-let selectedAmount = 0;
-
-// Initialize donation event listeners
-document.addEventListener('DOMContentLoaded', function() {
-    // Amount button event listeners
-    document.querySelectorAll('.amount-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const amount = this.getAttribute('data-amount');
-            if (amount === 'custom') {
-                setCustomAmount(this);
-            } else {
-                setAmount(parseFloat(amount), this);
-            }
-        });
-    });
-
-    // Donation button event listener
-    document.querySelectorAll('[data-payment="donate"]').forEach(btn => {
-        btn.addEventListener('click', function() {
-            // Redirect to donation selection page
-            window.location.href = '/donation-select.html';
-        });
-    });
-});
-
-function setAmount(amount, buttonElement) {
-    selectedAmount = amount;
-    
-    // Update button states
-    document.querySelectorAll('.amount-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    
-    buttonElement.classList.add('active');
-}
-
-function setCustomAmount(buttonElement) {
-    const amount = prompt('Enter your custom donation amount (USD):');
-    if (amount && !isNaN(amount) && parseFloat(amount) > 0) {
-        selectedAmount = parseFloat(amount);
-        
-        // Update button states
-        document.querySelectorAll('.amount-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        
-        buttonElement.classList.add('active');
-        buttonElement.textContent = `$${selectedAmount}`;
-    }
-}
-
-function openPaymentMethod(method) {
-    if (selectedAmount <= 0) {
-        alert('Por favor selecciona un monto de donación primero.');
-        return;
-    }
-    
-    // Always use current domain for payment redirect
-    const amount = selectedAmount;
-    window.location.href = `/payment.html?amount=${amount}&method=${method}`;
-}
 
 // Mobile menu toggle
 hamburger.addEventListener('click', () => {

@@ -124,7 +124,7 @@ function enableTraditionalCardFields() {
 
 function updatePaymentSummary(amount, method) {
     document.getElementById('payment-method').textContent = method;
-    document.getElementById('donation-amount').textContent = `$${parseFloat(amount).toFixed(2)}`;
+    document.getElementById('payment-amount').textContent = `$${parseFloat(amount).toFixed(2)}`;
     document.getElementById('total-amount').textContent = `$${parseFloat(amount).toFixed(2)}`;
     
     // Add payment method indicator class
@@ -578,12 +578,12 @@ function processPayment() {
     
     // Check if payment method is PayPal
     if (paymentData.paymentMethod === 'PayPal') {
-        // Redirect to PayPal.me with the donation amount
+        // Redirect to PayPal.me with the payment amount
         const paypalUsername = 'mentesaludable';
         const paypalUrl = `https://paypal.me/${paypalUsername}/${paymentData.amount}`;
         
         // Optional: Add a note to the PayPal payment
-        const note = encodeURIComponent(`Donation from ${paymentData.firstName} ${paymentData.lastName}`);
+        const note = encodeURIComponent(`Payment from ${paymentData.firstName} ${paymentData.lastName}`);
         const paypalUrlWithNote = `${paypalUrl}?note=${note}`;
         
         // Show PayPal redirect message
@@ -730,7 +730,7 @@ async function processStripePayment(paymentData, submitBtn, originalText) {
                 errorCode: error.code
             });
         } else if (paymentIntent.status === 'succeeded') {
-            // Confirm payment on server and save donation info
+            // Confirm payment on server and save payment info
             const confirmResponse = await fetch('/api/confirm-payment', {
                 method: 'POST',
                 headers: {
@@ -789,7 +789,7 @@ function showPayPalRedirect(paymentData, paypalUrl) {
             <div class="modal-content">
                 <i class="fab fa-paypal paypal-icon"></i>
                 <h2>Redirigiendo a PayPal</h2>
-                <p>Serás redirigido a PayPal para completar tu donación de <strong>$${paymentData.amount}</strong></p>
+                <p>Serás redirigido a PayPal para completar tu pago de <strong>$${paymentData.amount}</strong></p>
                 <p class="instructions">Después de completar el pago en PayPal, puedes cerrar esta ventana.</p>
                 <div class="modal-actions">
                     <button id="open-paypal-btn" class="btn-primary">
@@ -873,7 +873,7 @@ function updateModalForPaymentInProgress(paymentData) {
             reopenPaypalBtn.addEventListener('click', function() {
                 const paypalUsername = 'mentesaludable';
                 const paypalUrl = `https://paypal.me/${paypalUsername}/${paymentData.amount}`;
-                const note = encodeURIComponent(`Donation from ${paymentData.firstName} ${paymentData.lastName}`);
+                const note = encodeURIComponent(`Payment from ${paymentData.firstName} ${paymentData.lastName}`);
                 const paypalUrlWithNote = `${paypalUrl}?note=${note}`;
                 
                 window.open(paypalUrlWithNote, '_blank');
@@ -894,10 +894,10 @@ function showPaymentSuccess(paymentData) {
         <div class="payment-success">
             <div class="success-content">
                 <i class="fas fa-info-circle"></i>
-                <h2>Gracias por tu Intención de Donación</h2>
-                <p>Has indicado que completaste una donación de $${paymentData.amount}.</p>
+                <h2>Gracias por tu Intención de Pago</h2>
+                <p>Has indicado que completaste un pago de $${paymentData.amount}.</p>
                 <p><strong>Importante:</strong> Este mensaje NO confirma que el pago fue procesado.</p>
-                <p>Para verificar tu donación:</p>
+                <p>Para verificar tu pago:</p>
                 <ul style="text-align: left; margin: 1rem 0;">
                     <li>Revisa tu cuenta PayPal en "Actividad"</li>
                     <li>Busca un email de confirmación de PayPal</li>
@@ -925,11 +925,11 @@ function showCreditCardSuccess(paymentData) {
             <div class="success-content">
                 <i class="fas fa-check-circle"></i>
                 <h2>¡Pago Procesado Exitosamente!</h2>
-                <p>Tu donación de <strong>$${paymentData.amount}</strong> ha sido procesada.</p>
+                <p>Tu pago de <strong>$${paymentData.amount}</strong> ha sido procesado.</p>
                 
                 <p class="thank-you-message">
                     <strong>¡Gracias ${paymentData.firstName}!</strong><br>
-                    Tu generosa donación ayuda a mantener este proyecto funcionando.
+                    Tu apoyo ayuda a mantener este proyecto funcionando.
                 </p>
                 
                 <div class="modal-actions">
@@ -998,14 +998,14 @@ function generateReceipt(paymentData, transactionId) {
     // Create a simple text receipt
     const receiptContent = `
 ===========================================
-           RECIBO DE DONACIÓN
+           RECIBO DE PAGO
 ===========================================
 
 Fecha: ${new Date().toLocaleDateString('es-ES')}
 ID Transacción: ${transactionId}
 
 -------------------------------------------
-DETALLES DEL DONANTE:
+DETALLES DEL PAGADOR:
 -------------------------------------------
 Nombre: ${paymentData.firstName} ${paymentData.lastName}
 Email: ${paymentData.email}
@@ -1024,7 +1024,7 @@ MENSAJE:
 ${paymentData.message || 'Sin mensaje'}
 
 -------------------------------------------
-¡Gracias por tu generosa donación!
+¡Gracias por tu pago!
 Tu apoyo es muy valorado.
 
 Oscar Medina
@@ -1037,7 +1037,7 @@ Desarrollador Web
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `recibo_donacion_${transactionId}.txt`;
+    a.download = `recibo_pago_${transactionId}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

@@ -287,7 +287,7 @@ try {
         currency: currency,
         payment_method_types: [paymentMethodType],
         metadata: {
-          type: 'donation',
+          type: 'payment',
           website: 'personal-website'
         }
       });
@@ -307,7 +307,7 @@ try {
     }
   });
 
-  // Confirm payment and save donation info
+  // Confirm payment and save payment info
   app.post('/api/confirm-payment', async (req, res) => {
     try {
       // Set payment-specific headers
@@ -340,7 +340,7 @@ try {
             country: donorInfo.country
           },
           metadata: {
-            source: 'donation_form',
+            source: 'payment_form',
             anonymous: donorInfo.anonymous || false
           }
         });
@@ -357,7 +357,7 @@ try {
             brand: paymentIntent.charges?.data[0]?.payment_method_details?.card?.brand || 'unknown',
             last4: paymentIntent.charges?.data[0]?.payment_method_details?.card?.last4 || 'unknown'
           },
-          description: message || 'Donation via credit card',
+          description: message || 'Payment via credit card',
           receiptEmail: donorInfo.email,
           billingAddress: {
             line1: donorInfo.address,
@@ -367,7 +367,7 @@ try {
             country: donorInfo.country
           },
           metadata: {
-            type: 'donation',
+            type: 'payment',
             anonymous: donorInfo.anonymous || false,
             source: 'website'
           }
@@ -375,7 +375,7 @@ try {
 
         res.json({
           success: true,
-          message: 'Payment confirmed and donation recorded',
+          message: 'Payment confirmed and recorded',
           transactionId: paymentIntent.id,
           chargeId: paymentIntent.latest_charge,
           customerId: customer._id

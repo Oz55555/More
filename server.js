@@ -227,14 +227,6 @@ app.get('/admin', requireAuth, (req, res) => {
   res.sendFile(__dirname + '/admin.html');
 });
 
-// Donation pages routes
-app.get('/donation', (req, res) => {
-  res.sendFile(__dirname + '/donation.html');
-});
-
-app.get('/donation-select', (req, res) => {
-  res.sendFile(__dirname + '/donation-select.html');
-});
 
 app.get('/payment', (req, res) => {
   res.sendFile(__dirname + '/payment.html');
