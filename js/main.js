@@ -102,7 +102,7 @@ window.addEventListener('load', function() {
     const progressFill = document.querySelector('.progress-fill');
     
     // Detect connection speed
-    let minLoadTime = 1000; // Default minimum load time
+    let minLoadTime = 300; // Default minimum load time
     
     if ('connection' in navigator) {
         const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
@@ -112,14 +112,14 @@ window.addEventListener('load', function() {
         switch(effectiveType) {
             case 'slow-2g':
             case '2g':
-                minLoadTime = 2000;
+                minLoadTime = 800;
                 break;
             case '3g':
-                minLoadTime = 1500;
+                minLoadTime = 500;
                 break;
             case '4g':
             default:
-                minLoadTime = 1000;
+                minLoadTime = 300;
                 break;
         }
     }

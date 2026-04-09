@@ -4,18 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadence Wave | Digital Transformation Experts</title>
+    <meta name="description" content="Cadence Wave is a global digital transformation consultancy with certified SAFe Agilists. We deliver scaled agile frameworks across LATAM, Europe and USA for Healthcare, Finance and Technology enterprises.">
+
+    <!-- Preconnect to external origins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+
+    <!-- Preload LCP resources -->
+    <link rel="preload" as="image" href="/images/cw.webp" type="image/webp">
+    <link rel="preload" as="image" href="/images/wave.webp" type="image/webp">
+
     <link rel="icon" type="image/png" href="/images/cw.png">
-    <link rel="stylesheet" href="css/style.css?v=1.0.5">
+
+    <!-- Critical CSS (render-blocking is acceptable for local stylesheets) -->
+    <link rel="stylesheet" href="css/style.css?v=1.0.6">
     <link rel="stylesheet" href="css/cookies.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome: non-render-blocking -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"></noscript>
+
+    <!-- Google Fonts: non-render-blocking -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"></noscript>
 </head>
 <body>
     <!-- Page Loader -->
     <div id="page-loader" class="page-loader">
         <div class="loader-content">
             <div class="logo-container">
-                <img src="images/cw.png" alt="Cadence Wave" class="loader-logo" translate="no">
+                <picture>
+                    <source srcset="images/cw.webp" type="image/webp">
+                    <img src="images/cw.png" alt="Cadence Wave" class="loader-logo" translate="no" fetchpriority="high" width="120" height="120">
+                </picture>
                 <div class="wave-animation"></div>
             </div>
             <div class="loader-text">Loading</div>
@@ -31,7 +53,10 @@
             <div class="nav-left">
                 <a href="#home" class="logo-link">
                     <div class="logo">
-                        <img src="images/cw.png" alt="Cadence Wave Logo" translate="no">
+                        <picture>
+                            <source srcset="images/cw.webp" type="image/webp">
+                            <img src="images/cw.png" alt="Cadence Wave Logo" translate="no" width="65" height="65">
+                        </picture>
                     </div>
                 </a>
                 <a href="#why-us" class="nav-link-main desktop-only">Why Us</a>
@@ -70,10 +95,22 @@
         </script>
     <section id="home" class="hero">
         <div class="carousel-container">
-            <img src="images/wave.png" alt="Cadence Wave" translate="no">
-            <img src="images/Strategy.png" alt="Digital Strategy">
-            <img src="images/Diverses.png" alt="Diverse Team Collaboration">           
-            <img src="images/Global.png" alt="Global Technology">
+            <picture>
+                <source srcset="images/wave.webp" type="image/webp">
+                <img src="images/wave.png" alt="Cadence Wave" translate="no" fetchpriority="high">
+            </picture>
+            <picture>
+                <source srcset="images/Strategy.webp" type="image/webp">
+                <img src="images/Strategy.png" alt="Digital Strategy" loading="lazy">
+            </picture>
+            <picture>
+                <source srcset="images/Diverses.webp" type="image/webp">
+                <img src="images/Diverses.png" alt="Diverse Team Collaboration" loading="lazy">
+            </picture>
+            <picture>
+                <source srcset="images/Global.webp" type="image/webp">
+                <img src="images/Global.png" alt="Global Technology" loading="lazy">
+            </picture>
         </div>
         <div class="hero-content">
             <h1>
