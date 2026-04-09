@@ -141,7 +141,7 @@ const projects = [
     {
         title: 'Healthcare ART Implementation - European Pharma Giant',
         description: 'Led the implementation of 3 Agile Release Trains for a multinational pharmaceutical company, transforming drug development processes and reducing time-to-market by 40%. Coordinated 150+ team members across 8 countries.',
-        image: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=600&h=400&fit=crop',
+        image: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=480&h=320&fit=crop&fm=webp&q=75',
         tags: ['SAFe 6.0', 'ART Setup', 'Healthcare', 'PI Planning'],
         metrics: '40% faster delivery • 150+ team members • 8 countries',
         outcome: 'Successful PI Planning events with 95% commitment reliability'
@@ -149,7 +149,7 @@ const projects = [
     {
         title: 'Financial Services Digital Transformation - LATAM Bank',
         description: 'Established 2 ARTs for core banking modernization across Mexico and Colombia. Implemented DevSecOps practices and automated compliance workflows, achieving 99.9% system uptime during transformation.',
-        image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&h=400&fit=crop',
+        image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=480&h=320&fit=crop&fm=webp&q=75',
         tags: ['Digital Banking', 'DevSecOps', 'Compliance', 'Cross-border'],
         metrics: '99.9% uptime • 60% faster releases • $2M cost savings',
         outcome: 'Zero security incidents during 18-month transformation'
@@ -157,7 +157,7 @@ const projects = [
     {
         title: 'Tech Startup Scale-Up - Silicon Valley SaaS Platform',
         description: 'Designed and launched the first ART for a rapidly growing SaaS company, scaling from 30 to 120 engineers. Implemented value stream mapping and established continuous delivery pipelines supporting 10M+ users.',
-        image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&h=400&fit=crop',
+        image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=480&h=320&fit=crop&fm=webp&q=75',
         tags: ['Startup Scaling', 'Value Streams', 'SaaS', 'Continuous Delivery'],
         metrics: '4x team growth • 10M+ users • 50% faster features',
         outcome: 'Seamless scaling with maintained code quality and team velocity'
@@ -165,7 +165,7 @@ const projects = [
     {
         title: 'Manufacturing IoT Transformation - German Industrial Leader',
         description: 'Orchestrated ART implementation for Industry 4.0 initiative, connecting 500+ manufacturing devices across 12 facilities. Established lean-agile practices for hardware-software integration teams.',
-        image: 'https://images.unsplash.com/photo-1565514020179-026b92b84bb6?w=600&h=400&fit=crop',
+        image: 'https://images.unsplash.com/photo-1565514020179-026b92b84bb6?w=480&h=320&fit=crop&fm=webp&q=75',
         tags: ['Industry 4.0', 'IoT Integration', 'Lean-Agile', 'Manufacturing'],
         metrics: '500+ connected devices • 12 facilities • 30% efficiency gain',
         outcome: 'Real-time production visibility and predictive maintenance'
@@ -173,7 +173,7 @@ const projects = [
     {
         title: 'Telecom 5G Network Rollout - Multi-National Carrier',
         description: 'Led agile transformation for 5G infrastructure deployment across USA and Europe. Coordinated 4 ARTs managing network planning, deployment, and optimization with strict regulatory compliance.',
-        image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=400&fit=crop',
+        image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=480&h=320&fit=crop&fm=webp&q=75',
         tags: ['5G Networks', 'Infrastructure', 'Regulatory Compliance', 'Multi-ART'],
         metrics: '4 ARTs • 200+ cell towers/month • 99.99% reliability',
         outcome: 'Fastest 5G rollout in company history with zero compliance issues'
@@ -181,7 +181,7 @@ const projects = [
     {
         title: 'Healthcare AI Platform - US Medical Research Institute',
         description: 'Implemented SAFe framework for AI-driven diagnostic platform development. Established cross-functional ARTs integrating data scientists, medical experts, and software engineers for FDA-compliant solutions.',
-        image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=600&h=400&fit=crop',
+        image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=480&h=320&fit=crop&fm=webp&q=75',
         tags: ['Healthcare AI', 'FDA Compliance', 'Cross-functional', 'Research'],
         metrics: 'FDA approval • 85% diagnostic accuracy • 6-month delivery',
         outcome: 'First AI diagnostic tool approved for clinical use'
@@ -204,10 +204,12 @@ document.getElementById('year').textContent = new Date().getFullYear();
 hamburger.addEventListener('click', () => {
     hamburger.classList.toggle('active');
     navLinks.classList.toggle('active');
-    document.body.style.overflow = navLinks.classList.contains('active') ? 'hidden' : 'auto';
+    const isOpen = navLinks.classList.contains('active');
+    hamburger.setAttribute('aria-expanded', isOpen);
+    document.body.style.overflow = isOpen ? 'hidden' : 'auto';
     
     // Update menu background with current carousel image
-    if (navLinks.classList.contains('active')) {
+    if (isOpen) {
         updateMenuBackground();
     }
 });

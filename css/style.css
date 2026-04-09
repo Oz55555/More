@@ -176,7 +176,7 @@
     --primary-color: #00539B; /* New Blue */
     --secondary-color: #1e3a8a;
     --text-color: #1f2937;
-    --light-text: #6b7280;
+    --light-text: #4b5563;
     --background: #ffffff;
     --light-bg: #f3f4f6;
     --transition: all 0.3s ease;
@@ -323,6 +323,9 @@ nav {
 .hamburger {
     display: none;
     cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
 }
 
 .hamburger .line {
@@ -333,7 +336,6 @@ nav {
     transition: var(--transition);
 }
 
-/* Hero Section */
 /* Hero Section */
 .hero {
     height: 100vh;
@@ -348,23 +350,6 @@ nav {
     max-width: 100%;
 }
 
-
-.hero-watermark {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 2; /* Between background and content */
-    width: 350px;
-    height: 350px;
-    opacity: 0.07; /* The key for the subconscious effect */
-}
-
-.hero-watermark img {
-    width: 100%;
-    height: 100%;
-    filter: brightness(0) invert(1); /* Make it white */
-}
 
 .hero::after {
     content: '';
@@ -542,12 +527,12 @@ section.hero {
     transform: translate(-50%, -50%);
     width: 240px; /* Adjusted size for better fit */
     height: 240px;
-    background-image: url('../images/cw.png');
+    background-image: url('../images/cw.webp');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
-    opacity: 0.05; /* Make it very subtle */
-    z-index: -1; /* Place it behind the text */
+    opacity: 0.05;
+    z-index: -1;
 }
 
 .section-title::after {
@@ -579,12 +564,12 @@ section.hero {
     transform: translate(-50%, -50%);
     width: 200px; /* Adjust size as needed */
     height: 200px;
-    background-image: url('../images/cw.png');
+    background-image: url('../images/cw.webp');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
-    opacity: 0.05; /* Very subtle */
-    z-index: -1; /* Behind the text */
+    opacity: 0.05;
+    z-index: -1;
 }
 
 .about-text {
@@ -945,100 +930,6 @@ textarea {
 
 .social-links a:hover {
     background: var(--primary-color);
-}
-
-.payment-methods-container {
-background: white;
-border-radius: 20px;
-padding: 2rem;
-box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-margin-bottom: 2rem;
-}
-
-.payment-methods-container h3 {
-color: #2c3e50;
-margin-bottom: 2rem;
-font-size: 1.5rem;
-display: flex;
-align-items: center;
-gap: 0.5rem;
-}
-
-.payment-methods-grid {
-display: grid;
-grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-gap: 1.5rem;
-}
-
-.payment-method-card {
-background: #f8f9fa;
-border: 2px solid #e9ecef;
-border-radius: 15px;
-padding: 1.5rem;
-display: flex;
-align-items: center;
-gap: 1rem;
-cursor: pointer;
-transition: all 0.3s ease;
-}
-
-.payment-method-card:hover {
-border-color: #007bff;
-background: #fff;
-transform: translateY(-2px);
-box-shadow: 0 5px 15px rgba(0, 123, 255, 0.1);
-}
-
-.payment-method-card.active {
-border-color: #007bff;
-background: #fff;
-box-shadow: 0 5px 15px rgba(0, 123, 255, 0.2);
-}
-
-.method-icon {
-font-size: 2.5rem;
-color: #007bff;
-min-width: 60px;
-text-align: center;
-}
-
-.method-info {
-flex: 1;
-}
-
-.method-info h4 {
-margin: 0 0 0.5rem 0;
-color: #2c3e50;
-font-size: 1.2rem;
-}
-
-.method-info p {
-margin: 0 0 0.5rem 0;
-color: #6c757d;
-font-size: 0.9rem;
-}
-
-.method-features {
-display: flex;
-align-items: center;
-gap: 0.3rem;
-font-size: 0.8rem;
-color: #28a745;
-}
-
-.method-arrow {
-color: #6c757d;
-font-size: 1.2rem;
-}
-
-
-@media (max-width: 768px) {
-.payment-methods-grid {
-grid-template-columns: 1fr;
-}
-.payment-methods-container {
-padding: 1.5rem;
-}
 }
 
 /* Footer */
@@ -1417,10 +1308,6 @@ footer {
         padding: 0.5rem 0.8rem;
     }
 
-    .skill-tags {
-        justify-content: center;
-    }
-
     .projects-grid {
         grid-template-columns: 1fr;
         gap: 1.5rem;
@@ -1566,6 +1453,19 @@ footer {
     .projects-grid {
         grid-template-columns: repeat(3, 1fr); /* Enforce 3 columns on very large screens */
     }
+}
+
+/* Visually hidden but accessible to screen readers */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }
 
 /* Custom Scrollbar */
