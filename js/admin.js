@@ -217,6 +217,7 @@ class LeadCaptureAgent {
                     <button class="btn-xs btn-view" data-id="${l._id}" title="Ver detalle"><i class="fas fa-eye"></i></button>
                     ${!es.sent ? `<button class="btn-xs btn-email" data-id="${l._id}" title="Enviar email IA"><i class="fas fa-paper-plane"></i></button>` : ''}
                     <button class="btn-xs btn-rescore" data-id="${l._id}" title="Re-puntuar"><i class="fas fa-brain"></i></button>
+                    <button class="btn-xs btn-delete" data-id="${l._id}" data-name="${this.esc(l.name)}" title="Eliminar lead"><i class="fas fa-trash"></i></button>
                 </td>
             </tr>`;
         }).join('');
@@ -225,6 +226,7 @@ class LeadCaptureAgent {
         tbody.querySelectorAll('.btn-view').forEach(b => b.addEventListener('click', () => this.openModal(b.dataset.id)));
         tbody.querySelectorAll('.btn-email').forEach(b => b.addEventListener('click', () => this.quickSendEmail(b.dataset.id)));
         tbody.querySelectorAll('.btn-rescore').forEach(b => b.addEventListener('click', () => this.quickRescore(b.dataset.id)));
+        tbody.querySelectorAll('.btn-delete').forEach(b => b.addEventListener('click', () => this.quickDelete(b.dataset.id, b.dataset.name)));
     }
 
     // ── MODAL ──────────────────────────────────────────────────────────────────
@@ -370,6 +372,19 @@ class LeadCaptureAgent {
     }
 
     // ── RESCORE ────────────────────────────────────────────────────────────────
+
+    async quickDelete(id, name) {
+        if (!confirm(`¿Eliminar el mensaje de "${name}"?\n\nEsta acción no se puede deshacer.`)) return;
+        try {
+            const data = await this.apiFetch(`/admin/contacts/${id}`, 'DELETE');
+            if (!data) return;
+            this.leads = this.leads.filter(l => l._id !== id);
+            this.applyFilter();
+            this.toast(`🗑️ Mensaje de ${name} eliminado`, 'success');
+        } catch (err) {
+            this.toast('Error al eliminar: ' + err.message, 'error');
+        }
+    }
 
     async quickRescore(id) {
         this.toast('Re-puntuando lead...', 'info');

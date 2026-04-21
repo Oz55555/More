@@ -1774,6 +1774,8 @@ tr:hover {
 .btn-email:hover { background: #16a34a; color: #fff; }
 .btn-rescore { background: #faf5ff; color: #7c3aed; }
 .btn-rescore:hover { background: #7c3aed; color: #fff; }
+.btn-delete { background: #fff1f2; color: #dc2626; }
+.btn-delete:hover { background: #dc2626; color: #fff; }
 
 /* Collapsible sections */
 .collapsible-section { background: #fff; border-radius: 12px; margin-bottom: 16px; box-shadow: 0 1px 6px rgba(0,0,0,0.06); overflow: hidden; }
