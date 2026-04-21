@@ -1,5 +1,3 @@
-const axios = require('axios');
-
 class LeadAnalysisService {
   constructor() {
     this.deepseekApiKey = process.env.DEEPSEEK_API_KEY;
@@ -62,40 +60,25 @@ Return ONLY JSON, no other text or explanation.`;
   }
 
   async analyzeWithDeepSeek(name, email, message) {
-    const response = await axios.post('https://api.deepseek.com/v1/chat/completions', {
-      model: 'deepseek-chat',
-      messages: [{ role: 'user', content: this.buildLeadPrompt(name, email, message) }],
-      temperature: 0.1,
-      max_tokens: 600
-    }, {
-      headers: {
-        'Authorization': `Bearer ${this.deepseekApiKey}`,
-        'Content-Type': 'application/json'
-      },
-      timeout: 20000
+    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${this.deepseekApiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'deepseek-chat', messages: [{ role: 'user', content: this.buildLeadPrompt(name, email, message) }], temperature: 0.1, max_tokens: 600 }),
+      signal: AbortSignal.timeout(20000)
     });
-
-    const content = response.data.choices[0].message.content;
-    return this.parseLeadAnalysis(content);
+    const data = await response.json();
+    return this.parseLeadAnalysis(data.choices[0].message.content);
   }
 
   async analyzeWithOpenAI(name, email, message) {
-    const response = await axios.post('https://api.openai.com/v1/chat/completions', {
-      model: 'gpt-4o-mini',
-      messages: [{ role: 'user', content: this.buildLeadPrompt(name, email, message) }],
-      temperature: 0.1,
-      max_tokens: 600,
-      response_format: { type: 'json_object' }
-    }, {
-      headers: {
-        'Authorization': `Bearer ${this.openaiApiKey}`,
-        'Content-Type': 'application/json'
-      },
-      timeout: 20000
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${this.openaiApiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'gpt-4o-mini', messages: [{ role: 'user', content: this.buildLeadPrompt(name, email, message) }], temperature: 0.1, max_tokens: 600, response_format: { type: 'json_object' } }),
+      signal: AbortSignal.timeout(20000)
     });
-
-    const content = response.data.choices[0].message.content;
-    return this.parseLeadAnalysis(content);
+    const data = await response.json();
+    return this.parseLeadAnalysis(data.choices[0].message.content);
   }
 
   parseLeadAnalysis(content) {
@@ -225,20 +208,14 @@ Return ONLY a JSON object:
       : 'https://api.openai.com/v1/chat/completions';
     const model = this.deepseekApiKey ? 'deepseek-chat' : 'gpt-4o-mini';
 
-    const response = await axios.post(endpoint, {
-      model,
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.5,
-      max_tokens: 1200
-    }, {
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
-      },
-      timeout: 25000
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], temperature: 0.5, max_tokens: 1200 }),
+      signal: AbortSignal.timeout(25000)
     });
-
-    const content = response.data.choices[0].message.content;
+    const data = await response.json();
+    const content = data.choices[0].message.content;
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error('No JSON in AI email response');
     return JSON.parse(jsonMatch[0]);
