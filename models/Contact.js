@@ -60,21 +60,20 @@ const contactSchema = new mongoose.Schema({
     }
   },
   leadAnalysis: {
-    score: { type: Number, min: 0, max: 100, default: null },
+    score: { type: Number, min: 0, max: 100 },
     qualification: {
       type: String,
-      enum: ['hot', 'warm', 'cold', 'not_qualified'],
-      default: null
+      enum: ['hot', 'warm', 'cold', 'not_qualified']
     },
-    intent: { type: String, maxlength: 200, default: null },
+    intent: { type: String, maxlength: 200 },
     interestAreas: [{ type: String }],
-    urgency: { type: String, enum: ['high', 'medium', 'low'], default: null },
+    urgency: { type: String, enum: ['high', 'medium', 'low'] },
     companySignals: { type: Boolean, default: false },
     budgetSignals: { type: Boolean, default: false },
-    summary: { type: String, maxlength: 400, default: null },
-    recommendedAction: { type: String, maxlength: 300, default: null },
+    summary: { type: String, maxlength: 400 },
+    recommendedAction: { type: String, maxlength: 300 },
     language: { type: String, enum: ['es', 'en', 'other'], default: 'en' },
-    analyzedAt: { type: Date, default: null }
+    analyzedAt: { type: Date }
   },
   emailStatus: {
     sent: { type: Boolean, default: false },
