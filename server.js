@@ -291,11 +291,8 @@ app.post('/api/contact', validateContactForm, async (req, res) => {
 
     // Run lead analysis in parallel (non-blocking)
     leadAnalysisService.analyzeLeadPotential(name, email, message)
-      .then(leadAnalysis => {
-        contact.leadAnalysis = leadAnalysis;
-        return contact.save();
-      })
-      .then(() => console.log(`Lead analyzed: ${email} — Score: ${contact.leadAnalysis?.score} (${contact.leadAnalysis?.qualification})`))
+      .then(leadAnalysis => Contact.findByIdAndUpdate(contact._id, { $set: { leadAnalysis } }, { runValidators: false })
+        .then(() => console.log(`Lead analyzed: ${email} — Score: ${leadAnalysis?.score} (${leadAnalysis?.qualification})`)))
       .catch(err => console.error('Lead analysis async error:', err.message));
 
     // Save to database immediately (lead analysis updates async)
@@ -1265,13 +1262,14 @@ app.post('/api/admin/leads/:id/send-email', requireAuth, async (req, res) => {
 
     const result = await emailService.sendLeadOutreachEmail(contact);
 
-    contact.emailStatus = {
-      sent: true,
-      sentAt: new Date(),
-      messageId: result.messageId,
-      subject: result.subject
-    };
-    await contact.save();
+    await Contact.findByIdAndUpdate(id, {
+      $set: {
+        'emailStatus.sent': true,
+        'emailStatus.sentAt': new Date(),
+        'emailStatus.messageId': result.messageId,
+        'emailStatus.subject': result.subject
+      }
+    }, { runValidators: false });
 
     console.log(`Lead outreach email sent to ${contact.email} — Subject: ${result.subject}`);
 
@@ -1312,8 +1310,7 @@ app.post('/api/admin/leads/:id/rescore', requireAuth, async (req, res) => {
     if (!contact) return res.status(404).json({ success: false, message: 'Lead not found' });
 
     const leadAnalysis = await leadAnalysisService.analyzeLeadPotential(contact.name, contact.email, contact.message);
-    contact.leadAnalysis = leadAnalysis;
-    await contact.save();
+    await Contact.findByIdAndUpdate(id, { $set: { leadAnalysis } }, { runValidators: false });
 
     res.json({ success: true, leadAnalysis, message: 'Lead re-scored successfully' });
   } catch (error) {
@@ -1331,8 +1328,7 @@ app.post('/api/admin/leads/rescore-all', requireAuth, async (req, res) => {
     for (const contact of contacts) {
       try {
         const leadAnalysis = await leadAnalysisService.analyzeLeadPotential(contact.name, contact.email, contact.message);
-        contact.leadAnalysis = leadAnalysis;
-        await contact.save();
+        await Contact.findByIdAndUpdate(contact._id, { $set: { leadAnalysis } }, { runValidators: false });
         processed++;
         await new Promise(r => setTimeout(r, 300));
       } catch (err) {
