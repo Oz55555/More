@@ -268,6 +268,17 @@ app.post('/api/contact', validateContactForm, async (req, res) => {
       console.log('Continuing without tone analysis...');
     }
 
+    // Sanitize toneAnalysis to only schema-valid enum values before saving
+    const sanitizedTone = toneAnalysis ? {
+      sentiment: ['positive', 'negative', 'neutral'].includes(toneAnalysis.sentiment)
+        ? toneAnalysis.sentiment : 'neutral',
+      emotion: ['joy', 'sadness', 'anger', 'fear', 'surprise', 'disgust', 'neutral'].includes(toneAnalysis.emotion)
+        ? toneAnalysis.emotion : 'neutral',
+      confidence: typeof toneAnalysis.confidence === 'number' ? toneAnalysis.confidence : null,
+      summary: toneAnalysis.summary ? String(toneAnalysis.summary).substring(0, 500) : null,
+      analyzedAt: toneAnalysis.analyzedAt || new Date()
+    } : undefined;
+
     // Create new contact entry with tone analysis
     const contact = new Contact({
       name,
@@ -275,7 +286,7 @@ app.post('/api/contact', validateContactForm, async (req, res) => {
       message,
       ipAddress: req.ip || req.connection.remoteAddress,
       userAgent: req.get('User-Agent'),
-      toneAnalysis: toneAnalysis
+      toneAnalysis: sanitizedTone
     });
 
     // Run lead analysis in parallel (non-blocking)
