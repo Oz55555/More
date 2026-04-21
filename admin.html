@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadence Wave AI Analysis Dashboard - Admin</title>
+    <title>Cadence Wave — Lead Capture Agent</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="stylesheet" href="css/admin.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -13,644 +13,274 @@
 <body>
     <div class="admin-container">
         <header class="admin-header">
-            <h1><i class="fas fa-brain"></i> <span translate="no">Cadence Wave</span> AI Analysis Dashboard</h1>
+            <div class="header-brand">
+                <i class="fas fa-robot"></i>
+                <div>
+                    <h1><span translate="no">Cadence Wave</span> — Lead Capture Agent</h1>
+                    <p class="header-subtitle">Monitoreo inteligente de clientes potenciales · Powered by DeepSeek AI</p>
+                </div>
+            </div>
             <div class="header-actions">
+                <div class="agent-status-pill" id="agentStatusPill">
+                    <span class="pulse-dot"></span>
+                    <span id="agentStatusText">Agente Activo</span>
+                </div>
                 <button id="refreshBtn" class="btn btn-primary">
-                    <i class="fas fa-sync-alt"></i> Refresh
+                    <i class="fas fa-sync-alt"></i> Actualizar
                 </button>
                 <button id="logoutBtn" class="btn btn-warning">
-                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                    <i class="fas fa-sign-out-alt"></i> Salir
                 </button>
                 <a href="/" class="btn btn-secondary">
-                    <i class="fas fa-home"></i> Back to Site
+                    <i class="fas fa-home"></i> Sitio
                 </a>
             </div>
         </header>
 
         <main class="admin-main">
-            <!-- Statistics Overview -->
-            <section class="stats-overview">
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-comments"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3 id="totalMessages">-</h3>
-                        <p>Total Messages</p>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-brain"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3 id="analyzedMessages">-</h3>
-                        <p>Analyzed Messages</p>
+
+            <!-- â”€â”€ LEAD STATS BAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+            <section class="lead-stats-bar">
+                <div class="lead-stat-card hot">
+                    <div class="lsc-icon"><i class="fas fa-fire"></i></div>
+                    <div class="lsc-info">
+                        <h3 id="statHot">-</h3>
+                        <p>Hot Leads</p>
                     </div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-smile"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3 id="positivePercentage">-</h3>
-                        <p>Positive Sentiment</p>
+                <div class="lead-stat-card warm">
+                    <div class="lsc-icon"><i class="fas fa-temperature-half"></i></div>
+                    <div class="lsc-info">
+                        <h3 id="statWarm">-</h3>
+                        <p>Warm Leads</p>
                     </div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-chart-bar"></i>
+                <div class="lead-stat-card cold">
+                    <div class="lsc-icon"><i class="fas fa-snowflake"></i></div>
+                    <div class="lsc-info">
+                        <h3 id="statCold">-</h3>
+                        <p>Cold Leads</p>
                     </div>
-                    <div class="stat-content">
-                        <h3 id="avgConfidence">-</h3>
-                        <p>Avg Confidence</p>
+                </div>
+                <div class="lead-stat-card email">
+                    <div class="lsc-icon"><i class="fas fa-paper-plane"></i></div>
+                    <div class="lsc-info">
+                        <h3 id="statEmails">-</h3>
+                        <p>Emails Enviados</p>
+                    </div>
+                </div>
+                <div class="lead-stat-card total">
+                    <div class="lsc-icon"><i class="fas fa-inbox"></i></div>
+                    <div class="lsc-info">
+                        <h3 id="statTotal">-</h3>
+                        <p>Total Mensajes</p>
+                    </div>
+                </div>
+                <div class="lead-stat-card company">
+                    <div class="lsc-icon"><i class="fas fa-building"></i></div>
+                    <div class="lsc-info">
+                        <h3 id="statCompany">-</h3>
+                        <p>Señales Empresa</p>
                     </div>
                 </div>
             </section>
 
-            <!-- Enhanced Risk Assessment Section -->
-            <section class="risk-assessment-section">
+            <!-- â”€â”€ LEAD CAPTURE AGENT SECTION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+            <section class="lead-capture-section">
                 <div class="section-header">
-                    <h2><i class="fas fa-shield-virus"></i> Centro de Análisis de Riesgos y Alertas</h2>
-                    <div class="quick-actions">
-                        <button id="refreshRisksBtn" class="btn btn-primary">
-                            <i class="fas fa-sync"></i> Actualizar Riesgos
+                    <div class="section-title-group">
+                        <h2><i class="fas fa-crosshairs"></i> Lead Capture Agent Monitor</h2>
+                        <span class="agent-badge">IA Activa</span>
+                    </div>
+                    <div class="lead-controls">
+                        <button id="rescoreAllBtn" class="btn btn-info">
+                            <i class="fas fa-brain"></i> Re-puntuar Todo
                         </button>
-                        <button id="exportRisksBtn" class="btn btn-secondary">
-                            <i class="fas fa-download"></i> Exportar Datos
+                        <button id="exportLeadsBtn" class="btn btn-secondary">
+                            <i class="fas fa-download"></i> Exportar CSV
                         </button>
-                        <button id="realTimeAnalysisBtn" class="btn btn-success">
-                            <i class="fas fa-play"></i> Análisis en Tiempo Real
-                        </button>
-                        <button id="emergencyProtocolBtn" class="btn btn-danger">
-                            <i class="fas fa-phone"></i> Protocolo de Emergencia
+                        <button id="emailStatusBtn" class="btn btn-secondary">
+                            <i class="fas fa-envelope"></i> Estado Email
                         </button>
                     </div>
-                    
-                    <!-- Emergency Status Indicator -->
-                    <div class="emergency-status-container">
-                        <div id="emergencyStatus" class="emergency-inactive">
-                            <i class="fas fa-shield-check"></i> SISTEMA NORMAL
+                </div>
+
+                <!-- Lead Pipeline -->
+                <div class="lead-pipeline">
+                    <div class="pipeline-col hot-col">
+                        <div class="pipeline-header">
+                            <i class="fas fa-fire"></i> HOT LEADS
+                            <span class="pipeline-count" id="pipelineHot">0</span>
+                        </div>
+                        <div class="pipeline-body" id="pipelineHotList">
+                            <p class="pipeline-empty">Sin leads hot</p>
+                        </div>
+                    </div>
+                    <div class="pipeline-col warm-col">
+                        <div class="pipeline-header">
+                            <i class="fas fa-temperature-half"></i> WARM LEADS
+                            <span class="pipeline-count" id="pipelineWarm">0</span>
+                        </div>
+                        <div class="pipeline-body" id="pipelineWarmList">
+                            <p class="pipeline-empty">Sin leads warm</p>
+                        </div>
+                    </div>
+                    <div class="pipeline-col cold-col">
+                        <div class="pipeline-header">
+                            <i class="fas fa-snowflake"></i> COLD / OTHER
+                            <span class="pipeline-count" id="pipelineCold">0</span>
+                        </div>
+                        <div class="pipeline-body" id="pipelineColdList">
+                            <p class="pipeline-empty">Sin leads fríos</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Risk Level Indicator -->
-                <div class="risk-level-indicator">
-                    <div class="risk-meter">
-                        <div class="meter-background">
-                            <div class="meter-fill" id="riskMeterFill"></div>
-                        </div>
-                        <div class="meter-labels">
-                            <span class="safe">Seguro</span>
-                            <span class="moderate">Moderado</span>
-                            <span class="high">Alto Riesgo</span>
-                            <span class="critical">Crítico</span>
-                        </div>
-                    </div>
-                    <div class="current-risk-level">
-                        <h3 id="currentRiskLevel">EVALUANDO...</h3>
-                        <p id="riskLevelDescription">Analizando patrones de riesgo...</p>
-                    </div>
-                </div>
-                
-                <!-- Enhanced Risk Overview Cards -->
-                <div class="risk-overview">
-                    <div class="risk-card high-risk" data-risk="high">
-                        <div class="risk-icon">
-                            <i class="fas fa-skull-crossbones"></i>
-                            <div class="pulse-ring"></div>
-                        </div>
-                        <div class="risk-content">
-                            <div class="risk-number">
-                                <h3 id="highRiskCount">-</h3>
-                                <span class="risk-change" id="highRiskChange">+0</span>
-                            </div>
-                            <p>Mensajes Críticos</p>
-                            <span class="risk-detail">Suicidio, violencia, autolesión</span>
-                            <div class="risk-actions-mini">
-                                <button class="btn-mini btn-danger" data-action="viewHighRiskMessages">
-                                    <i class="fas fa-eye"></i> Ver Todos
-                                </button>
-                                <button class="btn-mini btn-warning" data-action="notifySupport" data-risk="high">
-                                    <i class="fas fa-bell"></i> Notificar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="risk-card medium-risk" data-risk="medium">
-                        <div class="risk-icon">
-                            <i class="fas fa-exclamation-triangle"></i>
-                        </div>
-                        <div class="risk-content">
-                            <div class="risk-number">
-                                <h3 id="mediumRiskCount">-</h3>
-                                <span class="risk-change" id="mediumRiskChange">+0</span>
-                            </div>
-                            <p>Riesgo Moderado</p>
-                            <span class="risk-detail">Depresión, ansiedad, estrés</span>
-                            <div class="risk-actions-mini">
-                                <button class="btn-mini btn-warning" data-action="viewMediumRiskMessages">
-                                    <i class="fas fa-eye"></i> Ver Todos
-                                </button>
-                                <button class="btn-mini btn-info" data-action="scheduleFollowUp" data-risk="medium">
-                                    <i class="fas fa-calendar"></i> Seguimiento
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="risk-card low-risk" data-risk="low">
-                        <div class="risk-icon">
-                            <i class="fas fa-shield-check"></i>
-                        </div>
-                        <div class="risk-content">
-                            <div class="risk-number">
-                                <h3 id="lowRiskCount">-</h3>
-                                <span class="risk-change" id="lowRiskChange">+0</span>
-                            </div>
-                            <p>Mensajes Seguros</p>
-                            <span class="risk-detail">Sin indicadores de riesgo</span>
-                            <div class="risk-progress">
-                                <div class="progress-bar">
-                                    <div class="progress-fill" id="safetyProgress"></div>
-                                </div>
-                                <span class="progress-text" id="safetyPercentage">0%</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="risk-card mood-trend" data-trend="stable">
-                        <div class="risk-icon">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                        <div class="risk-content">
-                            <div class="trend-indicator">
-                                <h3 id="moodTrend">-</h3>
-                                <div class="trend-arrow" id="trendArrow">→</div>
-                            </div>
-                            <p>Tendencia Emocional</p>
-                            <span class="risk-detail">Últimas 24 horas</span>
-                            <div class="mini-chart">
-                                <canvas id="trendMiniChart" width="120" height="40"></canvas>
-                            </div>
-                        </div>
-                    </div>
+                <!-- Lead Filters -->
+                <div class="lead-filters">
+                    <button class="filter-btn active" data-filter="all">Todos</button>
+                    <button class="filter-btn" data-filter="hot">ðŸ”¥ Hot</button>
+                    <button class="filter-btn" data-filter="warm">🌡 Warm</button>
+                    <button class="filter-btn" data-filter="cold">â„ï¸ Cold</button>
+                    <button class="filter-btn" data-filter="emailed">✉️ Contactados</button>
+                    <button class="filter-btn" data-filter="pending">â³ Sin Contactar</button>
+                    <input type="text" id="leadSearch" placeholder="Buscar por nombre o email..." class="lead-search">
                 </div>
 
-                <!-- Risk Timeline and Patterns -->
-                <div class="risk-analytics">
-                    <div class="analytics-card">
-                        <h3><i class="fas fa-clock"></i> Línea de Tiempo de Riesgos</h3>
-                        <div class="timeline-container">
-                            <canvas id="riskTimelineChart" width="800" height="200"></canvas>
-                        </div>
-                        <div class="timeline-controls">
-                            <button class="btn-small" data-action="setTimelineRange" data-range="24h">24h</button>
-                            <button class="btn-small" data-action="setTimelineRange" data-range="7d">7d</button>
-                            <button class="btn-small" data-action="setTimelineRange" data-range="30d">30d</button>
-                        </div>
-                    </div>
-                    
-                    <div class="analytics-card">
-                        <h3><i class="fas fa-brain"></i> Patrones de Riesgo IA</h3>
-                        <div class="patterns-grid">
-                            <div class="pattern-item">
-                                <div class="pattern-icon">
-                                    <i class="fas fa-calendar-times"></i>
-                                </div>
-                                <div class="pattern-info">
-                                    <h4 id="peakRiskTime">--:--</h4>
-                                    <p>Hora Pico de Riesgo</p>
-                                </div>
-                            </div>
-                            <div class="pattern-item">
-                                <div class="pattern-icon">
-                                    <i class="fas fa-language"></i>
-                                </div>
-                                <div class="pattern-info">
-                                    <h4 id="riskLanguage">--</h4>
-                                    <p>Idioma Más Riesgoso</p>
-                                </div>
-                            </div>
-                            <div class="pattern-item">
-                                <div class="pattern-icon">
-                                    <i class="fas fa-hashtag"></i>
-                                </div>
-                                <div class="pattern-info">
-                                    <h4 id="riskKeyword">--</h4>
-                                    <p>Palabra Clave Crítica</p>
-                                </div>
-                            </div>
-                            <div class="pattern-item">
-                                <div class="pattern-icon">
-                                    <i class="fas fa-percentage"></i>
-                                </div>
-                                <div class="pattern-info">
-                                    <h4 id="riskAccuracy">--%</h4>
-                                    <p>Precisión del Modelo</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Enhanced Alert System -->
-                <div class="alert-section" id="alertSection">
-                    <div class="alert-header">
-                        <h3><i class="fas fa-siren-on"></i> Sistema de Alertas Inteligente</h3>
-                        <div class="alert-controls">
-                            <button class="btn-small btn-success" id="alertsEnabled">
-                                <i class="fas fa-bell"></i> Activadas
-                            </button>
-                            <button class="btn-small btn-secondary" data-action="configureAlerts">
-                                <i class="fas fa-cog"></i> Configurar
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="alerts-container">
-                        <div id="alertsList" class="alerts-list">
-                            <div class="no-alerts" id="noAlertsMessage">
-                                <i class="fas fa-shield-check"></i>
-                                <p>No hay alertas activas</p>
-                                <small>Sistema monitoreando en tiempo real</small>
-                            </div>
-                        </div>
-                        
-                        <div class="alert-summary">
-                            <div class="summary-item">
-                                <span class="label">Alertas Hoy:</span>
-                                <span class="value" id="todayAlerts">0</span>
-                            </div>
-                            <div class="summary-item">
-                                <span class="label">Tiempo Respuesta Promedio:</span>
-                                <span class="value" id="avgResponseTime">--</span>
-                            </div>
-                            <div class="summary-item">
-                                <span class="label">Casos Resueltos:</span>
-                                <span class="value" id="resolvedCases">0</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Quick Action Panel -->
-                <div class="quick-actions-panel">
-                    <h3><i class="fas fa-bolt"></i> Acciones Rápidas</h3>
-                    <div class="quick-actions-grid">
-                        <button class="quick-action-btn" data-action="generateRiskReport">
-                            <i class="fas fa-file-medical"></i>
-                            <span>Generar Reporte</span>
-                        </button>
-                        <button class="quick-action-btn" data-action="contactEmergencyServices">
-                            <i class="fas fa-ambulance"></i>
-                            <span>Servicios de Emergencia</span>
-                        </button>
-                        <button class="quick-action-btn" data-action="scheduleWellnessCheck">
-                            <i class="fas fa-heartbeat"></i>
-                            <span>Chequeo de Bienestar</span>
-                        </button>
-                        <button class="quick-action-btn" data-action="exportRiskData">
-                            <i class="fas fa-database"></i>
-                            <span>Exportar Datos</span>
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- DeepSeek Token Usage Section -->
-            <section class="token-usage-section">
-                <div class="section-header">
-                    <h2><i class="fas fa-coins"></i> DeepSeek API Usage</h2>
-                    <div class="token-actions">
-                        <button id="refreshTokensBtn" class="btn btn-primary">
-                            <i class="fas fa-sync-alt"></i> Refresh
-                        </button>
-                        <button id="resetTokensBtn" class="btn btn-warning">
-                            <i class="fas fa-trash-alt"></i> Reset Stats
-                        </button>
-                        <button id="realTimeAnalysisBtn" class="btn btn-success">
-                            <i class="fas fa-play"></i> Análisis en Tiempo Real
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="token-stats-overview">
-                    <div class="token-stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-coins"></i>
-                        </div>
-                        <div class="stat-content">
-                            <h3 id="totalTokens">-</h3>
-                            <p>Total Tokens Used</p>
-                        </div>
-                    </div>
-                    <div class="token-stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-robot"></i>
-                        </div>
-                        <div class="stat-content">
-                            <h3 id="totalRequests">-</h3>
-                            <p>API Requests</p>
-                        </div>
-                    </div>
-                    <div class="token-stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-dollar-sign"></i>
-                        </div>
-                        <div class="stat-content">
-                            <h3 id="totalCost">-</h3>
-                            <p>Total Cost</p>
-                        </div>
-                    </div>
-                    <div class="token-stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-calculator"></i>
-                        </div>
-                        <div class="stat-content">
-                            <h3 id="avgTokensPerRequest">-</h3>
-                            <p>Avg Tokens/Request</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="token-charts">
-                    <div class="chart-card">
-                        <h3>Daily Token Usage (Last 7 Days)</h3>
-                        <canvas id="tokenUsageChart"></canvas>
-                    </div>
-                    <div class="chart-card">
-                        <h3>Today's Usage</h3>
-                        <div class="today-stats">
-                            <div class="today-stat">
-                                <span class="label">Tokens:</span>
-                                <span id="todayTokens" class="value">-</span>
-                            </div>
-                            <div class="today-stat">
-                                <span class="label">Requests:</span>
-                                <span id="todayRequests" class="value">-</span>
-                            </div>
-                            <div class="today-stat">
-                                <span class="label">Cost:</span>
-                                <span id="todayCost" class="value">-</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Charts Section -->
-            <section class="charts-section">
-                <div class="chart-container">
-                    <div class="chart-card">
-                        <h3>Sentiment Distribution</h3>
-                        <canvas id="sentimentChart"></canvas>
-                    </div>
-                    <div class="chart-card">
-                        <h3>Emotion Breakdown</h3>
-                        <canvas id="emotionChart"></canvas>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Enhanced Analysis Section -->
-            <section class="enhanced-analysis-section">
-                <div class="section-header">
-                    <h2><i class="fas fa-brain"></i> Advanced AI Analysis Dashboard</h2>
-                    <div class="analysis-controls">
-                        <button id="analyzeAllBtn" class="btn btn-primary">
-                            <i class="fas fa-magic"></i> Re-analizar con DeepSeek
-                        </button>
-                        <button id="exportAnalysisBtn" class="btn btn-secondary">
-                            <i class="fas fa-download"></i> Exportar Datos
-                        </button>
-                        <button id="moodAnalysisBtn" class="btn btn-info">
-                            <i class="fas fa-smile"></i> Análisis de Humor
-                        </button>
-                        <button id="riskAssessmentBtn" class="btn btn-danger">
-                            <i class="fas fa-shield-alt"></i> Evaluación de Riesgos
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Analysis Overview Cards -->
-                <div class="analysis-overview">
-                    <div class="analysis-card">
-                        <div class="card-icon toxicity">
-                            <i class="fas fa-shield-alt"></i>
-                        </div>
-                        <div class="card-content">
-                            <h3 id="toxicityRate">-</h3>
-                            <p>Toxicity Rate</p>
-                            <span class="trend" id="toxicityTrend">↓ 12% vs last week</span>
-                        </div>
-                    </div>
-                    <div class="analysis-card">
-                        <div class="card-icon language">
-                            <i class="fas fa-globe"></i>
-                        </div>
-                        <div class="card-content">
-                            <h3 id="languageCount">-</h3>
-                            <p>Languages Detected</p>
-                            <span class="languages-list" id="topLanguages">EN, ES, FR</span>
-                        </div>
-                    </div>
-                    <div class="analysis-card">
-                        <div class="card-icon keywords">
-                            <i class="fas fa-tags"></i>
-                        </div>
-                        <div class="card-content">
-                            <h3 id="keywordCount">-</h3>
-                            <p>Unique Keywords</p>
-                            <span class="top-keywords" id="topKeywords">project, help, question</span>
-                        </div>
-                    </div>
-                    <div class="analysis-card">
-                        <div class="card-icon topics">
-                            <i class="fas fa-lightbulb"></i>
-                        </div>
-                        <div class="card-content">
-                            <h3 id="topicCount">-</h3>
-                            <p>Topic Categories</p>
-                            <span class="top-topics" id="topTopics">Technical, Business, Personal</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Advanced Charts -->
-                <div class="advanced-charts">
-                    <div class="chart-card">
-                        <h3>Toxicity vs Sentiment Correlation</h3>
-                        <canvas id="toxicitySentimentChart"></canvas>
-                    </div>
-                    <div class="chart-card">
-                        <h3>Language Distribution</h3>
-                        <canvas id="languageChart"></canvas>
-                    </div>
-                    <div class="chart-card">
-                        <h3>Keyword Cloud Analysis</h3>
-                        <div id="keywordCloud" class="keyword-cloud"></div>
-                    </div>
-                    <div class="chart-card">
-                        <h3>Topic Evolution Over Time</h3>
-                        <canvas id="topicTimelineChart"></canvas>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Messages Table -->
-            <section class="messages-section">
-                <div class="section-header">
-                    <h2><i class="fas fa-comments"></i> Mensajes con Análisis Integral de DeepSeek</h2>
-                    <div class="filter-controls">
-                        <select id="sentimentFilter">
-                            <option value="">All Sentiments</option>
-                            <option value="positive">Positive</option>
-                            <option value="negative">Negative</option>
-                            <option value="neutral">Neutral</option>
-                        </select>
-                        <select id="emotionFilter">
-                            <option value="">All Emotions</option>
-                            <option value="joy">Joy</option>
-                            <option value="anger">Anger</option>
-                            <option value="sadness">Sadness</option>
-                            <option value="fear">Fear</option>
-                            <option value="surprise">Surprise</option>
-                            <option value="disgust">Disgust</option>
-                            <option value="neutral">Neutral</option>
-                        </select>
-                        <select id="toxicityFilter">
-                            <option value="">Todos los Niveles</option>
-                            <option value="safe">Seguro</option>
-                            <option value="toxic">Tóxico</option>
-                        </select>
-                        <select id="languageFilter">
-                            <option value="">Todos los Idiomas</option>
-                            <option value="en">Inglés</option>
-                            <option value="es">Español</option>
-                            <option value="fr">Francés</option>
-                            <option value="de">Alemán</option>
-                            <option value="pt">Portugués</option>
-                            <option value="it">Italiano</option>
-                        </select>
-                    </div>
-                </div>
+                <!-- Leads Table -->
                 <div class="table-container">
-                    <table id="messagesTable">
+                    <table id="leadsTable">
                         <thead>
                             <tr>
                                 <th>Fecha</th>
-                                <th>Nombre</th>
-                                <th>Email</th>
+                                <th>Contacto</th>
                                 <th>Mensaje</th>
-                                <th>Sentimiento</th>
-                                <th>Emoción</th>
-                                <th>Nivel de Riesgo</th>
-                                <th>Toxicidad</th>
-                                <th>Idioma</th>
-                                <th>Palabras Clave</th>
-                                <th>Temas</th>
-                                <th>Confianza</th>
-                                <th>Resumen IA</th>
+                                <th>Score</th>
+                                <th>Calificación</th>
+                                <th>Intención</th>
+                                <th>Urgencia</th>
+                                <th>Empresa</th>
+                                <th>Email Status</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
-                        <tbody id="messagesTableBody">
+                        <tbody id="leadsTableBody">
                             <tr>
-                                <td colspan="14" class="loading">
-                                    <i class="fas fa-spinner fa-spin"></i> Loading messages...
+                                <td colspan="10" class="loading">
+                                    <i class="fas fa-spinner fa-spin"></i> Cargando leads...
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </section>
+
+            <!-- â”€â”€ SECONDARY: Token Usage â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+            <details class="collapsible-section">
+                <summary><i class="fas fa-coins"></i> DeepSeek API Usage <span class="collapse-badge" id="tokenBadge">â€”</span></summary>
+                <div class="collapsible-body">
+                <!-- Token Usage compact -->
+                <div class="token-stats-overview">
+                    <div class="token-stat-card">
+                        <div class="stat-icon"><i class="fas fa-coins"></i></div>
+                        <div class="stat-content"><h3 id="totalTokens">-</h3><p>Total Tokens</p></div>
+                    </div>
+                    <div class="token-stat-card">
+                        <div class="stat-icon"><i class="fas fa-robot"></i></div>
+                        <div class="stat-content"><h3 id="totalRequests">-</h3><p>API Requests</p></div>
+                    </div>
+                    <div class="token-stat-card">
+                        <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
+                        <div class="stat-content"><h3 id="totalCost">-</h3><p>Total Cost</p></div>
+                    </div>
+                    <div class="token-stat-card">
+                        <div class="stat-icon"><i class="fas fa-calculator"></i></div>
+                        <div class="stat-content"><h3 id="avgTokensPerRequest">-</h3><p>Avg Tokens/Req</p></div>
+                    </div>
+                </div>
+                <div class="token-charts">
+                    <div class="chart-card"><h3>Daily Token Usage (Last 7 Days)</h3><canvas id="tokenUsageChart"></canvas></div>
+                </div>
+                </div>
+            </details>
+
+            <!-- â”€â”€ SECONDARY: Sentiment Charts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+            <details class="collapsible-section">
+                <summary><i class="fas fa-chart-pie"></i> Análisis de Sentimiento</summary>
+                <div class="collapsible-body">
+                <div class="chart-container">
+                    <div class="chart-card"><h3>Sentiment Distribution</h3><canvas id="sentimentChart"></canvas></div>
+                    <div class="chart-card"><h3>Emotion Breakdown</h3><canvas id="emotionChart"></canvas></div>
+                </div>
+                </div>
+            </details>
+
         </main>
     </div>
 
-    <!-- Alert Details Modal -->
-    <div id="alertModal" class="modal-overlay" style="display: none;">
-        <div class="alert-modal">
+    <!-- â”€â”€ LEAD DETAIL MODAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <div id="leadModal" class="modal-overlay" style="display:none;">
+        <div class="lead-modal">
             <div class="modal-header">
-                <h3><i class="fas fa-exclamation-triangle"></i> Detalles de la Alerta</h3>
-                <button class="modal-close" id="closeAlertModal">
-                    <i class="fas fa-times"></i>
-                </button>
+                <h3><i class="fas fa-user-tie"></i> Detalle del Lead</h3>
+                <button class="modal-close" id="closeLeadModal"><i class="fas fa-times"></i></button>
             </div>
-            <div class="modal-body">
-                <div class="alert-details">
-                    <div class="alert-info-grid">
-                        <div class="alert-info-item">
-                            <label>Nivel de Riesgo:</label>
-                            <span id="alertRiskLevel" class="risk-badge">-</span>
+            <div class="modal-body" id="leadModalBody">
+                <div class="lead-detail-grid">
+                    <div class="lead-detail-left">
+                        <div class="lead-score-display">
+                            <div class="score-circle" id="modalScoreCircle">
+                                <span id="modalScore">-</span>
+                            </div>
+                            <div>
+                                <span class="qual-badge" id="modalQualBadge">-</span>
+                                <p id="modalUrgency" class="urgency-label">-</p>
+                            </div>
                         </div>
-                        <div class="alert-info-item">
-                            <label>Fecha y Hora:</label>
-                            <span id="alertTimestamp">-</span>
-                        </div>
-                        <div class="alert-info-item">
-                            <label>Tipo de Alerta:</label>
-                            <span id="alertType">-</span>
-                        </div>
-                        <div class="alert-info-item">
-                            <label>Estado:</label>
-                            <span id="alertStatus" class="status-badge">-</span>
-                        </div>
+                        <div class="detail-row"><label>Nombre</label><span id="modalName">-</span></div>
+                        <div class="detail-row"><label>Email</label><a id="modalEmail" href="#">-</a></div>
+                        <div class="detail-row"><label>Fecha</label><span id="modalDate">-</span></div>
+                        <div class="detail-row"><label>Intención</label><span id="modalIntent">-</span></div>
+                        <div class="detail-row"><label>SeÃ±al empresa</label><span id="modalCompany">-</span></div>
+                        <div class="detail-row"><label>SeÃ±al presupuesto</label><span id="modalBudget">-</span></div>
+                        <div class="detail-row"><label>Ãreas de interÃ©s</label><div id="modalAreas" class="tag-list"></div></div>
+                        <div class="detail-row"><label>AcciÃ³n recomendada</label><span id="modalAction">-</span></div>
+                        <div class="detail-row"><label>Resumen IA</label><span id="modalSummary">-</span></div>
                     </div>
-                    
-                    <div class="alert-message-section">
-                        <label>Mensaje Original:</label>
-                        <div id="alertOriginalMessage" class="message-content">-</div>
-                    </div>
-                    
-                    <div class="alert-analysis-section">
-                        <label>Análisis de IA:</label>
-                        <div id="alertAnalysis" class="analysis-content">-</div>
-                    </div>
-                    
-                    <div class="alert-keywords-section">
-                        <label>Palabras Clave Detectadas:</label>
-                        <div id="alertKeywords" class="keywords-container">-</div>
-                    </div>
-                    
-                    <div class="alert-contact-section">
-                        <label>Información de Contacto:</label>
-                        <div class="contact-info">
-                            <div><strong>Nombre:</strong> <span id="alertContactName">-</span></div>
-                            <div><strong>Email:</strong> <span id="alertContactEmail">-</span></div>
+                    <div class="lead-detail-right">
+                        <label>Mensaje original</label>
+                        <div id="modalMessage" class="message-content-full">-</div>
+                        <div id="emailPreviewBox" class="email-preview-box" style="display:none;">
+                            <label>Vista previa del email IA</label>
+                            <div class="email-preview-subject"><strong>Asunto:</strong> <span id="previewSubject">-</span></div>
+                            <div id="previewBody" class="email-preview-body">-</div>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <div class="alert-actions">
-                    <button class="btn btn-danger" id="markAsUrgent">
-                        <i class="fas fa-exclamation"></i> Marcar Urgente
-                    </button>
-                    <button class="btn btn-warning" id="assignToSupport">
-                        <i class="fas fa-user-plus"></i> Asignar a Soporte
-                    </button>
-                    <button class="btn btn-success" id="markAsResolved">
-                        <i class="fas fa-check"></i> Marcar Resuelto
-                    </button>
-                    <button class="btn btn-secondary" id="addNotes">
-                        <i class="fas fa-sticky-note"></i> Agregar Notas
-                    </button>
-                </div>
+                <button class="btn btn-info" id="previewEmailBtn">
+                    <i class="fas fa-eye"></i> Ver Email IA
+                </button>
+                <button class="btn btn-success" id="sendEmailBtn">
+                    <i class="fas fa-paper-plane"></i> Enviar Email IA
+                </button>
+                <button class="btn btn-warning" id="rescoreLeadBtn">
+                    <i class="fas fa-brain"></i> Re-puntuar
+                </button>
+                <button class="btn btn-secondary" id="closeModalFooterBtn">
+                    <i class="fas fa-times"></i> Cerrar
+                </button>
             </div>
         </div>
     </div>
 
+    <!-- â”€â”€ TOAST NOTIFICATION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <div id="toast" class="toast" style="display:none;"></div>
+
     <script src="js/admin.js"></script>
     <script>
-        // Initialize dashboard after admin.js is loaded
-        if (typeof ToneAnalysisDashboard !== 'undefined') {
-            window.dashboard = new ToneAnalysisDashboard();
-        } else {
-            console.error('ToneAnalysisDashboard class not found');
-        }
+        window.leadAgent = new LeadCaptureAgent();
     </script>
 </body>
 </html>

@@ -13,6 +13,8 @@ const Customer = require('./models/Customer');
 const PaymentHistory = require('./models/PaymentHistory');
 const toneAnalysisService = require('./services/toneAnalysis');
 const CustomerService = require('./services/customerService');
+const leadAnalysisService = require('./services/leadAnalysis');
+const emailService = require('./services/emailService');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -276,7 +278,16 @@ app.post('/api/contact', validateContactForm, async (req, res) => {
       toneAnalysis: toneAnalysis
     });
 
-    // Save to database
+    // Run lead analysis in parallel (non-blocking)
+    leadAnalysisService.analyzeLeadPotential(name, email, message)
+      .then(leadAnalysis => {
+        contact.leadAnalysis = leadAnalysis;
+        return contact.save();
+      })
+      .then(() => console.log(`Lead analyzed: ${email} — Score: ${contact.leadAnalysis?.score} (${contact.leadAnalysis?.qualification})`))
+      .catch(err => console.error('Lead analysis async error:', err.message));
+
+    // Save to database immediately (lead analysis updates async)
     await contact.save();
 
     console.log(`New contact form submission from ${email}`);
@@ -1165,6 +1176,174 @@ app.post('/api/admin/reanalyze/:messageId', requireAuth, async (req, res) => {
     });
   }
 });
+
+// ─── LEAD CAPTURE AGENT ENDPOINTS ───────────────────────────────────────────
+
+// Get all leads with optional qualification filter
+app.get('/api/admin/leads', requireAuth, async (req, res) => {
+  try {
+    const { qualification, emailSent, limit = 100 } = req.query;
+    const query = {};
+    if (qualification && qualification !== 'all') {
+      query['leadAnalysis.qualification'] = qualification;
+    }
+    if (emailSent === 'true') query['emailStatus.sent'] = true;
+    if (emailSent === 'false') query['emailStatus.sent'] = { $ne: true };
+
+    const contacts = await Contact.find(query)
+      .sort({ submittedAt: -1 })
+      .limit(parseInt(limit));
+
+    res.json({ success: true, data: contacts, total: contacts.length });
+  } catch (error) {
+    console.error('Get leads error:', error);
+    res.status(500).json({ success: false, message: 'Error fetching leads' });
+  }
+});
+
+// Get lead statistics summary
+app.get('/api/admin/leads/stats', requireAuth, async (req, res) => {
+  try {
+    const all = await Contact.find({}).sort({ submittedAt: -1 });
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const stats = {
+      total: all.length,
+      hot: all.filter(c => c.leadAnalysis?.qualification === 'hot').length,
+      warm: all.filter(c => c.leadAnalysis?.qualification === 'warm').length,
+      cold: all.filter(c => c.leadAnalysis?.qualification === 'cold').length,
+      not_qualified: all.filter(c => c.leadAnalysis?.qualification === 'not_qualified').length,
+      analyzed: all.filter(c => c.leadAnalysis?.score != null).length,
+      emailsSent: all.filter(c => c.emailStatus?.sent).length,
+      todayMessages: all.filter(c => new Date(c.submittedAt) >= today).length,
+      avgScore: 0,
+      highUrgency: all.filter(c => c.leadAnalysis?.urgency === 'high').length,
+      companyLeads: all.filter(c => c.leadAnalysis?.companySignals).length
+    };
+
+    const scoredLeads = all.filter(c => c.leadAnalysis?.score != null);
+    if (scoredLeads.length > 0) {
+      stats.avgScore = Math.round(scoredLeads.reduce((s, c) => s + c.leadAnalysis.score, 0) / scoredLeads.length);
+    }
+
+    res.json({ success: true, stats });
+  } catch (error) {
+    console.error('Lead stats error:', error);
+    res.status(500).json({ success: false, message: 'Error fetching lead stats' });
+  }
+});
+
+// Send AI-personalized outreach email to a lead
+app.post('/api/admin/leads/:id/send-email', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const contact = await Contact.findById(id);
+
+    if (!contact) {
+      return res.status(404).json({ success: false, message: 'Lead not found' });
+    }
+
+    if (contact.emailStatus?.sent) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email already sent to this lead',
+        sentAt: contact.emailStatus.sentAt
+      });
+    }
+
+    const result = await emailService.sendLeadOutreachEmail(contact);
+
+    contact.emailStatus = {
+      sent: true,
+      sentAt: new Date(),
+      messageId: result.messageId,
+      subject: result.subject
+    };
+    await contact.save();
+
+    console.log(`Lead outreach email sent to ${contact.email} — Subject: ${result.subject}`);
+
+    res.json({
+      success: true,
+      message: `Email enviado exitosamente a ${contact.email}`,
+      result
+    });
+  } catch (error) {
+    console.error('Send lead email error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error sending email: ' + error.message
+    });
+  }
+});
+
+// Preview AI-generated email for a lead (without sending)
+app.get('/api/admin/leads/:id/preview-email', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const contact = await Contact.findById(id);
+    if (!contact) return res.status(404).json({ success: false, message: 'Lead not found' });
+
+    const emailContent = await leadAnalysisService.generateOutreachEmail(contact);
+    res.json({ success: true, email: emailContent, contact: { name: contact.name, email: contact.email } });
+  } catch (error) {
+    console.error('Preview email error:', error);
+    res.status(500).json({ success: false, message: 'Error generating email preview: ' + error.message });
+  }
+});
+
+// Re-score a specific lead
+app.post('/api/admin/leads/:id/rescore', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const contact = await Contact.findById(id);
+    if (!contact) return res.status(404).json({ success: false, message: 'Lead not found' });
+
+    const leadAnalysis = await leadAnalysisService.analyzeLeadPotential(contact.name, contact.email, contact.message);
+    contact.leadAnalysis = leadAnalysis;
+    await contact.save();
+
+    res.json({ success: true, leadAnalysis, message: 'Lead re-scored successfully' });
+  } catch (error) {
+    console.error('Re-score lead error:', error);
+    res.status(500).json({ success: false, message: 'Error re-scoring lead: ' + error.message });
+  }
+});
+
+// Re-analyze all contacts for lead scoring
+app.post('/api/admin/leads/rescore-all', requireAuth, async (req, res) => {
+  try {
+    const contacts = await Contact.find({ 'leadAnalysis.score': null });
+    let processed = 0, errors = 0;
+
+    for (const contact of contacts) {
+      try {
+        const leadAnalysis = await leadAnalysisService.analyzeLeadPotential(contact.name, contact.email, contact.message);
+        contact.leadAnalysis = leadAnalysis;
+        await contact.save();
+        processed++;
+        await new Promise(r => setTimeout(r, 300));
+      } catch (err) {
+        console.error(`Lead rescore error for ${contact._id}:`, err.message);
+        errors++;
+      }
+    }
+
+    res.json({ success: true, processed, errors, message: `${processed} leads scored, ${errors} failed` });
+  } catch (error) {
+    console.error('Rescore all error:', error);
+    res.status(500).json({ success: false, message: 'Error re-scoring all leads' });
+  }
+});
+
+// Check email service connectivity
+app.get('/api/admin/email-status', requireAuth, async (req, res) => {
+  const status = await emailService.verifyConnection();
+  res.json(status);
+});
+
+// ─── END LEAD CAPTURE AGENT ENDPOINTS ────────────────────────────────────────
 
 // Re-analyze all messages with DeepSeek
 app.post('/api/admin/reanalyze-all', requireAuth, async (req, res) => {

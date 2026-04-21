@@ -58,7 +58,32 @@ const contactSchema = new mongoose.Schema({
       type: Date,
       default: null
     }
-  }
+  },
+  leadAnalysis: {
+    score: { type: Number, min: 0, max: 100, default: null },
+    qualification: {
+      type: String,
+      enum: ['hot', 'warm', 'cold', 'not_qualified'],
+      default: null
+    },
+    intent: { type: String, maxlength: 200, default: null },
+    interestAreas: [{ type: String }],
+    urgency: { type: String, enum: ['high', 'medium', 'low'], default: null },
+    companySignals: { type: Boolean, default: false },
+    budgetSignals: { type: Boolean, default: false },
+    summary: { type: String, maxlength: 400, default: null },
+    recommendedAction: { type: String, maxlength: 300, default: null },
+    language: { type: String, enum: ['es', 'en', 'other'], default: 'en' },
+    analyzedAt: { type: Date, default: null }
+  },
+  emailStatus: {
+    sent: { type: Boolean, default: false },
+    sentAt: { type: Date, default: null },
+    messageId: { type: String, default: null },
+    subject: { type: String, default: null }
+  },
+  flaggedAsHighRisk: { type: Boolean, default: false },
+  flaggedAt: { type: Date, default: null }
 });
 
 // Index for faster queries

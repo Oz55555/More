@@ -1,0 +1,264 @@
+const axios = require('axios');
+
+class LeadAnalysisService {
+  constructor() {
+    this.deepseekApiKey = process.env.DEEPSEEK_API_KEY;
+    this.openaiApiKey = process.env.OPENAI_API_KEY;
+  }
+
+  async analyzeLeadPotential(name, email, message) {
+    try {
+      if (this.deepseekApiKey) {
+        return await this.analyzeWithDeepSeek(name, email, message);
+      }
+      if (this.openaiApiKey) {
+        return await this.analyzeWithOpenAI(name, email, message);
+      }
+      return this.analyzeWithKeywords(message);
+    } catch (error) {
+      console.error('Lead analysis failed, using keyword fallback:', error.message);
+      return this.analyzeWithKeywords(message);
+    }
+  }
+
+  buildLeadPrompt(name, email, message) {
+    return `You are a B2B sales analyst for Cadence Wave, a global digital transformation consultancy specializing in SAFe Agile frameworks, enterprise agile transformation, coaching, and training services.
+
+Analyze this incoming contact form message and score it as a potential business lead.
+
+Contact:
+- Name: ${name}
+- Email: ${email}
+- Message: "${message}"
+
+Evaluate for:
+1. Business intent — are they seeking consulting, training, coaching, or transformation services?
+2. Company signals — do they represent an organization, enterprise, team, or company?
+3. Urgency — how soon do they need help?
+4. Budget signals — any hints at investment capacity or pricing inquiry?
+5. Relevant interest areas — SAFe, agile, digital transformation, PI Planning, ART, Scrum Master, PO, DevOps, etc.
+
+Return ONLY a valid JSON object with this exact structure:
+{
+  "score": <0-100 integer>,
+  "qualification": "<hot|warm|cold|not_qualified>",
+  "intent": "<brief 5-10 word description>",
+  "interestAreas": ["<area1>", "<area2>"],
+  "urgency": "<high|medium|low>",
+  "companySignals": <true|false>,
+  "budgetSignals": <true|false>,
+  "summary": "<1-2 sentence lead summary>",
+  "recommendedAction": "<specific next step for Oscar>",
+  "language": "<es|en|other>"
+}
+
+Scoring guide:
+- 70-100: Hot lead — clear business need, company context, specific SAFe/agile/transformation request
+- 40-69: Warm lead — professional interest, vague need, or exploratory inquiry
+- 20-39: Cold lead — general question, individual seeking info
+- 0-19: Not qualified — spam, personal, off-topic
+
+Return ONLY JSON, no other text or explanation.`;
+  }
+
+  async analyzeWithDeepSeek(name, email, message) {
+    const response = await axios.post('https://api.deepseek.com/v1/chat/completions', {
+      model: 'deepseek-chat',
+      messages: [{ role: 'user', content: this.buildLeadPrompt(name, email, message) }],
+      temperature: 0.1,
+      max_tokens: 600
+    }, {
+      headers: {
+        'Authorization': `Bearer ${this.deepseekApiKey}`,
+        'Content-Type': 'application/json'
+      },
+      timeout: 20000
+    });
+
+    const content = response.data.choices[0].message.content;
+    return this.parseLeadAnalysis(content);
+  }
+
+  async analyzeWithOpenAI(name, email, message) {
+    const response = await axios.post('https://api.openai.com/v1/chat/completions', {
+      model: 'gpt-4o-mini',
+      messages: [{ role: 'user', content: this.buildLeadPrompt(name, email, message) }],
+      temperature: 0.1,
+      max_tokens: 600,
+      response_format: { type: 'json_object' }
+    }, {
+      headers: {
+        'Authorization': `Bearer ${this.openaiApiKey}`,
+        'Content-Type': 'application/json'
+      },
+      timeout: 20000
+    });
+
+    const content = response.data.choices[0].message.content;
+    return this.parseLeadAnalysis(content);
+  }
+
+  parseLeadAnalysis(content) {
+    try {
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error('No JSON found in AI response');
+      const raw = JSON.parse(jsonMatch[0]);
+
+      return {
+        score: Math.min(100, Math.max(0, parseInt(raw.score) || 0)),
+        qualification: ['hot', 'warm', 'cold', 'not_qualified'].includes(raw.qualification)
+          ? raw.qualification : 'cold',
+        intent: String(raw.intent || 'General inquiry').substring(0, 200),
+        interestAreas: Array.isArray(raw.interestAreas) ? raw.interestAreas.slice(0, 8) : [],
+        urgency: ['high', 'medium', 'low'].includes(raw.urgency) ? raw.urgency : 'low',
+        companySignals: Boolean(raw.companySignals),
+        budgetSignals: Boolean(raw.budgetSignals),
+        summary: String(raw.summary || '').substring(0, 400),
+        recommendedAction: String(raw.recommendedAction || 'Review message').substring(0, 300),
+        language: ['es', 'en', 'other'].includes(raw.language) ? raw.language : 'en',
+        analyzedAt: new Date()
+      };
+    } catch (error) {
+      console.error('Lead parse failed:', error.message);
+      return this.analyzeWithKeywords('');
+    }
+  }
+
+  analyzeWithKeywords(message) {
+    const text = (message || '').toLowerCase();
+    let score = 10;
+    const interestAreas = [];
+
+    const businessKeywords = ['company', 'empresa', 'organization', 'organización', 'team', 'equipo', 'enterprise', 'startup', 'firma', 'corporate'];
+    const serviceKeywords = ['consulting', 'consultoría', 'agile', 'ágil', 'safe', 'transformation', 'transformación', 'training', 'capacitación', 'coaching', 'implementation', 'implementación', 'framework', 'scrum', 'pi planning', 'art', 'devops'];
+    const urgencyKeywords = ['asap', 'urgent', 'urgente', 'immediately', 'inmediatamente', 'soon', 'pronto', 'quarter', 'deadline', 'plazo', 'need to start'];
+    const budgetKeywords = ['budget', 'presupuesto', 'invest', 'inversión', 'cost', 'costo', 'pricing', 'precio', 'rates', 'tarifas'];
+
+    const bizCount = businessKeywords.filter(k => text.includes(k)).length;
+    const svcCount = serviceKeywords.filter(k => text.includes(k)).length;
+    const urgCount = urgencyKeywords.filter(k => text.includes(k)).length;
+    const budCount = budgetKeywords.filter(k => text.includes(k)).length;
+
+    score += bizCount * 12 + svcCount * 18 + urgCount * 8 + budCount * 10;
+    score = Math.min(100, score);
+
+    if (text.includes('safe') || text.includes('scaled agile')) interestAreas.push('SAFe');
+    if (text.includes('agile') || text.includes('ágil') || text.includes('scrum')) interestAreas.push('Agile');
+    if (text.includes('digital transformation') || text.includes('transformación digital')) interestAreas.push('Digital Transformation');
+    if (text.includes('consult')) interestAreas.push('Consulting');
+    if (text.includes('train') || text.includes('capacit')) interestAreas.push('Training');
+    if (text.includes('coach')) interestAreas.push('Coaching');
+    if (interestAreas.length === 0) interestAreas.push('General Inquiry');
+
+    let qualification = 'not_qualified';
+    if (score >= 70) qualification = 'hot';
+    else if (score >= 40) qualification = 'warm';
+    else if (score >= 20) qualification = 'cold';
+
+    const hasSpanish = /[áéíóúñ]/.test(text) || ['empresa', 'quiero', 'necesito', 'ayuda'].some(w => text.includes(w));
+
+    return {
+      score,
+      qualification,
+      intent: svcCount > 0 ? 'Seeking transformation/agile services' : 'General inquiry',
+      interestAreas,
+      urgency: urgCount > 1 ? 'high' : urgCount > 0 ? 'medium' : 'low',
+      companySignals: bizCount > 0,
+      budgetSignals: budCount > 0,
+      summary: `Lead score ${score}/100. Interests: ${interestAreas.join(', ')}.`,
+      recommendedAction: score >= 70 ? 'Contact immediately — high value lead' : score >= 40 ? 'Send AI agent email within 24h' : 'Add to nurture sequence',
+      language: hasSpanish ? 'es' : 'en',
+      analyzedAt: new Date()
+    };
+  }
+
+  async generateOutreachEmail(contact) {
+    const { name, message, leadAnalysis } = contact;
+    const lang = leadAnalysis?.language || 'en';
+    const areas = (leadAnalysis?.interestAreas || []).join(', ') || 'digital transformation';
+    const intent = leadAnalysis?.intent || 'your inquiry';
+
+    try {
+      if (this.deepseekApiKey || this.openaiApiKey) {
+        return await this.generateEmailWithAI(name, message, leadAnalysis, lang);
+      }
+    } catch (error) {
+      console.error('AI email generation failed, using template:', error.message);
+    }
+
+    return this.generateEmailTemplate(name, message, areas, intent, lang);
+  }
+
+  async generateEmailWithAI(name, message, leadAnalysis, lang) {
+    const langInstruction = lang === 'es' ? 'Write the email in Spanish.' : 'Write the email in English.';
+    const prompt = `You are Oscar Medina, a SAFe Agilist and digital transformation consultant at Cadence Wave (cadencewave.io).
+
+Write a personalized outreach email to a potential client who filled out your contact form.
+
+Client info:
+- Name: ${name}
+- Their message: "${message}"
+- Their interests: ${(leadAnalysis?.interestAreas || []).join(', ')}
+- Their intent: ${leadAnalysis?.intent}
+- Lead summary: ${leadAnalysis?.summary}
+
+${langInstruction}
+
+The email should:
+1. Greet them by first name
+2. Reference their specific message and need
+3. Briefly explain how Cadence Wave can help (2-3 specific points relevant to their need)
+4. Introduce NOVA, Cadence Wave's AI assistant, as available 24/7 to answer questions
+5. Invite them to schedule a 30-min discovery call (link: https://cadencewave.io)
+6. Sign off as Oscar Medina, SAFe Agilist | Cadence Wave
+
+Return ONLY a JSON object:
+{
+  "subject": "<email subject line>",
+  "bodyText": "<plain text body>",
+  "bodyHtml": "<HTML body with basic formatting, no full HTML document — just body content paragraphs and tags>"
+}`;
+
+    const apiKey = this.deepseekApiKey || this.openaiApiKey;
+    const endpoint = this.deepseekApiKey
+      ? 'https://api.deepseek.com/v1/chat/completions'
+      : 'https://api.openai.com/v1/chat/completions';
+    const model = this.deepseekApiKey ? 'deepseek-chat' : 'gpt-4o-mini';
+
+    const response = await axios.post(endpoint, {
+      model,
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.5,
+      max_tokens: 1200
+    }, {
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      timeout: 25000
+    });
+
+    const content = response.data.choices[0].message.content;
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('No JSON in AI email response');
+    return JSON.parse(jsonMatch[0]);
+  }
+
+  generateEmailTemplate(name, message, areas, intent, lang) {
+    const firstName = name.split(' ')[0];
+    if (lang === 'es') {
+      return {
+        subject: `Gracias por contactar a Cadence Wave, ${firstName} 🚀`,
+        bodyText: `Hola ${firstName},\n\nGracias por contactarnos sobre ${intent}. En Cadence Wave nos especializamos en ${areas} y estaré encantado de ayudarte.\n\nPuedo agendar una llamada de descubrimiento de 30 minutos para entender mejor tus necesidades. También tienes disponible NOVA, nuestra asistente de IA, que puede responderte de inmediato.\n\nEscríbeme o visita cadencewave.io para más información.\n\nSaludos,\nOscar Medina\nSAFe Agilist | Cadence Wave`,
+        bodyHtml: `<p>Hola <strong>${firstName}</strong>,</p><p>Gracias por contactar a Cadence Wave. Recibí tu mensaje y me da mucho gusto saber que estás interesado/a en <strong>${areas}</strong>.</p><p>En Cadence Wave ayudamos a organizaciones a acelerar su transformación digital usando marcos ágiles como SAFe, logrando resultados concretos en tiempo récord.</p><p>He puesto a disposición de <strong>NOVA</strong>, nuestra asistente de inteligencia artificial, para que puedas obtener respuestas inmediatas 24/7.</p><p><strong>¿Agendamos una llamada de descubrimiento de 30 min?</strong> → <a href="https://cadencewave.io">cadencewave.io</a></p><br><p>Saludos,<br><strong>Oscar Medina</strong><br>SAFe Agilist | Cadence Wave<br>cadencewave.io</p>`
+      };
+    }
+    return {
+      subject: `Thank you for reaching out to Cadence Wave, ${firstName} 🚀`,
+      bodyText: `Hi ${firstName},\n\nThank you for reaching out to Cadence Wave about ${intent}. We specialize in ${areas} and I'd love to help.\n\nLet's schedule a 30-min discovery call to understand your needs better. You also have access to NOVA, our AI assistant, for immediate answers 24/7.\n\nReply to this email or visit cadencewave.io to learn more.\n\nBest regards,\nOscar Medina\nSAFe Agilist | Cadence Wave`,
+      bodyHtml: `<p>Hi <strong>${firstName}</strong>,</p><p>Thank you for reaching out to Cadence Wave. I received your message and I'm excited about your interest in <strong>${areas}</strong>.</p><p>At Cadence Wave, we help organizations accelerate digital transformation using proven agile frameworks like SAFe, delivering measurable results.</p><p>I've assigned <strong>NOVA</strong>, our AI assistant, to provide you with immediate answers 24/7 — just reply to this email.</p><p><strong>Ready to explore how we can help?</strong> → <a href="https://cadencewave.io">cadencewave.io</a></p><br><p>Best regards,<br><strong>Oscar Medina</strong><br>SAFe Agilist | Cadence Wave<br>cadencewave.io</p>`
+    };
+  }
+}
+
+module.exports = new LeadAnalysisService();
