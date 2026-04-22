@@ -67,6 +67,7 @@ Return ONLY JSON, no other text or explanation.`;
       signal: AbortSignal.timeout(20000)
     });
     const data = await response.json();
+    if (!data.choices?.[0]) throw new Error(`DeepSeek API error: ${data.error?.message || data.message || JSON.stringify(data)}`);
     return this.parseLeadAnalysis(data.choices[0].message.content);
   }
 
@@ -78,6 +79,7 @@ Return ONLY JSON, no other text or explanation.`;
       signal: AbortSignal.timeout(20000)
     });
     const data = await response.json();
+    if (!data.choices?.[0]) throw new Error(`OpenAI API error: ${data.error?.message || data.message || JSON.stringify(data)}`);
     return this.parseLeadAnalysis(data.choices[0].message.content);
   }
 
@@ -215,6 +217,7 @@ Return ONLY a JSON object:
       signal: AbortSignal.timeout(25000)
     });
     const data = await response.json();
+    if (!data.choices?.[0]) throw new Error(`AI email API error: ${data.error?.message || data.message || JSON.stringify(data)}`);
     const content = data.choices[0].message.content;
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error('No JSON in AI email response');
