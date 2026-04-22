@@ -4,7 +4,6 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
 const session = require('express-session');
-const MongoStore = require('connect-mongo');
 const bcrypt = require('bcryptjs');
 const { body, validationResult } = require('express-validator');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
@@ -94,15 +93,24 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // Session configuration
+let sessionStore;
+try {
+  const MongoStore = require('connect-mongo');
+  sessionStore = MongoStore.create({
+    mongoUrl: process.env.MONGODB_URI,
+    ttl: 7 * 24 * 60 * 60,
+    autoRemove: 'native'
+  });
+  console.log('Using MongoDB session store');
+} catch (e) {
+  console.warn('connect-mongo unavailable, using MemoryStore:', e.message);
+}
+
 app.use(session({
   secret: process.env.SESSION_SECRET || 'your-secret-key-change-in-production',
   resave: false,
   saveUninitialized: false,
-  store: MongoStore.create({
-    mongoUrl: process.env.MONGODB_URI,
-    ttl: 7 * 24 * 60 * 60, // 7 days
-    autoRemove: 'native'
-  }),
+  ...(sessionStore && { store: sessionStore }),
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
