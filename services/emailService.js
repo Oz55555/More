@@ -3,30 +3,30 @@ const leadAnalysisService = require('./leadAnalysis');
 
 class EmailService {
   constructor() {
-    this.transporter = null;
+    this.transport = null;
     this.fromName = process.env.EMAIL_FROM_NAME || 'Oscar Medina | Cadence Wave';
     this.fromEmail = process.env.EMAIL_USER || '';
   }
 
-  getTransporter() {
-    if (this.transporter) return this.transporter;
+getTransporter() {
+  if (this.transport) return this.transport;
 
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      throw new Error('EMAIL_USER and EMAIL_PASS environment variables are required');
-    }
-
-    this.transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.EMAIL_PORT || '587'),
-      secure: process.env.EMAIL_SECURE === 'true',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      }
-    });
-
-    return this.transporter;
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    throw new Error('EMAIL_USER and EMAIL_PASS environment variables are required');
   }
+
+  this.transport = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+    port: parseInt(process.env.EMAIL_PORT || '587', 10),
+    secure: process.env.EMAIL_SECURE === 'true',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS
+    }
+  });
+
+  return this.transport;
+}
 
   buildHtmlEmail(bodyHtml, recipientName) {
     const firstName = (recipientName || '').split(' ')[0];
@@ -120,8 +120,8 @@ class EmailService {
 
   async verifyConnection() {
     try {
-      const transporter = this.getTransporter();
-      await transporter.verify();
+      const transport = this.getTransport();
+      await transport.verify();
       return { success: true, message: 'Email service connected' };
     } catch (error) {
       return { success: false, message: error.message };
