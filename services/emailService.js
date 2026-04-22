@@ -120,7 +120,7 @@ getTransporter() {
 
   async verifyConnection() {
     try {
-      const transport = this.getTransport();
+      const transport = this.getTransporter();
       await transport.verify();
       return { success: true, message: 'Email service connected' };
     } catch (error) {
