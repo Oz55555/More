@@ -2,6 +2,7 @@ class LeadAnalysisService {
   constructor() {
     this.deepseekApiKey = process.env.DEEPSEEK_API_KEY;
     this.openaiApiKey = process.env.OPENAI_API_KEY;
+    this._emailCache = new Map(); // contactId → emailContent
   }
 
   async analyzeLeadPotential(name, email, message) {
@@ -20,51 +21,23 @@ class LeadAnalysisService {
   }
 
   buildLeadPrompt(name, email, message) {
-    return `You are a B2B sales analyst for Cadence Wave, a global digital transformation consultancy specializing in SAFe Agile frameworks, enterprise agile transformation, coaching, and training services.
+    return `B2B lead analyst for Cadence Wave (SAFe agile consultancy). Score this contact form submission.
 
-Analyze this incoming contact form message and score it as a potential business lead.
+Name: ${name} | Email: ${email}
+Message: "${message.substring(0, 400)}"
 
-Contact:
-- Name: ${name}
-- Email: ${email}
-- Message: "${message}"
+Return ONLY this JSON:
+{"score":<0-100>,"qualification":"<hot|warm|cold|not_qualified>","intent":"<5-10 words>","interestAreas":["..."],"urgency":"<high|medium|low>","companySignals":<bool>,"budgetSignals":<bool>,"summary":"<2 sentences>","recommendedAction":"<next step>","language":"<es|en|other>"}
 
-Evaluate for:
-1. Business intent — are they seeking consulting, training, coaching, or transformation services?
-2. Company signals — do they represent an organization, enterprise, team, or company?
-3. Urgency — how soon do they need help?
-4. Budget signals — any hints at investment capacity or pricing inquiry?
-5. Relevant interest areas — SAFe, agile, digital transformation, PI Planning, ART, Scrum Master, PO, DevOps, etc.
-
-Return ONLY a valid JSON object with this exact structure:
-{
-  "score": <0-100 integer>,
-  "qualification": "<hot|warm|cold|not_qualified>",
-  "intent": "<brief 5-10 word description>",
-  "interestAreas": ["<area1>", "<area2>"],
-  "urgency": "<high|medium|low>",
-  "companySignals": <true|false>,
-  "budgetSignals": <true|false>,
-  "summary": "<1-2 sentence lead summary>",
-  "recommendedAction": "<specific next step for Oscar>",
-  "language": "<es|en|other>"
-}
-
-Scoring guide:
-- 70-100: Hot lead — clear business need, company context, specific SAFe/agile/transformation request
-- 40-69: Warm lead — professional interest, vague need, or exploratory inquiry
-- 20-39: Cold lead — general question, individual seeking info
-- 0-19: Not qualified — spam, personal, off-topic
-
-Return ONLY JSON, no other text or explanation.`;
+Scoring: 70-100=hot(clear business need+company), 40-69=warm(exploratory), 20-39=cold(general info), 0-19=not_qualified(spam/personal). ONLY JSON.`;
   }
 
   async analyzeWithDeepSeek(name, email, message) {
     const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${this.deepseekApiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'deepseek-chat', messages: [{ role: 'user', content: this.buildLeadPrompt(name, email, message) }], temperature: 0.1, max_tokens: 600 }),
-      signal: AbortSignal.timeout(10000)
+      body: JSON.stringify({ model: 'deepseek-chat', messages: [{ role: 'user', content: this.buildLeadPrompt(name, email, message) }], temperature: 0.1, max_tokens: 350 }),
+      signal: AbortSignal.timeout(8000)
     });
     const data = await response.json();
     if (!data.choices?.[0]) throw new Error(`DeepSeek API error: ${data.error?.message || data.message || JSON.stringify(data)}`);
@@ -75,8 +48,8 @@ Return ONLY JSON, no other text or explanation.`;
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${this.openaiApiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'gpt-4o-mini', messages: [{ role: 'user', content: this.buildLeadPrompt(name, email, message) }], temperature: 0.1, max_tokens: 600, response_format: { type: 'json_object' } }),
-      signal: AbortSignal.timeout(10000)
+      body: JSON.stringify({ model: 'gpt-4o-mini', messages: [{ role: 'user', content: this.buildLeadPrompt(name, email, message) }], temperature: 0.1, max_tokens: 350, response_format: { type: 'json_object' } }),
+      signal: AbortSignal.timeout(8000)
     });
     const data = await response.json();
     if (!data.choices?.[0]) throw new Error(`OpenAI API error: ${data.error?.message || data.message || JSON.stringify(data)}`);
@@ -161,48 +134,43 @@ Return ONLY JSON, no other text or explanation.`;
     const { name, message, leadAnalysis } = contact;
     const lang = leadAnalysis?.language || 'en';
     const areas = (leadAnalysis?.interestAreas || []).join(', ') || 'digital transformation';
-    const intent = leadAnalysis?.intent || 'your inquiry';
+    const intent = leadAnalysis?.intent || 'your project';
+    const cacheKey = String(contact._id);
+
+    if (this._emailCache.has(cacheKey)) {
+      console.log('Email cache hit for', cacheKey);
+      return this._emailCache.get(cacheKey);
+    }
 
     try {
       if (this.deepseekApiKey || this.openaiApiKey) {
-        return await this.generateEmailWithAI(name, message, leadAnalysis, lang);
+        const result = await this.generateEmailWithAI(name, message, leadAnalysis, lang);
+        this._emailCache.set(cacheKey, result);
+        return result;
       }
     } catch (error) {
       console.error('AI email generation failed, using template:', error.message);
     }
 
-    return this.generateEmailTemplate(name, message, areas, intent, lang);
+    const result = this.generateEmailTemplate(name, message, areas, intent, lang);
+    this._emailCache.set(cacheKey, result);
+    return result;
   }
 
   async generateEmailWithAI(name, message, leadAnalysis, lang) {
-    const langInstruction = lang === 'es' ? 'Write the email in Spanish.' : 'Write the email in English.';
-    const prompt = `You are Oscar Medina, a SAFe Agilist and digital transformation consultant at Cadence Wave (cadencewave.io).
+    const langInstruction = lang === 'es' ? 'Write in Spanish.' : 'Write in English.';
+    const interests = (leadAnalysis?.interestAreas || []).join(', ') || 'digital transformation';
+    const prompt = `You are Oscar Medina, SAFe Agilist at Cadence Wave (cadencewave.io). ${langInstruction}
+Write a personalized outreach email to a contact form lead.
 
-Write a personalized outreach email to a potential client who filled out your contact form.
+Client: ${name}
+Message: "${message.substring(0, 300)}"
+Interests: ${interests}
+Intent: ${leadAnalysis?.intent || 'general inquiry'}
 
-Client info:
-- Name: ${name}
-- Their message: "${message}"
-- Their interests: ${(leadAnalysis?.interestAreas || []).join(', ')}
-- Their intent: ${leadAnalysis?.intent}
-- Lead summary: ${leadAnalysis?.summary}
+Email must: greet by first name, acknowledge their need, mention 2 relevant Cadence Wave benefits, mention NOVA AI assistant (24/7), invite 30-min discovery call (cadencewave.io), sign as Oscar Medina SAFe Agilist | Cadence Wave.
 
-${langInstruction}
-
-The email should:
-1. Greet them by first name
-2. Reference their specific message and need
-3. Briefly explain how Cadence Wave can help (2-3 specific points relevant to their need)
-4. Introduce NOVA, Cadence Wave's AI assistant, as available 24/7 to answer questions
-5. Invite them to schedule a 30-min discovery call (link: https://cadencewave.io)
-6. Sign off as Oscar Medina, SAFe Agilist | Cadence Wave
-
-Return ONLY a JSON object:
-{
-  "subject": "<email subject line>",
-  "bodyText": "<plain text body>",
-  "bodyHtml": "<HTML body with basic formatting, no full HTML document — just body content paragraphs and tags>"
-}`;
+Return ONLY JSON: {"subject":"...","bodyText":"...","bodyHtml":"<p>...</p>"}`;
 
     const apiKey = this.deepseekApiKey || this.openaiApiKey;
     const endpoint = this.deepseekApiKey
@@ -213,8 +181,8 @@ Return ONLY a JSON object:
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], temperature: 0.5, max_tokens: 700 }),
-      signal: AbortSignal.timeout(12000)
+      body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], temperature: 0.4, max_tokens: 550 }),
+      signal: AbortSignal.timeout(10000)
     });
     const data = await response.json();
     if (!data.choices?.[0]) throw new Error(`AI email API error: ${data.error?.message || data.message || JSON.stringify(data)}`);
