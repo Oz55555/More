@@ -95,12 +95,7 @@ getTransporter() {
   async sendLeadOutreachEmail(contact) {
     const transporter = this.getTransporter();
 
-    // TEST MODE: bypass AI, use fixed template directly
-    const { name, message, leadAnalysis } = contact;
-    const lang = leadAnalysis?.language || 'en';
-    const areas = (leadAnalysis?.interestAreas || []).join(', ') || 'digital transformation';
-    const intent = leadAnalysis?.intent || 'your project';
-    const emailContent = leadAnalysisService.generateEmailTemplate(name, message, areas, intent, lang);
+    const emailContent = await leadAnalysisService.generateOutreachEmail(contact);
 
     const htmlBody = this.buildHtmlEmail(emailContent.bodyHtml, contact.name);
 
