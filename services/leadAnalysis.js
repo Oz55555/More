@@ -64,7 +64,7 @@ Return ONLY JSON, no other text or explanation.`;
       method: 'POST',
       headers: { 'Authorization': `Bearer ${this.deepseekApiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ model: 'deepseek-chat', messages: [{ role: 'user', content: this.buildLeadPrompt(name, email, message) }], temperature: 0.1, max_tokens: 600 }),
-      signal: AbortSignal.timeout(20000)
+      signal: AbortSignal.timeout(10000)
     });
     const data = await response.json();
     if (!data.choices?.[0]) throw new Error(`DeepSeek API error: ${data.error?.message || data.message || JSON.stringify(data)}`);
@@ -76,7 +76,7 @@ Return ONLY JSON, no other text or explanation.`;
       method: 'POST',
       headers: { 'Authorization': `Bearer ${this.openaiApiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ model: 'gpt-4o-mini', messages: [{ role: 'user', content: this.buildLeadPrompt(name, email, message) }], temperature: 0.1, max_tokens: 600, response_format: { type: 'json_object' } }),
-      signal: AbortSignal.timeout(20000)
+      signal: AbortSignal.timeout(10000)
     });
     const data = await response.json();
     if (!data.choices?.[0]) throw new Error(`OpenAI API error: ${data.error?.message || data.message || JSON.stringify(data)}`);
@@ -213,8 +213,8 @@ Return ONLY a JSON object:
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], temperature: 0.5, max_tokens: 1200 }),
-      signal: AbortSignal.timeout(25000)
+      body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], temperature: 0.5, max_tokens: 700 }),
+      signal: AbortSignal.timeout(12000)
     });
     const data = await response.json();
     if (!data.choices?.[0]) throw new Error(`AI email API error: ${data.error?.message || data.message || JSON.stringify(data)}`);
