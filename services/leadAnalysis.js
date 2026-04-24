@@ -158,17 +158,20 @@ Scoring: 70-100=hot(clear business need+company), 40-69=warm(exploratory), 20-39
   }
 
   async generateEmailWithAI(name, message, leadAnalysis, lang) {
+    const firstName = name.split(' ')[0];
     const langInstruction = lang === 'es' ? 'Write in Spanish.' : 'Write in English.';
     const interests = (leadAnalysis?.interestAreas || []).join(', ') || 'digital transformation';
     const prompt = `You are Oscar Medina, SAFe Agilist at Cadence Wave (cadencewave.io). ${langInstruction}
-Write a personalized outreach email to a contact form lead.
+Write a personalized outreach email to this contact form lead. Use their REAL name throughout the email.
 
-Client: ${name}
+Client first name: ${firstName}
+Full name: ${name}
 Message: "${message.substring(0, 300)}"
 Interests: ${interests}
 Intent: ${leadAnalysis?.intent || 'general inquiry'}
 
-Email must: greet by first name, acknowledge their need, mention 2 relevant Cadence Wave benefits, mention NOVA AI assistant (24/7), invite 30-min discovery call (cadencewave.io), sign as Oscar Medina SAFe Agilist | Cadence Wave.
+IMPORTANT: Use "${firstName}" as the greeting name — never use placeholders like [Name] or [Contact Name].
+Email must: greet as "Hola ${firstName}" or "Hi ${firstName}", acknowledge their need, mention 2 relevant Cadence Wave benefits, mention NOVA AI assistant (24/7), invite 30-min discovery call (cadencewave.io), sign as Oscar Medina SAFe Agilist | Cadence Wave.
 
 Return ONLY JSON: {"subject":"...","bodyText":"...","bodyHtml":"<p>...</p>"}`;
 
@@ -189,7 +192,19 @@ Return ONLY JSON: {"subject":"...","bodyText":"...","bodyHtml":"<p>...</p>"}`;
     const content = data.choices[0].message.content;
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error('No JSON in AI email response');
-    return JSON.parse(jsonMatch[0]);
+
+    const result = JSON.parse(jsonMatch[0]);
+    // Safety: replace any leftover placeholders with the real name
+    const replacePlaceholders = (str) => str
+      .replace(/\[nombre del contacto\]/gi, firstName)
+      .replace(/\[nombre\]/gi, firstName)
+      .replace(/\[name\]/gi, firstName)
+      .replace(/\[contact name\]/gi, firstName)
+      .replace(/\[cliente\]/gi, firstName);
+    result.subject  = replacePlaceholders(result.subject  || '');
+    result.bodyText = replacePlaceholders(result.bodyText || '');
+    result.bodyHtml = replacePlaceholders(result.bodyHtml || '');
+    return result;
   }
 
   generateEmailTemplate(name, message, areas, intent, lang) {
