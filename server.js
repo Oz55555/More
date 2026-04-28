@@ -1301,6 +1301,19 @@ app.post('/api/admin/leads/:id/send-email', requireAuth, async (req, res) => {
   }
 });
 
+// Temporary diagnostic: check email env vars visible to the process
+app.get('/api/admin/debug-email-env', requireAuth, (req, res) => {
+  res.json({
+    EMAIL_USER_set: !!process.env.EMAIL_USER,
+    EMAIL_USER_value: process.env.EMAIL_USER ? process.env.EMAIL_USER.replace(/(.{3}).*(@.*)/, '$1***$2') : null,
+    EMAIL_PASS_set: !!process.env.EMAIL_PASS,
+    EMAIL_PASS_length: process.env.EMAIL_PASS ? process.env.EMAIL_PASS.length : 0,
+    EMAIL_HOST: process.env.EMAIL_HOST || '(not set)',
+    EMAIL_PORT: process.env.EMAIL_PORT || '(not set)',
+    NODE_ENV: process.env.NODE_ENV || '(not set)'
+  });
+});
+
 // Preview AI-generated email for a lead (without sending)
 app.get('/api/admin/leads/:id/preview-email', requireAuth, async (req, res) => {
   try {
