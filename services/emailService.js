@@ -31,16 +31,16 @@ class EmailService {
           <!-- Header -->
           <tr>
             <td style="background:linear-gradient(135deg,#00539B 0%,#1e3a8a 100%);padding:32px 40px;text-align:center;">
-              <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:700;letter-spacing:-0.5px;">Cadence Wave</h1>
-              <p style="margin:6px 0 0;color:rgba(255,255,255,0.8);font-size:13px;font-weight:400;">Digital Transformation · SAFe Agile · Consulting</p>
+              <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:700;letter-spacing:-0.5px;">CadenceWave</h1>
+              <p style="margin:6px 0 0;color:rgba(255,255,255,0.8);font-size:13px;font-weight:400;">Digital Transformation · Agile Consulting</p>
             </td>
           </tr>
           <!-- AI Badge -->
           <tr>
             <td style="background:#f0f7ff;padding:14px 40px;border-bottom:1px solid #e8f0fb;">
               <p style="margin:0;font-size:13px;color:#00539B;display:flex;align-items:center;gap:8px;">
-                <span style="background:#00539B;color:#fff;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600;letter-spacing:0.5px;">✦ NOVA AI</span>
-                <span style="margin-left:8px;">This message was personalized by NOVA, our AI assistant</span>
+                <span style="background:#00539B;color:#fff;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600;letter-spacing:0.5px;">✦ BAO AI</span>
+                <span style="margin-left:8px;">This message was personalized by BAO, our AI assistant</span>
               </p>
             </td>
           </tr>
