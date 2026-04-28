@@ -79,14 +79,18 @@ class EmailService {
   }
 
   async sendLeadOutreachEmail(contact) {
-    if (!this.fromEmail) throw new Error('EMAIL_FROM environment variable is required');
+    const fromEmail = (process.env.EMAIL_FROM || '').trim();
+    const fromName = this.fromName;
+    if (!fromEmail) throw new Error('EMAIL_FROM environment variable is required');
+    const fromField = `${fromName} <${fromEmail}>`;
+    console.log('[EmailService] from field:', JSON.stringify(fromField));
     const resend = this.getResend();
 
     const emailContent = await leadAnalysisService.generateOutreachEmail(contact);
     const htmlBody = this.buildHtmlEmail(emailContent.bodyHtml, contact.name);
 
     const { data, error } = await resend.emails.send({
-      from: `${this.fromName} <${this.fromEmail}>`,
+      from: fromField,
       to: contact.email,
       reply_to: this.fromEmail,
       subject: emailContent.subject,
