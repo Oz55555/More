@@ -95,7 +95,7 @@ app.use(express.urlencoded({ extended: true }));
 // Session configuration
 let sessionStore;
 try {
-  const MongoStore = require('connect-mongo');
+  const { MongoStore } = require('connect-mongo');
   sessionStore = MongoStore.create({
     mongoUrl: process.env.MONGODB_URI,
     ttl: 7 * 24 * 60 * 60,
