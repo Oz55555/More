@@ -1302,7 +1302,7 @@ app.post('/api/admin/leads/:id/send-email', requireAuth, async (req, res) => {
 });
 
 // Temporary diagnostic: check email env vars visible to the process
-app.get('/api/admin/debug-email-env', (req, res) => {
+app.get('/api/debug-email-check', (req, res) => {
   res.json({
     EMAIL_USER_set: !!process.env.EMAIL_USER,
     EMAIL_USER_value: process.env.EMAIL_USER ? process.env.EMAIL_USER.replace(/(.{3}).*(@.*)/, '$1***$2') : null,
