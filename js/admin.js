@@ -325,7 +325,11 @@ class LeadCaptureAgent {
         const lead = this.leads.find(l => l._id === this.currentLeadId);
         if (!lead) return;
 
-        if (!confirm(`¿Enviar email de IA a ${lead.name} (${lead.email})?`)) return;
+        const ok = await this.showConfirm(
+            'Enviar Email IA',
+            `¿Enviar email personalizado a <strong>${lead.name}</strong>?<br><span style="font-size:0.85rem;color:#9ca3af">${lead.email}</span>`
+        );
+        if (!ok) return;
 
         const btn = document.getElementById('sendEmailBtn');
         btn.disabled = true;
@@ -356,7 +360,11 @@ class LeadCaptureAgent {
     async quickSendEmail(id) {
         const lead = this.leads.find(l => l._id === id);
         if (!lead) return;
-        if (!confirm(`¿Enviar email de IA a ${lead.name} (${lead.email})?`)) return;
+        const ok = await this.showConfirm(
+            'Enviar Email IA',
+            `¿Enviar email personalizado a <strong>${lead.name}</strong>?<br><span style="font-size:0.85rem;color:#9ca3af">${lead.email}</span>`
+        );
+        if (!ok) return;
         try {
             const data = await this.apiFetch(`/admin/leads/${id}/send-email`, 'POST');
             if (!data) return;
@@ -462,6 +470,31 @@ class LeadCaptureAgent {
         const a = document.createElement('a');
         a.href = url; a.download = `cadencewave-leads-${Date.now()}.csv`; a.click();
         URL.revokeObjectURL(url);
+    }
+
+    // ── CONFIRM MODAL ───────────────────────────────────────────────────────────
+
+    showConfirm(title, bodyHtml) {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('confirmModal');
+            document.getElementById('confirmModalTitle').textContent = title;
+            document.getElementById('confirmModalBody').innerHTML = bodyHtml;
+            modal.style.display = 'flex';
+
+            const ok = document.getElementById('confirmModalOk');
+            const cancel = document.getElementById('confirmModalCancel');
+
+            const cleanup = (result) => {
+                modal.style.display = 'none';
+                ok.replaceWith(ok.cloneNode(true));
+                cancel.replaceWith(cancel.cloneNode(true));
+                resolve(result);
+            };
+
+            document.getElementById('confirmModalOk').addEventListener('click', () => cleanup(true));
+            document.getElementById('confirmModalCancel').addEventListener('click', () => cleanup(false));
+            modal.addEventListener('click', (e) => { if (e.target === modal) cleanup(false); }, { once: true });
+        });
     }
 
     // ── CHARTS ─────────────────────────────────────────────────────────────────
