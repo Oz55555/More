@@ -187,14 +187,19 @@ Return ONLY JSON: {"subject":"...","bodyText":"...","bodyHtml":"<p>...</p>"}`;
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], temperature: 0.4, max_tokens: 550 }),
-      signal: AbortSignal.timeout(10000)
+      body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], temperature: 0.4, max_tokens: 900 }),
+      signal: AbortSignal.timeout(15000)
     });
     const data = await response.json();
     if (!data.choices?.[0]) throw new Error(`AI email API error: ${data.error?.message || data.message || JSON.stringify(data)}`);
-    const content = data.choices[0].message.content;
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('No JSON in AI email response');
+    const raw = data.choices[0].message.content;
+    // Strip markdown code fences if present (```json ... ```)
+    const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      console.error('AI email raw response (no JSON found):', raw.substring(0, 300));
+      throw new Error('No JSON in AI email response');
+    }
 
     const result = JSON.parse(jsonMatch[0]);
     // Safety: replace any leftover placeholders with the real name
