@@ -3,7 +3,7 @@ const leadAnalysisService = require('./leadAnalysis');
 
 class EmailService {
   constructor() {
-    this.fromName = (process.env.EMAIL_FROM_NAME || 'Oscar Medina - Cadence Wave').replace(/[|<>]/g, '-');
+    this.fromName = (process.env.EMAIL_FROM_NAME || 'Cadence Wave').replace(/[|<>]/g, '-');
     this.fromEmail = process.env.EMAIL_FROM || '';
   }
 
