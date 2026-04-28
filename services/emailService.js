@@ -1,32 +1,18 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 const leadAnalysisService = require('./leadAnalysis');
 
 class EmailService {
   constructor() {
-    this.transport = null;
     this.fromName = process.env.EMAIL_FROM_NAME || 'Oscar Medina | Cadence Wave';
-    this.fromEmail = process.env.EMAIL_USER || '';
+    this.fromEmail = process.env.EMAIL_FROM || 'onboarding@resend.dev';
   }
 
-getTransporter() {
-  if (this.transport) return this.transport;
-
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    throw new Error('EMAIL_USER and EMAIL_PASS environment variables are required');
-  }
-
-  this.transport = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.EMAIL_PORT || '587', 10),
-    secure: process.env.EMAIL_SECURE === 'true',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
+  getResend() {
+    if (!process.env.RESEND_API_KEY) {
+      throw new Error('RESEND_API_KEY environment variable is required');
     }
-  });
-
-  return this.transport;
-}
+    return new Resend(process.env.RESEND_API_KEY);
+  }
 
   buildHtmlEmail(bodyHtml, recipientName) {
     const firstName = (recipientName || '').split(' ')[0];
@@ -93,25 +79,24 @@ getTransporter() {
   }
 
   async sendLeadOutreachEmail(contact) {
-    const transporter = this.getTransporter();
+    const resend = this.getResend();
 
     const emailContent = await leadAnalysisService.generateOutreachEmail(contact);
-
     const htmlBody = this.buildHtmlEmail(emailContent.bodyHtml, contact.name);
 
-    const mailOptions = {
-      from: `"${this.fromName}" <${this.fromEmail}>`,
+    const { data, error } = await resend.emails.send({
+      from: `${this.fromName} <${this.fromEmail}>`,
       to: contact.email,
-      replyTo: this.fromEmail,
+      reply_to: this.fromEmail,
       subject: emailContent.subject,
       text: emailContent.bodyText,
       html: htmlBody
-    };
+    });
 
-    const info = await transporter.sendMail(mailOptions);
+    if (error) throw new Error(`Resend error: ${error.message}`);
 
     return {
-      messageId: info.messageId,
+      messageId: data.id,
       subject: emailContent.subject,
       previewText: emailContent.bodyText.substring(0, 200) + '...',
       sentTo: contact.email
@@ -120,9 +105,15 @@ getTransporter() {
 
   async verifyConnection() {
     try {
-      const transport = this.getTransporter();
-      await transport.verify();
-      return { success: true, message: 'Email service connected' };
+      const resend = this.getResend();
+      const { data, error } = await resend.emails.send({
+        from: `${this.fromName} <${this.fromEmail}>`,
+        to: this.fromEmail,
+        subject: 'Cadence Wave — Connection Test',
+        text: 'Email service is working.'
+      });
+      if (error) return { success: false, message: error.message };
+      return { success: true, message: 'Resend API connected' };
     } catch (error) {
       return { success: false, message: error.message };
     }
