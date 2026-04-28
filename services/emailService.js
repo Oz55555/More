@@ -98,7 +98,13 @@ class EmailService {
       reply_to: this.fromEmail,
       subject: emailContent.subject,
       text: emailContent.bodyText,
-      html: htmlBody
+      html: htmlBody,
+      headers: {
+        'X-Priority': '1',
+        'Importance': 'high',
+        'X-MS-Exchange-Organization-SCL': '-1',
+        'Precedence': 'personal'
+      }
     });
 
     if (error) throw new Error(`Resend error: ${error.message}`);
