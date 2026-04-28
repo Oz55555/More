@@ -3,8 +3,8 @@ const leadAnalysisService = require('./leadAnalysis');
 
 class EmailService {
   constructor() {
-    this.fromName = process.env.EMAIL_FROM_NAME || 'Oscar Medina | Cadence Wave';
-    this.fromEmail = process.env.EMAIL_FROM || 'onboarding@resend.dev';
+    this.fromName = (process.env.EMAIL_FROM_NAME || 'Oscar Medina - Cadence Wave').replace(/[|<>]/g, '-');
+    this.fromEmail = process.env.EMAIL_FROM || '';
   }
 
   getResend() {
@@ -79,6 +79,7 @@ class EmailService {
   }
 
   async sendLeadOutreachEmail(contact) {
+    if (!this.fromEmail) throw new Error('EMAIL_FROM environment variable is required');
     const resend = this.getResend();
 
     const emailContent = await leadAnalysisService.generateOutreachEmail(contact);
