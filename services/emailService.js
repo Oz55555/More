@@ -31,6 +31,9 @@ class EmailService {
           <!-- Header -->
           <tr>
             <td style="background:linear-gradient(135deg,#00539B 0%,#1e3a8a 100%);padding:32px 40px;text-align:center;">
+              <div style="display:inline-block;background:rgba(255,255,255,0.12);border-radius:50%;padding:10px;margin-bottom:14px;line-height:0;">
+                <img src="https://www.cadencewave.io/images/cw.png" alt="CadenceWave" width="60" height="60" style="display:block;border-radius:50%;background:#fff;padding:6px;" />
+              </div>
               <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:700;letter-spacing:-0.5px;">CadenceWave</h1>
               <p style="margin:6px 0 0;color:rgba(255,255,255,0.8);font-size:13px;font-weight:400;">Digital Transformation · Agile Consulting</p>
             </td>
