@@ -382,7 +382,11 @@ class LeadCaptureAgent {
     // ── RESCORE ────────────────────────────────────────────────────────────────
 
     async quickDelete(id, name) {
-        if (!confirm(`¿Eliminar el mensaje de "${name}"?\n\nEsta acción no se puede deshacer.`)) return;
+        const ok = await this.showConfirm(
+            'Eliminar lead',
+            `¿Eliminar el mensaje de <strong>${name}</strong>?<br><span style="font-size:0.85rem;color:#ef4444">Esta acción no se puede deshacer.</span>`
+        );
+        if (!ok) return;
         try {
             const data = await this.apiFetch(`/admin/contacts/${id}`, 'DELETE');
             if (!data) return;
@@ -416,7 +420,11 @@ class LeadCaptureAgent {
     }
 
     async rescoreAll() {
-        if (!confirm('¿Re-puntuar todos los leads sin score con IA? Puede tomar varios minutos.')) return;
+        const ok = await this.showConfirm(
+            'Re-puntuar con IA',
+            '¿Analizar todos los leads sin score con inteligencia artificial?<br><span style="font-size:0.85rem;color:#9ca3af">Este proceso puede tomar varios minutos.</span>'
+        );
+        if (!ok) return;
         const btn = document.getElementById('rescoreAllBtn');
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
