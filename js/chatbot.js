@@ -6,27 +6,29 @@
   let isOpen = false;
   let isTyping = false;
 
-  const ROBOT_SVG = `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="15" y="38" width="18" height="5" rx="2.5" fill="currentColor" opacity="0.6"/>
-    <rect x="11" y="35" width="26" height="6" rx="3" fill="currentColor" opacity="0.85"/>
-    <ellipse cx="24" cy="21" rx="17" ry="18" fill="currentColor"/>
-    <ellipse cx="24" cy="21" rx="12.5" ry="12" fill="rgba(0,0,0,0.38)"/>
-    <ellipse cx="20" cy="16" rx="5" ry="3.5" fill="rgba(255,255,255,0.13)" transform="rotate(-25 20 16)"/>
-    <ellipse cx="29" cy="14" rx="2.5" ry="1.5" fill="rgba(255,255,255,0.1)" transform="rotate(-15 29 14)"/>
-    <circle cx="36" cy="15" r="2" fill="rgba(255,255,255,0.3)"/>
-    <circle cx="36" cy="15" r="1" fill="white" opacity="0.6"/>
-  </svg>`;
+  // Space Invader pixel art — 12×8 grid, pixel size 4, viewBox 48×32
+  const INVADER_PATH = `
+    <rect x="8"  y="0"  width="4" height="4"/>
+    <rect x="32" y="0"  width="4" height="4"/>
+    <rect x="12" y="4"  width="4" height="4"/>
+    <rect x="28" y="4"  width="4" height="4"/>
+    <rect x="8"  y="8"  width="32" height="4"/>
+    <rect x="4"  y="12" width="8"  height="4"/>
+    <rect x="16" y="12" width="16" height="4"/>
+    <rect x="36" y="12" width="8"  height="4"/>
+    <rect x="0"  y="16" width="48" height="4"/>
+    <rect x="0"  y="20" width="4"  height="4"/>
+    <rect x="8"  y="20" width="32" height="4"/>
+    <rect x="44" y="20" width="4"  height="4"/>
+    <rect x="0"  y="24" width="4"  height="4"/>
+    <rect x="8"  y="24" width="4"  height="4"/>
+    <rect x="36" y="24" width="4"  height="4"/>
+    <rect x="44" y="24" width="4"  height="4"/>
+    <rect x="12" y="28" width="8"  height="4"/>
+    <rect x="28" y="28" width="8"  height="4"/>`;
 
-  const ROBOT_SVG_SMALL = `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="15" y="38" width="18" height="5" rx="2.5" fill="white" opacity="0.5"/>
-    <rect x="11" y="35" width="26" height="6" rx="3" fill="white" opacity="0.8"/>
-    <ellipse cx="24" cy="21" rx="17" ry="18" fill="white"/>
-    <ellipse cx="24" cy="21" rx="12.5" ry="12" fill="rgba(0,55,120,0.55)"/>
-    <ellipse cx="20" cy="16" rx="5" ry="3.5" fill="rgba(255,255,255,0.18)" transform="rotate(-25 20 16)"/>
-    <ellipse cx="29" cy="14" rx="2.5" ry="1.5" fill="rgba(255,255,255,0.12)" transform="rotate(-15 29 14)"/>
-    <circle cx="36" cy="15" r="2" fill="rgba(255,255,255,0.5)"/>
-    <circle cx="36" cy="15" r="1" fill="white" opacity="0.8"/>
-  </svg>`;
+  const ROBOT_SVG = `<svg viewBox="0 0 48 32" fill="white" xmlns="http://www.w3.org/2000/svg">${INVADER_PATH}</svg>`;
+  const ROBOT_SVG_SMALL = `<svg viewBox="0 0 48 32" fill="white" xmlns="http://www.w3.org/2000/svg">${INVADER_PATH}</svg>`;
 
   function init() {
     injectStyles();
