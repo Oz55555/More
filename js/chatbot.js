@@ -17,13 +17,13 @@
     <circle cx="4"  cy="25" r="4" fill="white"/>
     <circle cx="40" cy="25" r="4" fill="white"/>
     <!-- Left eye -->
-    <circle cx="15" cy="22" r="5.5" fill="#0a2770"/>
-    <circle cx="13.2" cy="20.2" r="2" fill="white" opacity="0.9"/>
+    <circle cx="15" cy="22" r="4" fill="#0a2770"/>
+    <circle cx="14" cy="21" r="1.2" fill="white" opacity="0.7"/>
     <!-- Right eye -->
-    <circle cx="29" cy="22" r="5.5" fill="#0a2770"/>
-    <circle cx="27.2" cy="20.2" r="2" fill="white" opacity="0.9"/>
-    <!-- Smile arc -->
-    <path d="M14 31 Q22 37 30 31" stroke="#0a2770" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+    <circle cx="29" cy="22" r="4" fill="#0a2770"/>
+    <circle cx="28" cy="21" r="1.2" fill="white" opacity="0.7"/>
+    <!-- Neutral mouth (slight curve, minimal) -->
+    <path d="M16 31 Q22 33.5 28 31" stroke="#0a2770" stroke-width="2.2" fill="none" stroke-linecap="round"/>
   </svg>`;
 
   const ROBOT_SVG       = BAO_FACE;
