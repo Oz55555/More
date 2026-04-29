@@ -6,37 +6,45 @@
   let isOpen = false;
   let isTyping = false;
 
-  // BAO — Original pixel art mascot (10×10 grid, 4px pixels, viewBox 40×40)
-  // Character: raised arms + unique antennae + expressive eyes + pixel smile
-  const BAO_FACE = `<svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <!-- Antennae (white) -->
-    <rect x="12" y="0"  width="4" height="4" fill="white"/>
-    <rect x="24" y="0"  width="4" height="4" fill="white"/>
-    <!-- Raised arms (2 rows tall — waving hello) -->
-    <rect x="0"  y="4"  width="4" height="8" fill="white"/>
-    <rect x="36" y="4"  width="4" height="8" fill="white"/>
-    <!-- Head block -->
-    <rect x="4"  y="8"  width="32" height="16" fill="white"/>
-    <!-- Chin -->
-    <rect x="8"  y="24" width="24" height="4"  fill="white"/>
-    <!-- Body -->
-    <rect x="12" y="28" width="16" height="4"  fill="white"/>
-    <!-- Legs -->
-    <rect x="8"  y="32" width="4"  height="4"  fill="white"/>
-    <rect x="28" y="32" width="4"  height="4"  fill="white"/>
-    <!-- Feet -->
-    <rect x="4"  y="36" width="4"  height="4"  fill="white"/>
-    <rect x="32" y="36" width="4"  height="4"  fill="white"/>
-    <!-- Left eye (dark blue on white head) -->
-    <rect x="8"  y="12" width="8"  height="8"  rx="1" fill="#0a2770"/>
-    <circle cx="10" cy="14" r="1.5" fill="white" opacity="0.85"/>
-    <!-- Right eye -->
-    <rect x="24" y="12" width="8"  height="8"  rx="1" fill="#0a2770"/>
-    <circle cx="26" cy="14" r="1.5" fill="white" opacity="0.85"/>
-    <!-- Pixel smile: corners high, bottom arc low -->
-    <rect x="8"  y="20" width="4"  height="4"  fill="#0a2770"/>
-    <rect x="28" y="20" width="4"  height="4"  fill="#0a2770"/>
-    <rect x="12" y="24" width="16" height="4"  fill="#0a2770"/>
+  // BAO — Original pixel octopus mascot (11×10 grid, 4px pixels, viewBox 44×40)
+  const BAO_FACE = `<svg viewBox="0 0 44 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- HEAD (white, rounded blob shape) -->
+    <rect x="12" y="0"  width="20" height="4"  fill="white"/>
+    <rect x="8"  y="4"  width="28" height="4"  fill="white"/>
+    <rect x="4"  y="8"  width="36" height="8"  fill="white"/>
+    <rect x="8"  y="16" width="28" height="4"  fill="white"/>
+    <rect x="12" y="20" width="20" height="4"  fill="white"/>
+    <!-- LEFT EYE (dark, 2×2 pixels, with glint) -->
+    <rect x="8"  y="8"  width="8"  height="8"  rx="2" fill="#0a2770"/>
+    <circle cx="10" cy="10" r="1.5" fill="white" opacity="0.9"/>
+    <!-- RIGHT EYE -->
+    <rect x="28" y="8"  width="8"  height="8"  rx="2" fill="#0a2770"/>
+    <circle cx="30" cy="10" r="1.5" fill="white" opacity="0.9"/>
+    <!-- PIXEL SMILE (corners → bottom arc) -->
+    <rect x="12" y="16" width="4"  height="4"  fill="#0a2770"/>
+    <rect x="28" y="16" width="4"  height="4"  fill="#0a2770"/>
+    <rect x="16" y="20" width="12" height="4"  fill="#0a2770"/>
+    <!-- TENTACLES (4, alternating curl direction) -->
+    <!-- T1: left outer — curls left -->
+    <rect x="8"  y="24" width="4" height="4" fill="white"/>
+    <rect x="4"  y="28" width="4" height="4" fill="white"/>
+    <rect x="4"  y="32" width="4" height="4" fill="white"/>
+    <rect x="0"  y="36" width="4" height="4" fill="white"/>
+    <!-- T2: left inner — curls right -->
+    <rect x="16" y="24" width="4" height="4" fill="white"/>
+    <rect x="16" y="28" width="4" height="4" fill="white"/>
+    <rect x="12" y="32" width="4" height="4" fill="white"/>
+    <rect x="12" y="36" width="4" height="4" fill="white"/>
+    <!-- T3: right inner — curls left (mirror T2) -->
+    <rect x="24" y="24" width="4" height="4" fill="white"/>
+    <rect x="24" y="28" width="4" height="4" fill="white"/>
+    <rect x="28" y="32" width="4" height="4" fill="white"/>
+    <rect x="28" y="36" width="4" height="4" fill="white"/>
+    <!-- T4: right outer — curls right (mirror T1) -->
+    <rect x="32" y="24" width="4" height="4" fill="white"/>
+    <rect x="36" y="28" width="4" height="4" fill="white"/>
+    <rect x="36" y="32" width="4" height="4" fill="white"/>
+    <rect x="40" y="36" width="4" height="4" fill="white"/>
   </svg>`;
 
   const ROBOT_SVG       = BAO_FACE;
