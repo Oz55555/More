@@ -6,6 +6,36 @@
   let isOpen = false;
   let isTyping = false;
 
+  const ROBOT_SVG = `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="24" cy="6" r="3" fill="currentColor"/>
+    <line x1="24" y1="9" x2="24" y2="13" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+    <rect x="8" y="13" width="32" height="24" rx="6" fill="currentColor"/>
+    <circle cx="17" cy="23" r="4" fill="white"/>
+    <circle cx="31" cy="23" r="4" fill="white"/>
+    <circle cx="17" cy="23" r="2" fill="#00539B"/>
+    <circle cx="31" cy="23" r="2" fill="#00539B"/>
+    <circle cx="18" cy="22" r="0.8" fill="white"/>
+    <circle cx="32" cy="22" r="0.8" fill="white"/>
+    <path d="M17 31 Q24 36 31 31" stroke="white" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    <rect x="4" y="18" width="4" height="10" rx="2" fill="currentColor"/>
+    <rect x="40" y="18" width="4" height="10" rx="2" fill="currentColor"/>
+  </svg>`;
+
+  const ROBOT_SVG_SMALL = `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="24" cy="6" r="3" fill="white"/>
+    <line x1="24" y1="9" x2="24" y2="13" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+    <rect x="8" y="13" width="32" height="24" rx="6" fill="white"/>
+    <circle cx="17" cy="23" r="4" fill="#e8f0fe"/>
+    <circle cx="31" cy="23" r="4" fill="#e8f0fe"/>
+    <circle cx="17" cy="23" r="2" fill="#00539B"/>
+    <circle cx="31" cy="23" r="2" fill="#00539B"/>
+    <circle cx="18" cy="22" r="0.8" fill="white"/>
+    <circle cx="32" cy="22" r="0.8" fill="white"/>
+    <path d="M17 31 Q24 36 31 31" stroke="#00539B" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    <rect x="4" y="18" width="4" height="10" rx="2" fill="white"/>
+    <rect x="40" y="18" width="4" height="10" rx="2" fill="white"/>
+  </svg>`;
+
   function init() {
     injectStyles();
     injectHTML();
@@ -22,35 +52,170 @@
   function injectStyles() {
     const style = document.createElement('style');
     style.textContent = `
-      #bao-bubble{position:fixed;bottom:24px;right:24px;z-index:9999;cursor:pointer;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#00539B,#1e3a8a);box-shadow:0 4px 16px rgba(0,83,155,.4);display:flex;align-items:center;justify-content:center;transition:transform .2s,box-shadow .2s}
-      #bao-bubble:hover{transform:scale(1.08);box-shadow:0 6px 22px rgba(0,83,155,.5)}
-      #bao-bubble svg{width:26px;height:26px;fill:#fff}
-      #bao-badge{position:absolute;top:-2px;right:-2px;background:#ef4444;color:#fff;font-size:10px;font-weight:700;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;border:2px solid #fff}
-      #bao-window{position:fixed;bottom:92px;right:24px;z-index:9998;width:340px;max-height:520px;border-radius:16px;background:#fff;box-shadow:0 8px 40px rgba(0,0,0,.18);display:flex;flex-direction:column;overflow:hidden;opacity:0;pointer-events:none;transform:translateY(12px) scale(.97);transition:opacity .2s,transform .2s}
-      #bao-window.open{opacity:1;pointer-events:all;transform:translateY(0) scale(1)}
-      #bao-header{background:linear-gradient(135deg,#00539B,#1e3a8a);padding:14px 16px;display:flex;align-items:center;gap:10px}
-      #bao-header img{width:32px;height:32px;border-radius:50%;background:#fff;padding:3px}
-      #bao-header-info{flex:1}
-      #bao-header-info strong{display:block;color:#fff;font-size:14px}
-      #bao-header-info span{font-size:11px;color:rgba(255,255,255,.75)}
-      #bao-close{color:rgba(255,255,255,.7);background:none;border:none;font-size:20px;cursor:pointer;line-height:1;padding:0}
-      #bao-close:hover{color:#fff}
-      #bao-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;min-height:200px;max-height:320px}
-      .bao-msg{max-width:82%;padding:9px 13px;border-radius:14px;font-size:13.5px;line-height:1.5;word-break:break-word}
-      .bao-msg.bot{background:#f1f5f9;color:#1f2937;align-self:flex-start;border-bottom-left-radius:4px}
-      .bao-msg.user{background:#00539B;color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
-      .bao-typing{display:flex;gap:4px;align-items:center;padding:10px 14px}
-      .bao-typing span{width:7px;height:7px;background:#94a3b8;border-radius:50%;animation:bao-bounce .9s infinite}
-      .bao-typing span:nth-child(2){animation-delay:.15s}
-      .bao-typing span:nth-child(3){animation-delay:.3s}
-      @keyframes bao-bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
-      #bao-input-row{display:flex;align-items:center;padding:10px 12px;border-top:1px solid #e5e7eb;gap:8px}
-      #bao-input{flex:1;border:1px solid #e5e7eb;border-radius:20px;padding:8px 14px;font-size:13.5px;outline:none;resize:none;font-family:inherit;max-height:80px;overflow-y:auto}
-      #bao-input:focus{border-color:#00539B}
-      #bao-send{background:#00539B;border:none;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background .2s}
-      #bao-send:hover{background:#1e3a8a}
-      #bao-send svg{width:16px;height:16px;fill:#fff}
-      @media(max-width:400px){#bao-window{width:calc(100vw - 32px);right:16px}}
+      #bao-bubble {
+        position:fixed; bottom:28px; right:28px; z-index:9999; cursor:pointer;
+        width:60px; height:60px; border-radius:50%;
+        background:linear-gradient(145deg,#0066cc,#1e3a8a);
+        box-shadow:0 6px 24px rgba(0,83,155,.45), 0 2px 8px rgba(0,0,0,.2);
+        display:flex; align-items:center; justify-content:center;
+        transition:transform .25s cubic-bezier(.34,1.56,.64,1), box-shadow .25s;
+        animation: bao-pulse 3s ease-in-out infinite;
+      }
+      @keyframes bao-pulse {
+        0%,100%{ box-shadow:0 6px 24px rgba(0,83,155,.45),0 0 0 0 rgba(0,102,204,.4); }
+        50%{ box-shadow:0 6px 24px rgba(0,83,155,.45),0 0 0 10px rgba(0,102,204,0); }
+      }
+      #bao-bubble:hover { transform:scale(1.12); box-shadow:0 10px 30px rgba(0,83,155,.55); animation:none; }
+      #bao-bubble svg { width:34px; height:34px; color:white; }
+      #bao-badge {
+        position:absolute; top:-3px; right:-3px; background:#ef4444; color:#fff;
+        font-size:10px; font-weight:800; border-radius:50%; width:20px; height:20px;
+        display:flex; align-items:center; justify-content:center; border:2.5px solid #fff;
+        box-shadow:0 2px 6px rgba(239,68,68,.5);
+        animation: bao-badge-bounce .6s ease-in-out infinite alternate;
+      }
+      @keyframes bao-badge-bounce { from{transform:scale(1)} to{transform:scale(1.15)} }
+
+      #bao-window {
+        position:fixed; bottom:102px; right:28px; z-index:9998; width:360px;
+        border-radius:20px; background:#fff;
+        box-shadow:0 20px 60px rgba(0,0,0,.18), 0 4px 20px rgba(0,83,155,.12);
+        display:flex; flex-direction:column; overflow:hidden;
+        opacity:0; pointer-events:none;
+        transform:translateY(16px) scale(.95);
+        transition:opacity .3s cubic-bezier(.34,1.56,.64,1), transform .3s cubic-bezier(.34,1.56,.64,1);
+      }
+      #bao-window.open { opacity:1; pointer-events:all; transform:translateY(0) scale(1); }
+
+      #bao-header {
+        background:linear-gradient(135deg,#0057a8 0%,#1e3a8a 100%);
+        padding:16px 18px; display:flex; align-items:center; gap:12px;
+        position:relative; overflow:hidden;
+      }
+      #bao-header::before {
+        content:''; position:absolute; top:-20px; right:-20px; width:100px; height:100px;
+        background:rgba(255,255,255,.06); border-radius:50%;
+      }
+      #bao-header::after {
+        content:''; position:absolute; bottom:-30px; right:40px; width:80px; height:80px;
+        background:rgba(255,255,255,.04); border-radius:50%;
+      }
+      #bao-avatar {
+        width:42px; height:42px; border-radius:50%;
+        background:rgba(255,255,255,.15); backdrop-filter:blur(4px);
+        border:2px solid rgba(255,255,255,.3);
+        display:flex; align-items:center; justify-content:center; flex-shrink:0;
+      }
+      #bao-avatar svg { width:28px; height:28px; }
+      #bao-header-info { flex:1; }
+      #bao-header-info strong { display:block; color:#fff; font-size:15px; font-weight:700; letter-spacing:.3px; }
+      #bao-header-info span { font-size:11.5px; color:rgba(255,255,255,.8); display:flex; align-items:center; gap:5px; }
+      .bao-online-dot {
+        width:7px; height:7px; border-radius:50%; background:#22c55e;
+        box-shadow:0 0 0 2px rgba(34,197,94,.3);
+        animation:bao-blink 2s ease-in-out infinite;
+      }
+      @keyframes bao-blink { 0%,100%{opacity:1} 50%{opacity:.5} }
+      #bao-close {
+        color:rgba(255,255,255,.7); background:rgba(255,255,255,.1); border:none;
+        width:28px; height:28px; border-radius:50%; font-size:14px; cursor:pointer;
+        display:flex; align-items:center; justify-content:center;
+        transition:background .2s, color .2s; flex-shrink:0; z-index:1;
+      }
+      #bao-close:hover { background:rgba(255,255,255,.25); color:#fff; }
+
+      #bao-messages {
+        flex:1; overflow-y:auto; padding:18px 16px;
+        display:flex; flex-direction:column; gap:12px;
+        min-height:220px; max-height:340px;
+        background:linear-gradient(180deg,#f8faff 0%,#fff 100%);
+        scrollbar-width:thin; scrollbar-color:#e2e8f0 transparent;
+      }
+      #bao-messages::-webkit-scrollbar { width:4px; }
+      #bao-messages::-webkit-scrollbar-track { background:transparent; }
+      #bao-messages::-webkit-scrollbar-thumb { background:#e2e8f0; border-radius:2px; }
+
+      .bao-row { display:flex; align-items:flex-end; gap:8px; }
+      .bao-row.user { flex-direction:row-reverse; }
+      .bao-row-avatar {
+        width:28px; height:28px; border-radius:50%; flex-shrink:0;
+        background:linear-gradient(135deg,#0057a8,#1e3a8a);
+        display:flex; align-items:center; justify-content:center;
+      }
+      .bao-row-avatar svg { width:18px; height:18px; }
+      .bao-row.user .bao-row-avatar { background:linear-gradient(135deg,#64748b,#475569); }
+      .bao-row.user .bao-row-avatar-icon { font-size:14px; }
+
+      .bao-msg {
+        max-width:76%; padding:10px 14px; font-size:13.5px; line-height:1.6;
+        word-break:break-word; position:relative;
+        animation:bao-msg-in .25s cubic-bezier(.34,1.56,.64,1);
+      }
+      @keyframes bao-msg-in { from{opacity:0;transform:translateY(8px) scale(.96)} to{opacity:1;transform:none} }
+      .bao-msg.bot {
+        background:#fff; color:#1e293b;
+        border-radius:18px 18px 18px 4px;
+        box-shadow:0 2px 12px rgba(0,0,0,.08), 0 1px 3px rgba(0,0,0,.05);
+      }
+      .bao-msg.user {
+        background:linear-gradient(135deg,#0057a8,#1e3a8a); color:#fff;
+        border-radius:18px 18px 4px 18px;
+        box-shadow:0 4px 14px rgba(0,87,168,.3);
+      }
+
+      .bao-typing-row { display:flex; align-items:flex-end; gap:8px; }
+      .bao-typing-bubble {
+        background:#fff; border-radius:18px 18px 18px 4px;
+        box-shadow:0 2px 12px rgba(0,0,0,.08);
+        padding:12px 16px; display:flex; gap:5px; align-items:center;
+      }
+      .bao-typing-bubble span {
+        width:8px; height:8px; background:#94a3b8; border-radius:50%;
+        animation:bao-bounce .9s ease-in-out infinite;
+      }
+      .bao-typing-bubble span:nth-child(2){animation-delay:.18s}
+      .bao-typing-bubble span:nth-child(3){animation-delay:.36s}
+      @keyframes bao-bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-7px)}}
+
+      #bao-input-area {
+        padding:12px 14px; border-top:1px solid #f1f5f9;
+        background:#fff;
+      }
+      #bao-input-row {
+        display:flex; align-items:flex-end; gap:10px;
+        background:#f8faff; border:1.5px solid #e2e8f0;
+        border-radius:16px; padding:8px 8px 8px 14px;
+        transition:border-color .2s, box-shadow .2s;
+      }
+      #bao-input-row:focus-within {
+        border-color:#0057a8; box-shadow:0 0 0 3px rgba(0,87,168,.1);
+      }
+      #bao-input {
+        flex:1; border:none; background:transparent; font-size:13.5px;
+        outline:none; resize:none; font-family:inherit; max-height:80px;
+        overflow-y:auto; color:#1e293b; line-height:1.5;
+      }
+      #bao-input::placeholder { color:#94a3b8; }
+      #bao-send {
+        background:linear-gradient(135deg,#0057a8,#1e3a8a); border:none;
+        border-radius:12px; width:36px; height:36px; min-width:36px;
+        display:flex; align-items:center; justify-content:center;
+        cursor:pointer; transition:transform .2s, box-shadow .2s;
+        box-shadow:0 3px 10px rgba(0,87,168,.35);
+      }
+      #bao-send:hover { transform:scale(1.08); box-shadow:0 5px 14px rgba(0,87,168,.45); }
+      #bao-send:active { transform:scale(.95); }
+      #bao-send svg { width:16px; height:16px; fill:#fff; }
+
+      #bao-powered {
+        text-align:center; font-size:10.5px; color:#cbd5e1;
+        padding:6px 0 10px; letter-spacing:.3px;
+      }
+
+      @media(max-width:420px){
+        #bao-window{width:calc(100vw - 24px);right:12px;}
+        #bao-bubble{bottom:20px;right:16px;}
+      }
     `;
     document.head.appendChild(style);
   }
@@ -58,26 +223,29 @@
   function injectHTML() {
     const wrapper = document.createElement('div');
     wrapper.innerHTML = `
-      <div id="bao-bubble" role="button" aria-label="Chat with BAO" title="Chat with BAO AI">
-        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.85.5 3.58 1.37 5.07L2 22l4.93-1.37C8.42 21.5 10.15 22 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm0 18c-1.66 0-3.22-.46-4.56-1.26l-.32-.19-3.35.93.93-3.35-.19-.32C3.46 15.22 3 13.66 3 12 3 7.03 7.03 3 12 3s9 4.03 9 9-4.03 9-9 9zm4.5-6.5c-.25-.12-1.47-.72-1.7-.81-.23-.08-.4-.12-.56.12-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-2-1.23-.74-.66-1.24-1.47-1.38-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.44.13-.14.17-.25.25-.41.08-.17.04-.31-.02-.44-.06-.12-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.61.12.17 1.77 2.7 4.28 3.79.6.26 1.07.41 1.43.52.6.19 1.15.16 1.58.1.48-.07 1.47-.6 1.68-1.18.2-.58.2-1.08.14-1.18-.06-.1-.23-.16-.48-.28z"/></svg>
+      <div id="bao-bubble" role="button" aria-label="Chat with BAO AI" title="Chat with BAO">
+        ${ROBOT_SVG}
         <div id="bao-badge">1</div>
       </div>
-      <div id="bao-window" role="dialog" aria-label="BAO Chat">
+      <div id="bao-window" role="dialog" aria-label="BAO AI Chat">
         <div id="bao-header">
-          <img src="/images/cw.png" alt="BAO" />
+          <div id="bao-avatar">${ROBOT_SVG_SMALL}</div>
           <div id="bao-header-info">
             <strong>BAO</strong>
-            <span>CadenceWave AI · Online</span>
+            <span><span class="bao-online-dot"></span>CadenceWave AI &nbsp;·&nbsp; En línea</span>
           </div>
-          <button id="bao-close" aria-label="Close chat">&#10005;</button>
+          <button id="bao-close" aria-label="Cerrar chat">✕</button>
         </div>
         <div id="bao-messages"></div>
-        <div id="bao-input-row">
-          <textarea id="bao-input" rows="1" placeholder="Ask BAO anything…" aria-label="Message"></textarea>
-          <button id="bao-send" aria-label="Send">
-            <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
-          </button>
+        <div id="bao-input-area">
+          <div id="bao-input-row">
+            <textarea id="bao-input" rows="1" placeholder="Escribe tu mensaje…" aria-label="Mensaje"></textarea>
+            <button id="bao-send" aria-label="Enviar">
+              <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+            </button>
+          </div>
         </div>
+        <div id="bao-powered">Powered by BAO AI · CadenceWave</div>
       </div>
     `;
     document.body.appendChild(wrapper);
@@ -90,19 +258,22 @@
     document.getElementById('bao-input').addEventListener('keydown', e => {
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
     });
+    document.getElementById('bao-input').addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = Math.min(this.scrollHeight, 80) + 'px';
+    });
   }
 
-  function toggleChat() {
-    isOpen ? closeChat() : openChat();
-  }
+  function toggleChat() { isOpen ? closeChat() : openChat(); }
 
   function openChat() {
     isOpen = true;
     document.getElementById('bao-window').classList.add('open');
     document.getElementById('bao-badge').style.display = 'none';
-    document.getElementById('bao-input').focus();
+    document.getElementById('bao-bubble').style.animation = 'none';
+    setTimeout(() => document.getElementById('bao-input').focus(), 300);
     if (history.length === 0) {
-      setTimeout(() => appendMessage('bot', '👋 Hola! Soy **BAO**, el asistente IA de CadenceWave. ¿En qué puedo ayudarte hoy?\n\n_Hi! I\'m BAO, CadenceWave\'s AI. How can I help you today?_'), 400);
+      setTimeout(() => appendMessage('bot', '👋 ¡Hola! Soy **BAO**, el asistente IA de CadenceWave.\n¿En qué puedo ayudarte hoy?\n\n_Hi! I\'m BAO. How can I help you today?_'), 500);
     }
   }
 
@@ -113,11 +284,35 @@
 
   function appendMessage(role, text, save = true) {
     const container = document.getElementById('bao-messages');
-    const div = document.createElement('div');
-    div.className = `bao-msg ${role}`;
-    div.innerHTML = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/_(.*?)_/g, '<em>$1</em>').replace(/\n/g, '<br>');
-    container.appendChild(div);
+    const row = document.createElement('div');
+    row.className = `bao-row ${role}`;
+
+    const avatarDiv = document.createElement('div');
+    avatarDiv.className = 'bao-row-avatar';
+    if (role === 'bot') {
+      avatarDiv.innerHTML = ROBOT_SVG_SMALL;
+    } else {
+      avatarDiv.innerHTML = '<span class="bao-row-avatar-icon">👤</span>';
+    }
+
+    const bubble = document.createElement('div');
+    bubble.className = `bao-msg ${role}`;
+    bubble.innerHTML = text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/_(.*?)_/g, '<em>$1</em>')
+      .replace(/\n/g, '<br>');
+
+    if (role === 'bot') {
+      row.appendChild(avatarDiv);
+      row.appendChild(bubble);
+    } else {
+      row.appendChild(bubble);
+      row.appendChild(avatarDiv);
+    }
+
+    container.appendChild(row);
     container.scrollTop = container.scrollHeight;
+
     if (save) {
       history.push({ role: role === 'user' ? 'user' : 'assistant', content: text });
       sessionStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(history));
@@ -126,11 +321,18 @@
 
   function showTyping() {
     const container = document.getElementById('bao-messages');
-    const div = document.createElement('div');
-    div.id = 'bao-typing-indicator';
-    div.className = 'bao-msg bot bao-typing';
-    div.innerHTML = '<span></span><span></span><span></span>';
-    container.appendChild(div);
+    const row = document.createElement('div');
+    row.id = 'bao-typing-indicator';
+    row.className = 'bao-typing-row';
+    const avatarDiv = document.createElement('div');
+    avatarDiv.className = 'bao-row-avatar';
+    avatarDiv.innerHTML = ROBOT_SVG_SMALL;
+    const bubble = document.createElement('div');
+    bubble.className = 'bao-typing-bubble';
+    bubble.innerHTML = '<span></span><span></span><span></span>';
+    row.appendChild(avatarDiv);
+    row.appendChild(bubble);
+    container.appendChild(row);
     container.scrollTop = container.scrollHeight;
   }
 
@@ -146,11 +348,9 @@
     if (!text) return;
     input.value = '';
     input.style.height = 'auto';
-
     appendMessage('user', text);
     isTyping = true;
     showTyping();
-
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
@@ -159,10 +359,10 @@
       });
       const data = await res.json();
       hideTyping();
-      appendMessage('bot', data.reply || 'Sorry, I had trouble responding. Please try again.');
+      appendMessage('bot', data.reply || 'Lo siento, tuve un problema. Por favor intenta de nuevo.');
     } catch (_) {
       hideTyping();
-      appendMessage('bot', 'Connection issue. Please visit cadencewave.io or try again.');
+      appendMessage('bot', 'Problema de conexión. Visita cadencewave.io o intenta de nuevo.');
     } finally {
       isTyping = false;
     }
