@@ -6,45 +6,28 @@
   let isOpen = false;
   let isTyping = false;
 
-  // BAO — Original pixel octopus mascot (11×10 grid, 4px pixels, viewBox 44×40)
-  const BAO_FACE = `<svg viewBox="0 0 44 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <!-- HEAD (white, rounded blob shape) -->
-    <rect x="12" y="0"  width="20" height="4"  fill="white"/>
-    <rect x="8"  y="4"  width="28" height="4"  fill="white"/>
-    <rect x="4"  y="8"  width="36" height="8"  fill="white"/>
-    <rect x="8"  y="16" width="28" height="4"  fill="white"/>
-    <rect x="12" y="20" width="20" height="4"  fill="white"/>
-    <!-- LEFT EYE (dark, 2×2 pixels, with glint) -->
-    <rect x="8"  y="8"  width="8"  height="8"  rx="2" fill="#0a2770"/>
-    <circle cx="10" cy="10" r="1.5" fill="white" opacity="0.9"/>
-    <!-- RIGHT EYE -->
-    <rect x="28" y="8"  width="8"  height="8"  rx="2" fill="#0a2770"/>
-    <circle cx="30" cy="10" r="1.5" fill="white" opacity="0.9"/>
-    <!-- PIXEL SMILE (corners → bottom arc) -->
-    <rect x="12" y="16" width="4"  height="4"  fill="#0a2770"/>
-    <rect x="28" y="16" width="4"  height="4"  fill="#0a2770"/>
-    <rect x="16" y="20" width="12" height="4"  fill="#0a2770"/>
-    <!-- TENTACLES (4, alternating curl direction) -->
-    <!-- T1: left outer — curls left -->
-    <rect x="8"  y="24" width="4" height="4" fill="white"/>
-    <rect x="4"  y="28" width="4" height="4" fill="white"/>
-    <rect x="4"  y="32" width="4" height="4" fill="white"/>
-    <rect x="0"  y="36" width="4" height="4" fill="white"/>
-    <!-- T2: left inner — curls right -->
-    <rect x="16" y="24" width="4" height="4" fill="white"/>
-    <rect x="16" y="28" width="4" height="4" fill="white"/>
-    <rect x="12" y="32" width="4" height="4" fill="white"/>
-    <rect x="12" y="36" width="4" height="4" fill="white"/>
-    <!-- T3: right inner — curls left (mirror T2) -->
-    <rect x="24" y="24" width="4" height="4" fill="white"/>
-    <rect x="24" y="28" width="4" height="4" fill="white"/>
-    <rect x="28" y="32" width="4" height="4" fill="white"/>
-    <rect x="28" y="36" width="4" height="4" fill="white"/>
-    <!-- T4: right outer — curls right (mirror T1) -->
-    <rect x="32" y="24" width="4" height="4" fill="white"/>
-    <rect x="36" y="28" width="4" height="4" fill="white"/>
-    <rect x="36" y="32" width="4" height="4" fill="white"/>
-    <rect x="40" y="36" width="4" height="4" fill="white"/>
+  // BAO — Pixel art wave (CadenceWave brand, 12×7 grid, 4px, viewBox 48×28)
+  const BAO_FACE = `<svg viewBox="0 0 48 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Crest (top of curl) -->
+    <rect x="20" y="0"  width="16" height="4" fill="white"/>
+    <!-- Curl left side + right side (opens in middle) -->
+    <rect x="16" y="4"  width="8"  height="4" fill="white"/>
+    <rect x="32" y="4"  width="8"  height="4" fill="white"/>
+    <!-- Inside of curl (semi-transparent — depth effect) -->
+    <rect x="20" y="4"  width="12" height="8" fill="rgba(255,255,255,0.3)"/>
+    <!-- Wave body sweeping diagonally -->
+    <rect x="12" y="8"  width="8"  height="4" fill="white"/>
+    <rect x="36" y="8"  width="8"  height="4" fill="white"/>
+    <rect x="8"  y="12" width="8"  height="4" fill="white"/>
+    <rect x="40" y="12" width="8"  height="4" fill="white"/>
+    <!-- Foam (left base + connection) -->
+    <rect x="0"  y="16" width="12" height="4" fill="white"/>
+    <!-- Full base row -->
+    <rect x="0"  y="20" width="48" height="4" fill="white"/>
+    <!-- Spray drops -->
+    <rect x="4"  y="24" width="4"  height="4" fill="white"/>
+    <rect x="16" y="24" width="4"  height="4" fill="white"/>
+    <rect x="28" y="24" width="4"  height="4" fill="white"/>
   </svg>`;
 
   const ROBOT_SVG       = BAO_FACE;
