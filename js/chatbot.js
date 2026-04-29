@@ -6,26 +6,32 @@
   let isOpen = false;
   let isTyping = false;
 
-  // BAO — Professional AI face icon
+  // BAO — Clean robot face icon (antenna + round eyes + rect mouth + ear sensors)
   const BAO_FACE = `<svg viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <!-- Signal / connectivity dots -->
-    <circle cx="13" cy="7"  r="2"   fill="white" opacity="0.45"/>
-    <circle cx="22" cy="5"  r="2.5" fill="white" opacity="0.65"/>
-    <circle cx="31" cy="7"  r="2"   fill="white" opacity="0.45"/>
-    <!-- Face oval -->
-    <ellipse cx="22" cy="24" rx="16" ry="17" fill="white"/>
-    <!-- Left eye (visor pill) -->
-    <rect x="11" y="19" width="9" height="5.5" rx="2.75" fill="#0f2a6b"/>
-    <!-- Left eye glint -->
-    <circle cx="13.5" cy="20.5" r="1.4" fill="white" opacity="0.75"/>
-    <!-- Right eye (visor pill) -->
-    <rect x="24" y="19" width="9" height="5.5" rx="2.75" fill="#0f2a6b"/>
-    <!-- Right eye glint -->
-    <circle cx="26.5" cy="20.5" r="1.4" fill="white" opacity="0.75"/>
-    <!-- Smile arc -->
-    <path d="M14 31 Q22 37 30 31" stroke="#0f2a6b" stroke-width="2.4" fill="none" stroke-linecap="round"/>
-    <!-- Chin dimple (personality) -->
-    <circle cx="22" cy="38" r="1.2" fill="#0f2a6b" opacity="0.25"/>
+    <!-- Antenna ball -->
+    <circle cx="22" cy="5" r="2.8" fill="white"/>
+    <!-- Antenna stem -->
+    <rect x="20.5" y="7.5" width="3" height="5.5" rx="1.5" fill="white"/>
+    <!-- Head -->
+    <rect x="7" y="12" width="30" height="26" rx="8" fill="white"/>
+    <!-- Left ear sensor -->
+    <circle cx="5"  cy="25" r="3.2" fill="white"/>
+    <circle cx="5"  cy="25" r="1.6" fill="#0a2770"/>
+    <!-- Right ear sensor -->
+    <circle cx="39" cy="25" r="3.2" fill="white"/>
+    <circle cx="39" cy="25" r="1.6" fill="#0a2770"/>
+    <!-- Left eye -->
+    <circle cx="16.5" cy="22" r="4" fill="#0a2770"/>
+    <circle cx="15.2" cy="20.6" r="1.4" fill="white" opacity="0.8"/>
+    <!-- Right eye -->
+    <circle cx="27.5" cy="22" r="4" fill="#0a2770"/>
+    <circle cx="26.2" cy="20.6" r="1.4" fill="white" opacity="0.8"/>
+    <!-- Mouth panel -->
+    <rect x="14" y="29" width="16" height="5.5" rx="2.8" fill="#0a2770"/>
+    <!-- Mouth speaker lines -->
+    <line x1="18" y1="31" x2="18" y2="33" stroke="white" stroke-width="1.2" stroke-linecap="round" opacity="0.7"/>
+    <line x1="22" y1="30.5" x2="22" y2="33.5" stroke="white" stroke-width="1.2" stroke-linecap="round" opacity="0.7"/>
+    <line x1="26" y1="31" x2="26" y2="33" stroke="white" stroke-width="1.2" stroke-linecap="round" opacity="0.7"/>
   </svg>`;
 
   const ROBOT_SVG       = BAO_FACE;
