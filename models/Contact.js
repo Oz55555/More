@@ -35,28 +35,23 @@ const contactSchema = new mongoose.Schema({
   toneAnalysis: {
     sentiment: {
       type: String,
-      enum: ['positive', 'negative', 'neutral'],
-      default: null
+      enum: ['positive', 'negative', 'neutral']
     },
     emotion: {
       type: String,
-      enum: ['joy', 'sadness', 'anger', 'fear', 'surprise', 'disgust', 'neutral'],
-      default: null
+      enum: ['joy', 'sadness', 'anger', 'fear', 'surprise', 'disgust', 'neutral']
     },
     confidence: {
       type: Number,
       min: 0,
-      max: 1,
-      default: null
+      max: 1
     },
     summary: {
       type: String,
-      maxlength: [500, 'Tone summary cannot exceed 500 characters'],
-      default: null
+      maxlength: [500, 'Tone summary cannot exceed 500 characters']
     },
     analyzedAt: {
-      type: Date,
-      default: null
+      type: Date
     }
   },
   leadAnalysis: {
