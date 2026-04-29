@@ -6,29 +6,30 @@
   let isOpen = false;
   let isTyping = false;
 
-  // Space Invader pixel art — 12×8 grid, pixel size 4, viewBox 48×32
-  const INVADER_PATH = `
-    <rect x="8"  y="0"  width="4" height="4"/>
-    <rect x="32" y="0"  width="4" height="4"/>
-    <rect x="12" y="4"  width="4" height="4"/>
-    <rect x="28" y="4"  width="4" height="4"/>
-    <rect x="8"  y="8"  width="32" height="4"/>
-    <rect x="4"  y="12" width="8"  height="4"/>
-    <rect x="16" y="12" width="16" height="4"/>
-    <rect x="36" y="12" width="8"  height="4"/>
-    <rect x="0"  y="16" width="48" height="4"/>
-    <rect x="0"  y="20" width="4"  height="4"/>
-    <rect x="8"  y="20" width="32" height="4"/>
-    <rect x="44" y="20" width="4"  height="4"/>
-    <rect x="0"  y="24" width="4"  height="4"/>
-    <rect x="8"  y="24" width="4"  height="4"/>
-    <rect x="36" y="24" width="4"  height="4"/>
-    <rect x="44" y="24" width="4"  height="4"/>
-    <rect x="12" y="28" width="8"  height="4"/>
-    <rect x="28" y="28" width="8"  height="4"/>`;
+  // BAO — Professional AI face icon
+  const BAO_FACE = `<svg viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Signal / connectivity dots -->
+    <circle cx="13" cy="7"  r="2"   fill="white" opacity="0.45"/>
+    <circle cx="22" cy="5"  r="2.5" fill="white" opacity="0.65"/>
+    <circle cx="31" cy="7"  r="2"   fill="white" opacity="0.45"/>
+    <!-- Face oval -->
+    <ellipse cx="22" cy="24" rx="16" ry="17" fill="white"/>
+    <!-- Left eye (visor pill) -->
+    <rect x="11" y="19" width="9" height="5.5" rx="2.75" fill="#0f2a6b"/>
+    <!-- Left eye glint -->
+    <circle cx="13.5" cy="20.5" r="1.4" fill="white" opacity="0.75"/>
+    <!-- Right eye (visor pill) -->
+    <rect x="24" y="19" width="9" height="5.5" rx="2.75" fill="#0f2a6b"/>
+    <!-- Right eye glint -->
+    <circle cx="26.5" cy="20.5" r="1.4" fill="white" opacity="0.75"/>
+    <!-- Smile arc -->
+    <path d="M14 31 Q22 37 30 31" stroke="#0f2a6b" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+    <!-- Chin dimple (personality) -->
+    <circle cx="22" cy="38" r="1.2" fill="#0f2a6b" opacity="0.25"/>
+  </svg>`;
 
-  const ROBOT_SVG = `<svg viewBox="0 0 48 32" fill="white" xmlns="http://www.w3.org/2000/svg">${INVADER_PATH}</svg>`;
-  const ROBOT_SVG_SMALL = `<svg viewBox="0 0 48 32" fill="white" xmlns="http://www.w3.org/2000/svg">${INVADER_PATH}</svg>`;
+  const ROBOT_SVG       = BAO_FACE;
+  const ROBOT_SVG_SMALL = BAO_FACE;
 
   function init() {
     injectStyles();
