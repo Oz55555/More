@@ -21,22 +21,50 @@ class LeadAnalysisService {
   }
 
   buildLeadPrompt(name, email, message) {
-    return `B2B lead analyst for Cadence Wave (SAFe agile consultancy). Score this contact form submission.
+    const hour = new Date().getHours();
+    const dow  = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+    const msgLen = message.length;
+    return `You are a B2B lead analyst for CadenceWave (SAFe agile & digital transformation consultancy).
+Analyze this contact form submission and return ONLY a JSON object — no text before or after.
 
 Name: ${name} | Email: ${email}
-Message: "${message.substring(0, 400)}"
+Message (${msgLen} chars): "${message.substring(0, 400)}"
+Submitted: ${dow}, hour ${hour}:00
+
+Instructions:
+1. SPAM detection: flag as spam if message is nonsense, test data, job application, competitor scraping, or contains only URLs/random chars.
+2. INDUSTRY: detect sector (Technology, Finance, Healthcare, Retail, Manufacturing, Education, Government, Real Estate, Media, Other).
+3. EXTRACT from message: company name, phone number, budget amount, project deadline (null if not found).
+4. CONVERSION SCORE (0-100): combine lead score + time bonus (business hours +5, Mon-Thu +3) + message length bonus (>100 chars +5) + email domain bonus (corporate email +10).
+5. INTEREST AREAS: list specific topics mentioned.
 
 Return ONLY this JSON:
-{"score":<0-100>,"qualification":"<hot|warm|cold|not_qualified>","intent":"<5-10 words>","interestAreas":["..."],"urgency":"<high|medium|low>","companySignals":<bool>,"budgetSignals":<bool>,"summary":"<2 sentences>","recommendedAction":"<next step>","language":"<es|en|other>"}
+{
+  "score": <0-100>,
+  "qualification": "<hot|warm|cold|not_qualified>",
+  "intent": "<5-10 words>",
+  "interestAreas": ["..."],
+  "urgency": "<high|medium|low>",
+  "companySignals": <bool>,
+  "budgetSignals": <bool>,
+  "summary": "<2 sentences>",
+  "recommendedAction": "<next step>",
+  "language": "<es|en|other>",
+  "industry": "<sector>",
+  "extractedData": { "company": "<or null>", "phone": "<or null>", "budget": "<or null>", "deadline": "<or null>" },
+  "isSpam": <bool>,
+  "spamScore": <0-100>,
+  "conversionScore": <0-100>
+}
 
-Scoring: 70-100=hot(clear business need+company), 40-69=warm(exploratory), 20-39=cold(general info), 0-19=not_qualified(spam/personal). ONLY JSON.`;
+Scoring guide: 70-100=hot(clear need+company email), 40-69=warm(exploratory), 20-39=cold(general info), 0-19=not_qualified(spam/personal).`;
   }
 
   async analyzeWithDeepSeek(name, email, message) {
     const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${this.deepseekApiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'deepseek-chat', messages: [{ role: 'user', content: this.buildLeadPrompt(name, email, message) }], temperature: 0.1, max_tokens: 350 }),
+      body: JSON.stringify({ model: 'deepseek-chat', messages: [{ role: 'user', content: this.buildLeadPrompt(name, email, message) }], temperature: 0.1, max_tokens: 500 }),
       signal: AbortSignal.timeout(8000)
     });
     const data = await response.json();
@@ -48,7 +76,7 @@ Scoring: 70-100=hot(clear business need+company), 40-69=warm(exploratory), 20-39
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${this.openaiApiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'gpt-4o-mini', messages: [{ role: 'user', content: this.buildLeadPrompt(name, email, message) }], temperature: 0.1, max_tokens: 350, response_format: { type: 'json_object' } }),
+      body: JSON.stringify({ model: 'gpt-4o-mini', messages: [{ role: 'user', content: this.buildLeadPrompt(name, email, message) }], temperature: 0.1, max_tokens: 500, response_format: { type: 'json_object' } }),
       signal: AbortSignal.timeout(8000)
     });
     const data = await response.json();
@@ -74,7 +102,17 @@ Scoring: 70-100=hot(clear business need+company), 40-69=warm(exploratory), 20-39
         summary: String(raw.summary || '').substring(0, 400),
         recommendedAction: String(raw.recommendedAction || 'Review message').substring(0, 300),
         language: ['es', 'en', 'other'].includes(raw.language) ? raw.language : 'en',
-        analyzedAt: new Date()
+        analyzedAt: new Date(),
+        industry: raw.industry ? String(raw.industry).substring(0, 100) : null,
+        extractedData: raw.extractedData && typeof raw.extractedData === 'object' ? {
+          company:  raw.extractedData.company  || null,
+          phone:    raw.extractedData.phone    || null,
+          budget:   raw.extractedData.budget   || null,
+          deadline: raw.extractedData.deadline || null
+        } : null,
+        isSpam: Boolean(raw.isSpam),
+        spamScore: Math.min(100, Math.max(0, parseInt(raw.spamScore) || 0)),
+        conversionScore: Math.min(100, Math.max(0, parseInt(raw.conversionScore) || 0))
       };
     } catch (error) {
       console.error('Lead parse failed:', error.message);

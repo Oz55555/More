@@ -15,6 +15,7 @@ const toneAnalysisService = require('./services/toneAnalysis');
 const CustomerService = require('./services/customerService');
 const leadAnalysisService = require('./services/leadAnalysis');
 const emailService = require('./services/emailService');
+const schedulerService = require('./services/schedulerService');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -297,8 +298,23 @@ app.post('/api/contact', validateContactForm, async (req, res) => {
     // Lead analysis — background, non-blocking
     Promise.resolve()
       .then(() => leadAnalysisService.analyzeLeadPotential(name, email, message))
-      .then(leadAnalysis => Contact.findByIdAndUpdate(contact._id, { $set: { leadAnalysis } }, { runValidators: false })
-        .then(() => console.log(`Lead analyzed: ${email} — Score: ${leadAnalysis?.score} (${leadAnalysis?.qualification})`)))
+      .then(async leadAnalysis => {
+        const update = { leadAnalysis };
+        if (leadAnalysis.industry)       update.industry       = leadAnalysis.industry;
+        if (leadAnalysis.extractedData)  update.extractedData  = leadAnalysis.extractedData;
+        if (leadAnalysis.isSpam != null) update.isSpam         = leadAnalysis.isSpam;
+        if (leadAnalysis.spamScore)      update.spamScore      = leadAnalysis.spamScore;
+        if (leadAnalysis.conversionScore)update.conversionScore= leadAnalysis.conversionScore;
+        await Contact.findByIdAndUpdate(contact._id, { $set: update }, { runValidators: false });
+        console.log(`Lead analyzed: ${email} — Score: ${leadAnalysis?.score} (${leadAnalysis?.qualification}) | Industry: ${leadAnalysis?.industry} | Spam: ${leadAnalysis?.isSpam}`);
+        // Send welcome email if not spam
+        if (!leadAnalysis.isSpam) {
+          const populatedContact = await Contact.findById(contact._id);
+          emailService.sendWelcomeEmail(populatedContact)
+            .then(() => Contact.findByIdAndUpdate(contact._id, { $set: { welcomeEmailSent: true } }))
+            .catch(err => console.error('Welcome email error:', err.message));
+        }
+      })
       .catch(err => console.error('Lead analysis async error:', err.message));
 
     console.log(`New contact form submission from ${email}`);
@@ -1749,10 +1765,54 @@ if (process.env.NODE_ENV === 'production') {
     console.log(' Production mode: Trusting proxy for HTTPS');
 }
 
+// ── BAO CHATBOT ───────────────────────────────────────────────────────────────
+app.post('/api/chat', async (req, res) => {
+  try {
+    const { message, history = [], visitorName, visitorEmail } = req.body;
+    if (!message || typeof message !== 'string') return res.status(400).json({ success: false, reply: 'Invalid message' });
+
+    const apiKey = process.env.DEEPSEEK_API_KEY || process.env.OPENAI_API_KEY;
+    if (!apiKey) return res.json({ success: true, reply: 'Hi! Thanks for reaching out to CadenceWave. Please send us an email at cadencewave.io and we will get back to you soon.' });
+
+    const systemPrompt = `You are BAO, CadenceWave's AI assistant on the website cadencewave.io.
+CadenceWave is a digital transformation & SAFe agile consultancy.
+Your role: answer questions about CadenceWave services, help visitors understand how we can help them, and encourage them to fill out the contact form or schedule a discovery call.
+Services we offer: SAFe Agile implementation, Digital Transformation, Agile Coaching, PI Planning, DevOps, Scrum training.
+Always be friendly, concise, and professional. Detect the visitor's language and respond in the same language.
+If asked about pricing, say "We provide custom quotes based on your needs — fill out our contact form and we'll get back to you within 24h."
+If asked about availability, invite them to schedule a free 30-min discovery call at cadencewave.io.
+Keep replies under 120 words.`;
+
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      ...history.slice(-6).map(h => ({ role: h.role, content: h.content })),
+      { role: 'user', content: message.substring(0, 500) }
+    ];
+
+    const endpoint = process.env.DEEPSEEK_API_KEY
+      ? 'https://api.deepseek.com/v1/chat/completions'
+      : 'https://api.openai.com/v1/chat/completions';
+    const model = process.env.DEEPSEEK_API_KEY ? 'deepseek-chat' : 'gpt-4o-mini';
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model, messages, temperature: 0.7, max_tokens: 200 }),
+      signal: AbortSignal.timeout(10000)
+    });
+    const data = await response.json();
+    const reply = data.choices?.[0]?.message?.content || 'I\'m having trouble connecting. Please try again or visit cadencewave.io.';
+    res.json({ success: true, reply });
+  } catch (err) {
+    console.error('Chat API error:', err.message);
+    res.json({ success: true, reply: 'I\'m temporarily unavailable. Please reach us at cadencewave.io.' });
+  }
+});
+
 app.listen(PORT, () => {
     console.log(` Server running on port ${PORT}`);
     console.log(` Environment: ${process.env.NODE_ENV || 'development'}`);
-    
+    schedulerService.init();
     if (process.env.NODE_ENV === 'production') {
         console.log(' HTTPS handled by hosting provider');
     } else {

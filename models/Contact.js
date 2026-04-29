@@ -54,6 +54,18 @@ const contactSchema = new mongoose.Schema({
       type: Date
     }
   },
+  industry: { type: String, maxlength: 100 },
+  extractedData: {
+    company:  { type: String, maxlength: 200 },
+    phone:    { type: String, maxlength: 50  },
+    budget:   { type: String, maxlength: 100 },
+    deadline: { type: String, maxlength: 100 }
+  },
+  isSpam:          { type: Boolean, default: false },
+  spamScore:       { type: Number, min: 0, max: 100, default: 0 },
+  welcomeEmailSent:{ type: Boolean, default: false },
+  followUpSent:    { type: Boolean, default: false },
+  conversionScore: { type: Number, min: 0, max: 100 },
   leadAnalysis: {
     score: { type: Number, min: 0, max: 100 },
     qualification: {

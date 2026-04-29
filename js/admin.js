@@ -172,6 +172,17 @@ class LeadCaptureAgent {
             return true;
         });
 
+        // Dynamic prioritization: sort by conversionScore → leadScore → urgency
+        this.filteredLeads.sort((a, b) => {
+            const urgOrder = { high: 3, medium: 2, low: 1 };
+            const aConv = a.conversionScore ?? a.leadAnalysis?.score ?? 0;
+            const bConv = b.conversionScore ?? b.leadAnalysis?.score ?? 0;
+            if (bConv !== aConv) return bConv - aConv;
+            const aUrg = urgOrder[a.leadAnalysis?.urgency] || 0;
+            const bUrg = urgOrder[b.leadAnalysis?.urgency] || 0;
+            return bUrg - aUrg;
+        });
+
         this.renderTable();
     }
 
@@ -198,16 +209,20 @@ class LeadCaptureAgent {
                 ? `<span class="email-sent" title="Enviado ${new Date(es.sentAt).toLocaleDateString()}">✉️ Enviado</span>`
                 : `<span class="email-pending">⏳ Pendiente</span>`;
 
-            return `<tr class="${qual === 'hot' ? 'hot-row' : ''}">
+            const spamBadge = l.isSpam ? `<span style="background:#ef4444;color:#fff;font-size:10px;padding:1px 5px;border-radius:4px;margin-left:4px">SPAM</span>` : '';
+            const industryTag = l.industry ? `<small style="color:#6b7280;font-size:11px">${this.esc(l.industry)}</small>` : '';
+            const convScore = l.conversionScore != null ? `<span title="Conv. score" style="font-size:10px;color:#6b7280;margin-left:3px">(${l.conversionScore})</span>` : '';
+            return `<tr class="${qual === 'hot' ? 'hot-row' : ''}${l.isSpam ? ' opacity-50' : ''}">
                 <td class="date-cell">${date}</td>
                 <td>
                     <div class="contact-cell">
-                        <strong>${this.esc(l.name)}</strong>
+                        <strong>${this.esc(l.name)}</strong>${spamBadge}
                         <small><a href="mailto:${this.esc(l.email)}">${this.esc(l.email)}</a></small>
+                        ${industryTag}
                     </div>
                 </td>
                 <td class="msg-preview" title="${this.esc(l.message)}">${this.esc(l.message.substring(0, 70))}…</td>
-                <td><span class="score-badge ${scoreClass}">${score}</span></td>
+                <td><span class="score-badge ${scoreClass}">${score}</span>${convScore}</td>
                 <td><span class="qual-badge qual-${qual}">${qualLabel}</span></td>
                 <td class="intent-cell">${this.esc((la.intent || '—').substring(0, 40))}</td>
                 <td><span class="urg-badge ${urgClass}">${la.urgency || '—'}</span></td>
