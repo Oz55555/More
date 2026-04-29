@@ -15,68 +15,30 @@ class EmailService {
   }
 
   buildHtmlEmail(bodyHtml, recipientName) {
-    const firstName = (recipientName || '').split(' ')[0];
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cadence Wave</title>
 </head>
-<body style="margin:0;padding:0;background:#f4f6fb;font-family:'Segoe UI',Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6fb;padding:40px 0;">
-    <tr>
-      <td align="center">
-        <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,83,155,0.10);">
-          <!-- Header -->
-          <tr>
-            <td style="background:linear-gradient(135deg,#00539B 0%,#1e3a8a 100%);padding:32px 40px;text-align:center;">
-              <div style="display:inline-block;background:rgba(255,255,255,0.12);border-radius:50%;padding:10px;margin-bottom:14px;line-height:0;">
-                <img src="https://www.cadencewave.io/images/cw.png" alt="CadenceWave" width="60" height="60" style="display:block;border-radius:50%;background:#fff;padding:6px;" />
-              </div>
-              <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:700;letter-spacing:-0.5px;">CadenceWave</h1>
-              <p style="margin:6px 0 0;color:rgba(255,255,255,0.8);font-size:13px;font-weight:400;">Digital Transformation · Agile Consulting</p>
-            </td>
-          </tr>
-          <!-- AI Badge -->
-          <tr>
-            <td style="background:#f0f7ff;padding:14px 40px;border-bottom:1px solid #e8f0fb;">
-              <p style="margin:0;font-size:13px;color:#00539B;display:flex;align-items:center;gap:8px;">
-                <span style="background:#00539B;color:#fff;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600;letter-spacing:0.5px;">✦ BAO AI</span>
-                <span style="margin-left:8px;">This message was personalized by BAO, our AI assistant</span>
-              </p>
-            </td>
-          </tr>
-          <!-- Body -->
-          <tr>
-            <td style="padding:36px 40px 24px;color:#1f2937;font-size:15px;line-height:1.8;">
-              ${bodyHtml}
-            </td>
-          </tr>
-          <!-- CTA -->
-          <tr>
-            <td style="padding:0 40px 36px;text-align:center;">
-              <a href="https://cadencewave.io" style="display:inline-block;background:linear-gradient(135deg,#00539B,#1e3a8a);color:#fff;text-decoration:none;padding:14px 36px;border-radius:50px;font-weight:600;font-size:15px;letter-spacing:0.3px;">
-                Explore Cadence Wave →
-              </a>
-            </td>
-          </tr>
-          <!-- Footer -->
-          <tr>
-            <td style="background:#f8faff;border-top:1px solid #e8f0fb;padding:24px 40px;text-align:center;">
-              <p style="margin:0;font-size:12px;color:#6b7280;">
-                © ${new Date().getFullYear()} Cadence Wave · <a href="https://cadencewave.io" style="color:#00539B;text-decoration:none;">cadencewave.io</a>
-              </p>
-              <p style="margin:8px 0 0;font-size:11px;color:#9ca3af;">
-                You received this email because you submitted a contact form at cadencewave.io.<br>
-                Reply directly to this email to reach Oscar Medina.
-              </p>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
+<body style="margin:0;padding:0;background:#ffffff;font-family:Arial,sans-serif;">
+  <div style="max-width:580px;margin:0 auto;padding:32px 24px;">
+    <!-- Minimal header -->
+    <div style="margin-bottom:28px;padding-bottom:16px;border-bottom:1px solid #e5e7eb;">
+      <img src="https://www.cadencewave.io/images/cw.png" alt="" width="28" height="28" style="vertical-align:middle;margin-right:8px;border-radius:4px;" />
+      <span style="font-size:15px;font-weight:600;color:#111827;vertical-align:middle;">CadenceWave</span>
+    </div>
+    <!-- Body -->
+    <div style="color:#111827;font-size:15px;line-height:1.7;">
+      ${bodyHtml}
+    </div>
+    <!-- Footer -->
+    <div style="margin-top:32px;padding-top:16px;border-top:1px solid #e5e7eb;">
+      <p style="margin:0;font-size:12px;color:#9ca3af;">
+        cadencewave.io &nbsp;·&nbsp; You're receiving this because you submitted a contact form on our site.
+      </p>
+    </div>
+  </div>
 </body>
 </html>`;
   }
