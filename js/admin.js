@@ -287,6 +287,11 @@ class LeadCaptureAgent {
         if (previewBox) previewBox.style.display = 'none';
 
         document.getElementById('leadModal').style.display = 'flex';
+
+        // Pre-warm email cache in background so "Enviar" is instant
+        if (!es.sent) {
+            this.apiFetch(`/admin/leads/${id}/preview-email`).catch(() => {});
+        }
     }
 
     closeModal() {
