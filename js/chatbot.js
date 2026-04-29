@@ -6,24 +6,14 @@
   let isOpen = false;
   let isTyping = false;
 
-  // BAO — Friendly robot face for customer service
+  // BAO — 4-pointed sparkle (trending AI iconography: ChatGPT / Gemini / Copilot style)
   const BAO_FACE = `<svg viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <!-- Antenna ball + stem -->
-    <circle cx="22" cy="4"  r="3"   fill="white"/>
-    <rect   x="20"  y="6"   width="4" height="6" rx="2" fill="white"/>
-    <!-- Head (rounded rect) -->
-    <rect x="6"  y="11" width="32" height="27" rx="9" fill="white"/>
-    <!-- Ear bumps -->
-    <circle cx="4"  cy="25" r="4" fill="white"/>
-    <circle cx="40" cy="25" r="4" fill="white"/>
-    <!-- Left eye -->
-    <circle cx="15" cy="22" r="4" fill="#0a2770"/>
-    <circle cx="14" cy="21" r="1.2" fill="white" opacity="0.7"/>
-    <!-- Right eye -->
-    <circle cx="29" cy="22" r="4" fill="#0a2770"/>
-    <circle cx="28" cy="21" r="1.2" fill="white" opacity="0.7"/>
-    <!-- Neutral mouth (slight curve, minimal) -->
-    <path d="M16 31 Q22 33.5 28 31" stroke="#0a2770" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    <!-- Main sparkle star -->
+    <path d="M22 3 L26.4 17.6 L41 22 L26.4 26.4 L22 41 L17.6 26.4 L3 22 L17.6 17.6 Z"
+          fill="white"/>
+    <!-- Small accent sparkle (upper-right) -->
+    <path d="M37 5 L38.2 8.8 L42 10 L38.2 11.2 L37 15 L35.8 11.2 L32 10 L35.8 8.8 Z"
+          fill="white" opacity="0.6"/>
   </svg>`;
 
   const ROBOT_SVG       = BAO_FACE;
