@@ -6,28 +6,24 @@
   let isOpen = false;
   let isTyping = false;
 
-  // BAO — Pixel art wave (CadenceWave brand, 12×7 grid, 4px, viewBox 48×28)
-  const BAO_FACE = `<svg viewBox="0 0 48 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <!-- Crest (top of curl) -->
-    <rect x="20" y="0"  width="16" height="4" fill="white"/>
-    <!-- Curl left side + right side (opens in middle) -->
-    <rect x="16" y="4"  width="8"  height="4" fill="white"/>
-    <rect x="32" y="4"  width="8"  height="4" fill="white"/>
-    <!-- Inside of curl (semi-transparent — depth effect) -->
-    <rect x="20" y="4"  width="12" height="8" fill="rgba(255,255,255,0.3)"/>
-    <!-- Wave body sweeping diagonally -->
-    <rect x="12" y="8"  width="8"  height="4" fill="white"/>
-    <rect x="36" y="8"  width="8"  height="4" fill="white"/>
-    <rect x="8"  y="12" width="8"  height="4" fill="white"/>
-    <rect x="40" y="12" width="8"  height="4" fill="white"/>
-    <!-- Foam (left base + connection) -->
-    <rect x="0"  y="16" width="12" height="4" fill="white"/>
-    <!-- Full base row -->
-    <rect x="0"  y="20" width="48" height="4" fill="white"/>
-    <!-- Spray drops -->
-    <rect x="4"  y="24" width="4"  height="4" fill="white"/>
-    <rect x="16" y="24" width="4"  height="4" fill="white"/>
-    <rect x="28" y="24" width="4"  height="4" fill="white"/>
+  // BAO — Friendly robot face for customer service
+  const BAO_FACE = `<svg viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Antenna ball + stem -->
+    <circle cx="22" cy="4"  r="3"   fill="white"/>
+    <rect   x="20"  y="6"   width="4" height="6" rx="2" fill="white"/>
+    <!-- Head (rounded rect) -->
+    <rect x="6"  y="11" width="32" height="27" rx="9" fill="white"/>
+    <!-- Ear bumps -->
+    <circle cx="4"  cy="25" r="4" fill="white"/>
+    <circle cx="40" cy="25" r="4" fill="white"/>
+    <!-- Left eye -->
+    <circle cx="15" cy="22" r="5.5" fill="#0a2770"/>
+    <circle cx="13.2" cy="20.2" r="2" fill="white" opacity="0.9"/>
+    <!-- Right eye -->
+    <circle cx="29" cy="22" r="5.5" fill="#0a2770"/>
+    <circle cx="27.2" cy="20.2" r="2" fill="white" opacity="0.9"/>
+    <!-- Smile arc -->
+    <path d="M14 31 Q22 37 30 31" stroke="#0a2770" stroke-width="2.8" fill="none" stroke-linecap="round"/>
   </svg>`;
 
   const ROBOT_SVG       = BAO_FACE;
