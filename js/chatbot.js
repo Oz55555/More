@@ -7,31 +7,25 @@
   let isTyping = false;
 
   const ROBOT_SVG = `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="6" y="10" width="36" height="32" rx="10" fill="currentColor"/>
-    <rect x="11" y="15" width="26" height="16" rx="5" fill="rgba(255,255,255,0.13)"/>
-    <rect x="13" y="19" width="9" height="5" rx="2.5" fill="white"/>
-    <rect x="26" y="19" width="9" height="5" rx="2.5" fill="white"/>
-    <circle cx="17.5" cy="21.5" r="1.8" fill="#1e3a8a"/>
-    <circle cx="30.5" cy="21.5" r="1.8" fill="#1e3a8a"/>
-    <circle cx="18.3" cy="20.7" r="0.65" fill="white"/>
-    <circle cx="31.3" cy="20.7" r="0.65" fill="white"/>
-    <path d="M17 33 Q24 37.5 31 33" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
-    <circle cx="14" cy="8" r="2" fill="currentColor" opacity="0.5"/>
-    <circle cx="24" cy="7" r="2.5" fill="currentColor" opacity="0.7"/>
-    <circle cx="34" cy="8" r="2" fill="currentColor" opacity="0.5"/>
+    <rect x="15" y="38" width="18" height="5" rx="2.5" fill="currentColor" opacity="0.6"/>
+    <rect x="11" y="35" width="26" height="6" rx="3" fill="currentColor" opacity="0.85"/>
+    <ellipse cx="24" cy="21" rx="17" ry="18" fill="currentColor"/>
+    <ellipse cx="24" cy="21" rx="12.5" ry="12" fill="rgba(0,0,0,0.38)"/>
+    <ellipse cx="20" cy="16" rx="5" ry="3.5" fill="rgba(255,255,255,0.13)" transform="rotate(-25 20 16)"/>
+    <ellipse cx="29" cy="14" rx="2.5" ry="1.5" fill="rgba(255,255,255,0.1)" transform="rotate(-15 29 14)"/>
+    <circle cx="36" cy="15" r="2" fill="rgba(255,255,255,0.3)"/>
+    <circle cx="36" cy="15" r="1" fill="white" opacity="0.6"/>
   </svg>`;
 
   const ROBOT_SVG_SMALL = `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="6" y="10" width="36" height="32" rx="10" fill="white"/>
-    <rect x="11" y="15" width="26" height="16" rx="5" fill="rgba(0,83,155,0.08)"/>
-    <rect x="13" y="19" width="9" height="5" rx="2.5" fill="rgba(0,83,155,0.9)"/>
-    <rect x="26" y="19" width="9" height="5" rx="2.5" fill="rgba(0,83,155,0.9)"/>
-    <circle cx="17.5" cy="21.5" r="1.8" fill="white"/>
-    <circle cx="30.5" cy="21.5" r="1.8" fill="white"/>
-    <path d="M17 33 Q24 37.5 31 33" stroke="rgba(0,83,155,0.8)" stroke-width="2" fill="none" stroke-linecap="round"/>
-    <circle cx="14" cy="8" r="2" fill="white" opacity="0.5"/>
-    <circle cx="24" cy="7" r="2.5" fill="white" opacity="0.7"/>
-    <circle cx="34" cy="8" r="2" fill="white" opacity="0.5"/>
+    <rect x="15" y="38" width="18" height="5" rx="2.5" fill="white" opacity="0.5"/>
+    <rect x="11" y="35" width="26" height="6" rx="3" fill="white" opacity="0.8"/>
+    <ellipse cx="24" cy="21" rx="17" ry="18" fill="white"/>
+    <ellipse cx="24" cy="21" rx="12.5" ry="12" fill="rgba(0,55,120,0.55)"/>
+    <ellipse cx="20" cy="16" rx="5" ry="3.5" fill="rgba(255,255,255,0.18)" transform="rotate(-25 20 16)"/>
+    <ellipse cx="29" cy="14" rx="2.5" ry="1.5" fill="rgba(255,255,255,0.12)" transform="rotate(-15 29 14)"/>
+    <circle cx="36" cy="15" r="2" fill="rgba(255,255,255,0.5)"/>
+    <circle cx="36" cy="15" r="1" fill="white" opacity="0.8"/>
   </svg>`;
 
   function init() {
