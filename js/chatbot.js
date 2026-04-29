@@ -7,33 +7,31 @@
   let isTyping = false;
 
   const ROBOT_SVG = `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="24" cy="6" r="3" fill="currentColor"/>
-    <line x1="24" y1="9" x2="24" y2="13" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-    <rect x="8" y="13" width="32" height="24" rx="6" fill="currentColor"/>
-    <circle cx="17" cy="23" r="4" fill="white"/>
-    <circle cx="31" cy="23" r="4" fill="white"/>
-    <circle cx="17" cy="23" r="2" fill="#00539B"/>
-    <circle cx="31" cy="23" r="2" fill="#00539B"/>
-    <circle cx="18" cy="22" r="0.8" fill="white"/>
-    <circle cx="32" cy="22" r="0.8" fill="white"/>
-    <path d="M17 31 Q24 36 31 31" stroke="white" stroke-width="2.2" fill="none" stroke-linecap="round"/>
-    <rect x="4" y="18" width="4" height="10" rx="2" fill="currentColor"/>
-    <rect x="40" y="18" width="4" height="10" rx="2" fill="currentColor"/>
+    <rect x="6" y="10" width="36" height="32" rx="10" fill="currentColor"/>
+    <rect x="11" y="15" width="26" height="16" rx="5" fill="rgba(255,255,255,0.13)"/>
+    <rect x="13" y="19" width="9" height="5" rx="2.5" fill="white"/>
+    <rect x="26" y="19" width="9" height="5" rx="2.5" fill="white"/>
+    <circle cx="17.5" cy="21.5" r="1.8" fill="#1e3a8a"/>
+    <circle cx="30.5" cy="21.5" r="1.8" fill="#1e3a8a"/>
+    <circle cx="18.3" cy="20.7" r="0.65" fill="white"/>
+    <circle cx="31.3" cy="20.7" r="0.65" fill="white"/>
+    <path d="M17 33 Q24 37.5 31 33" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <circle cx="14" cy="8" r="2" fill="currentColor" opacity="0.5"/>
+    <circle cx="24" cy="7" r="2.5" fill="currentColor" opacity="0.7"/>
+    <circle cx="34" cy="8" r="2" fill="currentColor" opacity="0.5"/>
   </svg>`;
 
   const ROBOT_SVG_SMALL = `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="24" cy="6" r="3" fill="white"/>
-    <line x1="24" y1="9" x2="24" y2="13" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-    <rect x="8" y="13" width="32" height="24" rx="6" fill="white"/>
-    <circle cx="17" cy="23" r="4" fill="#e8f0fe"/>
-    <circle cx="31" cy="23" r="4" fill="#e8f0fe"/>
-    <circle cx="17" cy="23" r="2" fill="#00539B"/>
-    <circle cx="31" cy="23" r="2" fill="#00539B"/>
-    <circle cx="18" cy="22" r="0.8" fill="white"/>
-    <circle cx="32" cy="22" r="0.8" fill="white"/>
-    <path d="M17 31 Q24 36 31 31" stroke="#00539B" stroke-width="2.2" fill="none" stroke-linecap="round"/>
-    <rect x="4" y="18" width="4" height="10" rx="2" fill="white"/>
-    <rect x="40" y="18" width="4" height="10" rx="2" fill="white"/>
+    <rect x="6" y="10" width="36" height="32" rx="10" fill="white"/>
+    <rect x="11" y="15" width="26" height="16" rx="5" fill="rgba(0,83,155,0.08)"/>
+    <rect x="13" y="19" width="9" height="5" rx="2.5" fill="rgba(0,83,155,0.9)"/>
+    <rect x="26" y="19" width="9" height="5" rx="2.5" fill="rgba(0,83,155,0.9)"/>
+    <circle cx="17.5" cy="21.5" r="1.8" fill="white"/>
+    <circle cx="30.5" cy="21.5" r="1.8" fill="white"/>
+    <path d="M17 33 Q24 37.5 31 33" stroke="rgba(0,83,155,0.8)" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <circle cx="14" cy="8" r="2" fill="white" opacity="0.5"/>
+    <circle cx="24" cy="7" r="2.5" fill="white" opacity="0.7"/>
+    <circle cx="34" cy="8" r="2" fill="white" opacity="0.5"/>
   </svg>`;
 
   function init() {
