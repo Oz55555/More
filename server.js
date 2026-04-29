@@ -1740,35 +1740,10 @@ app.head('/healthz', (req, res) => {
   res.status(200).end();
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({
-    success: false,
-    message: 'Something went wrong!'
-  });
-});
-
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'Route not found'
-  });
-});
-
-// Start server
-
-// In production, trust the hosting provider's HTTPS proxy
-if (process.env.NODE_ENV === 'production') {
-    app.set('trust proxy', 1);
-    console.log(' Production mode: Trusting proxy for HTTPS');
-}
-
 // ── BAO CHATBOT ───────────────────────────────────────────────────────────────
 app.post('/api/chat', async (req, res) => {
   try {
-    const { message, history = [], visitorName, visitorEmail } = req.body;
+    const { message, history = [] } = req.body;
     if (!message || typeof message !== 'string') return res.status(400).json({ success: false, reply: 'Invalid message' });
 
     const apiKey = process.env.DEEPSEEK_API_KEY || process.env.OPENAI_API_KEY;
@@ -1808,6 +1783,31 @@ Keep replies under 120 words.`;
     res.json({ success: true, reply: 'I\'m temporarily unavailable. Please reach us at cadencewave.io.' });
   }
 });
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({
+    success: false,
+    message: 'Something went wrong!'
+  });
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: 'Route not found'
+  });
+});
+
+// Start server
+
+// In production, trust the hosting provider's HTTPS proxy
+if (process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1);
+    console.log(' Production mode: Trusting proxy for HTTPS');
+}
 
 app.listen(PORT, () => {
     console.log(` Server running on port ${PORT}`);
