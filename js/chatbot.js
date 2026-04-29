@@ -6,32 +6,39 @@
   let isOpen = false;
   let isTyping = false;
 
-  // BAO — Clean robot face icon (antenna + round eyes + rect mouth + ear sensors)
-  const BAO_FACE = `<svg viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <!-- Antenna ball -->
-    <circle cx="22" cy="5" r="2.8" fill="white"/>
-    <!-- Antenna stem -->
-    <rect x="20.5" y="7.5" width="3" height="5.5" rx="1.5" fill="white"/>
-    <!-- Head -->
-    <rect x="7" y="12" width="30" height="26" rx="8" fill="white"/>
-    <!-- Left ear sensor -->
-    <circle cx="5"  cy="25" r="3.2" fill="white"/>
-    <circle cx="5"  cy="25" r="1.6" fill="#0a2770"/>
-    <!-- Right ear sensor -->
-    <circle cx="39" cy="25" r="3.2" fill="white"/>
-    <circle cx="39" cy="25" r="1.6" fill="#0a2770"/>
-    <!-- Left eye -->
-    <circle cx="16.5" cy="22" r="4" fill="#0a2770"/>
-    <circle cx="15.2" cy="20.6" r="1.4" fill="white" opacity="0.8"/>
-    <!-- Right eye -->
-    <circle cx="27.5" cy="22" r="4" fill="#0a2770"/>
-    <circle cx="26.2" cy="20.6" r="1.4" fill="white" opacity="0.8"/>
-    <!-- Mouth panel -->
-    <rect x="14" y="29" width="16" height="5.5" rx="2.8" fill="#0a2770"/>
-    <!-- Mouth speaker lines -->
-    <line x1="18" y1="31" x2="18" y2="33" stroke="white" stroke-width="1.2" stroke-linecap="round" opacity="0.7"/>
-    <line x1="22" y1="30.5" x2="22" y2="33.5" stroke="white" stroke-width="1.2" stroke-linecap="round" opacity="0.7"/>
-    <line x1="26" y1="31" x2="26" y2="33" stroke="white" stroke-width="1.2" stroke-linecap="round" opacity="0.7"/>
+  // BAO — Space Invader crab (classic Type-B), 11×9 grid, 4px pixels, viewBox 44×36
+  const BAO_FACE = `<svg viewBox="0 0 44 36" fill="white" xmlns="http://www.w3.org/2000/svg">
+    <!-- R0: antennae tips -->
+    <rect x="8"  y="0"  width="4" height="4"/>
+    <rect x="32" y="0"  width="4" height="4"/>
+    <!-- R1: antennae step -->
+    <rect x="12" y="4"  width="4" height="4"/>
+    <rect x="28" y="4"  width="4" height="4"/>
+    <!-- R2: top of head -->
+    <rect x="8"  y="8"  width="28" height="4"/>
+    <!-- R3: upper body (eye-area notches) -->
+    <rect x="4"  y="12" width="8"  height="4"/>
+    <rect x="16" y="12" width="12" height="4"/>
+    <rect x="32" y="12" width="8"  height="4"/>
+    <!-- R4: full-width body row -->
+    <rect x="0"  y="16" width="44" height="4"/>
+    <!-- R5: eye-hole row -->
+    <rect x="0"  y="20" width="4"  height="4"/>
+    <rect x="8"  y="20" width="28" height="4"/>
+    <rect x="40" y="20" width="4"  height="4"/>
+    <!-- R6: lower face -->
+    <rect x="0"  y="24" width="4"  height="4"/>
+    <rect x="8"  y="24" width="4"  height="4"/>
+    <rect x="32" y="24" width="4"  height="4"/>
+    <rect x="40" y="24" width="4"  height="4"/>
+    <!-- R7: inner legs -->
+    <rect x="12" y="28" width="8"  height="4"/>
+    <rect x="24" y="28" width="8"  height="4"/>
+    <!-- R8: outer feet -->
+    <rect x="4"  y="32" width="4"  height="4"/>
+    <rect x="16" y="32" width="4"  height="4"/>
+    <rect x="24" y="32" width="4"  height="4"/>
+    <rect x="36" y="32" width="4"  height="4"/>
   </svg>`;
 
   const ROBOT_SVG       = BAO_FACE;
