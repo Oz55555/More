@@ -277,8 +277,9 @@ app.post('/api/contact', validateContactForm, async (req, res) => {
     });
     await contact.save();
 
-    // Tone analysis — background, non-blocking
-    toneAnalysisService.analyzeMessageTone(message)
+    // Tone analysis — background, non-blocking (Promise.resolve guards against sync throws)
+    Promise.resolve()
+      .then(() => toneAnalysisService.analyzeMessageTone(message))
       .then(toneAnalysis => {
         if (!toneAnalysis) return;
         console.log(`Tone analysis complete - Sentiment: ${toneAnalysis.sentiment}, Emotion: ${toneAnalysis.emotion}`);
@@ -294,7 +295,8 @@ app.post('/api/contact', validateContactForm, async (req, res) => {
       .catch(err => console.error('Tone analysis async error:', err.message));
 
     // Lead analysis — background, non-blocking
-    leadAnalysisService.analyzeLeadPotential(name, email, message)
+    Promise.resolve()
+      .then(() => leadAnalysisService.analyzeLeadPotential(name, email, message))
       .then(leadAnalysis => Contact.findByIdAndUpdate(contact._id, { $set: { leadAnalysis } }, { runValidators: false })
         .then(() => console.log(`Lead analyzed: ${email} — Score: ${leadAnalysis?.score} (${leadAnalysis?.qualification})`)))
       .catch(err => console.error('Lead analysis async error:', err.message));
