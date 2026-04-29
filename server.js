@@ -267,50 +267,37 @@ app.post('/api/contact', validateContactForm, async (req, res) => {
 
     const { name, email, message } = req.body;
 
-    // Perform tone analysis on the message
-    console.log('Analyzing tone for message from:', email);
-    let toneAnalysis = null;
-    
-    try {
-      toneAnalysis = await toneAnalysisService.analyzeMessageTone(message);
-      
-      if (toneAnalysis) {
-        console.log(`Tone analysis complete - Sentiment: ${toneAnalysis.sentiment}, Emotion: ${toneAnalysis.emotion}, Confidence: ${toneAnalysis.confidence}`);
-      }
-    } catch (error) {
-      console.error('Tone analysis failed:', error.message);
-      console.log('Continuing without tone analysis...');
-    }
-
-    // Sanitize toneAnalysis to only schema-valid enum values before saving
-    const sanitizedTone = toneAnalysis ? {
-      sentiment: ['positive', 'negative', 'neutral'].includes(toneAnalysis.sentiment)
-        ? toneAnalysis.sentiment : 'neutral',
-      emotion: ['joy', 'sadness', 'anger', 'fear', 'surprise', 'disgust', 'neutral'].includes(toneAnalysis.emotion)
-        ? toneAnalysis.emotion : 'neutral',
-      confidence: typeof toneAnalysis.confidence === 'number' ? toneAnalysis.confidence : null,
-      summary: toneAnalysis.summary ? String(toneAnalysis.summary).substring(0, 500) : null,
-      analyzedAt: toneAnalysis.analyzedAt || new Date()
-    } : undefined;
-
-    // Create new contact entry with tone analysis
+    // Save contact immediately — AI analysis runs in background
     const contact = new Contact({
       name,
       email,
       message,
       ipAddress: req.ip || req.connection.remoteAddress,
-      userAgent: req.get('User-Agent'),
-      toneAnalysis: sanitizedTone
+      userAgent: req.get('User-Agent')
     });
+    await contact.save();
 
-    // Run lead analysis in parallel (non-blocking)
+    // Tone analysis — background, non-blocking
+    toneAnalysisService.analyzeMessageTone(message)
+      .then(toneAnalysis => {
+        if (!toneAnalysis) return;
+        console.log(`Tone analysis complete - Sentiment: ${toneAnalysis.sentiment}, Emotion: ${toneAnalysis.emotion}`);
+        const sanitizedTone = {
+          sentiment: ['positive', 'negative', 'neutral'].includes(toneAnalysis.sentiment) ? toneAnalysis.sentiment : 'neutral',
+          emotion: ['joy', 'sadness', 'anger', 'fear', 'surprise', 'disgust', 'neutral'].includes(toneAnalysis.emotion) ? toneAnalysis.emotion : 'neutral',
+          confidence: typeof toneAnalysis.confidence === 'number' ? toneAnalysis.confidence : null,
+          summary: toneAnalysis.summary ? String(toneAnalysis.summary).substring(0, 500) : null,
+          analyzedAt: toneAnalysis.analyzedAt || new Date()
+        };
+        return Contact.findByIdAndUpdate(contact._id, { $set: { toneAnalysis: sanitizedTone } }, { runValidators: false });
+      })
+      .catch(err => console.error('Tone analysis async error:', err.message));
+
+    // Lead analysis — background, non-blocking
     leadAnalysisService.analyzeLeadPotential(name, email, message)
       .then(leadAnalysis => Contact.findByIdAndUpdate(contact._id, { $set: { leadAnalysis } }, { runValidators: false })
         .then(() => console.log(`Lead analyzed: ${email} — Score: ${leadAnalysis?.score} (${leadAnalysis?.qualification})`)))
       .catch(err => console.error('Lead analysis async error:', err.message));
-
-    // Save to database immediately (lead analysis updates async)
-    await contact.save();
 
     console.log(`New contact form submission from ${email}`);
 
@@ -319,12 +306,7 @@ app.post('/api/contact', validateContactForm, async (req, res) => {
       message: 'Thank you for your message! I will get back to you soon.',
       data: {
         id: contact._id,
-        submittedAt: contact.submittedAt,
-        toneAnalysis: toneAnalysis ? {
-          sentiment: toneAnalysis.sentiment,
-          emotion: toneAnalysis.emotion,
-          confidence: toneAnalysis.confidence
-        } : null
+        submittedAt: contact.submittedAt
       }
     });
 
