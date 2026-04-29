@@ -6,39 +6,37 @@
   let isOpen = false;
   let isTyping = false;
 
-  // BAO — Space Invader crab (classic Type-B), 11×9 grid, 4px pixels, viewBox 44×36
-  const BAO_FACE = `<svg viewBox="0 0 44 36" fill="white" xmlns="http://www.w3.org/2000/svg">
-    <!-- R0: antennae tips -->
-    <rect x="8"  y="0"  width="4" height="4"/>
-    <rect x="32" y="0"  width="4" height="4"/>
-    <!-- R1: antennae step -->
-    <rect x="12" y="4"  width="4" height="4"/>
-    <rect x="28" y="4"  width="4" height="4"/>
-    <!-- R2: top of head -->
-    <rect x="8"  y="8"  width="28" height="4"/>
-    <!-- R3: upper body (eye-area notches) -->
-    <rect x="4"  y="12" width="8"  height="4"/>
-    <rect x="16" y="12" width="12" height="4"/>
-    <rect x="32" y="12" width="8"  height="4"/>
-    <!-- R4: full-width body row -->
-    <rect x="0"  y="16" width="44" height="4"/>
-    <!-- R5: eye-hole row -->
-    <rect x="0"  y="20" width="4"  height="4"/>
-    <rect x="8"  y="20" width="28" height="4"/>
-    <rect x="40" y="20" width="4"  height="4"/>
-    <!-- R6: lower face -->
-    <rect x="0"  y="24" width="4"  height="4"/>
-    <rect x="8"  y="24" width="4"  height="4"/>
-    <rect x="32" y="24" width="4"  height="4"/>
-    <rect x="40" y="24" width="4"  height="4"/>
-    <!-- R7: inner legs -->
-    <rect x="12" y="28" width="8"  height="4"/>
-    <rect x="24" y="28" width="8"  height="4"/>
-    <!-- R8: outer feet -->
-    <rect x="4"  y="32" width="4"  height="4"/>
-    <rect x="16" y="32" width="4"  height="4"/>
-    <rect x="24" y="32" width="4"  height="4"/>
-    <rect x="36" y="32" width="4"  height="4"/>
+  // BAO — Original pixel art mascot (10×10 grid, 4px pixels, viewBox 40×40)
+  // Character: raised arms + unique antennae + expressive eyes + pixel smile
+  const BAO_FACE = `<svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Antennae (white) -->
+    <rect x="12" y="0"  width="4" height="4" fill="white"/>
+    <rect x="24" y="0"  width="4" height="4" fill="white"/>
+    <!-- Raised arms (2 rows tall — waving hello) -->
+    <rect x="0"  y="4"  width="4" height="8" fill="white"/>
+    <rect x="36" y="4"  width="4" height="8" fill="white"/>
+    <!-- Head block -->
+    <rect x="4"  y="8"  width="32" height="16" fill="white"/>
+    <!-- Chin -->
+    <rect x="8"  y="24" width="24" height="4"  fill="white"/>
+    <!-- Body -->
+    <rect x="12" y="28" width="16" height="4"  fill="white"/>
+    <!-- Legs -->
+    <rect x="8"  y="32" width="4"  height="4"  fill="white"/>
+    <rect x="28" y="32" width="4"  height="4"  fill="white"/>
+    <!-- Feet -->
+    <rect x="4"  y="36" width="4"  height="4"  fill="white"/>
+    <rect x="32" y="36" width="4"  height="4"  fill="white"/>
+    <!-- Left eye (dark blue on white head) -->
+    <rect x="8"  y="12" width="8"  height="8"  rx="1" fill="#0a2770"/>
+    <circle cx="10" cy="14" r="1.5" fill="white" opacity="0.85"/>
+    <!-- Right eye -->
+    <rect x="24" y="12" width="8"  height="8"  rx="1" fill="#0a2770"/>
+    <circle cx="26" cy="14" r="1.5" fill="white" opacity="0.85"/>
+    <!-- Pixel smile: corners high, bottom arc low -->
+    <rect x="8"  y="20" width="4"  height="4"  fill="#0a2770"/>
+    <rect x="28" y="20" width="4"  height="4"  fill="#0a2770"/>
+    <rect x="12" y="24" width="16" height="4"  fill="#0a2770"/>
   </svg>`;
 
   const ROBOT_SVG       = BAO_FACE;
