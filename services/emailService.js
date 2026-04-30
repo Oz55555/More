@@ -178,6 +178,80 @@ class EmailService {
     console.log('Weekly report sent to', adminEmail);
   }
 
+  async sendAdminAlert(contact, leadAnalysis, plan, bookingLink) {
+    const fromEmail  = (process.env.EMAIL_FROM  || '').trim();
+    const adminEmail = (process.env.ADMIN_EMAIL || fromEmail).trim();
+    if (!fromEmail || !adminEmail) return;
+    const resend = this.getResend();
+
+    const score         = leadAnalysis?.score         ?? 0;
+    const urgency       = leadAnalysis?.urgency       ?? 'low';
+    const qualification = leadAnalysis?.qualification ?? 'unknown';
+    const industry      = leadAnalysis?.industry      ?? '—';
+    const intent        = leadAnalysis?.intent        ?? '—';
+    const action        = plan?.action                ?? '—';
+    const reason        = plan?.reason                ?? '—';
+
+    const urgencyEmoji = urgency === 'high' ? '🚨' : urgency === 'medium' ? '⚠️' : '📋';
+    const scoreColor   = score >= 70 ? '#ef4444' : score >= 40 ? '#f59e0b' : '#6b7280';
+    const subject      = `${urgencyEmoji} [BAO Agent] ${qualification.toUpperCase()} Lead — ${contact.name} (${score}/100)`;
+    const dashUrl      = process.env.ADMIN_URL || 'https://cadencewave.io/admin';
+
+    const bodyHtml = `
+      <p style="font-size:16px"><strong>BAO detectó un lead ${qualification.toUpperCase()}.</strong> Aquí el resumen:</p>
+      <table style="border-collapse:collapse;width:100%;font-size:14px;margin:16px 0">
+        <tr style="background:#f3f4f6">
+          <td style="padding:8px 12px;font-weight:600;width:140px">Score</td>
+          <td style="padding:8px 12px"><strong style="color:${scoreColor};font-size:20px">${score}/100</strong></td>
+        </tr>
+        <tr>
+          <td style="padding:8px 12px;font-weight:600">Calificación</td>
+          <td style="padding:8px 12px">${qualification.toUpperCase()}</td>
+        </tr>
+        <tr style="background:#f3f4f6">
+          <td style="padding:8px 12px;font-weight:600">Urgencia</td>
+          <td style="padding:8px 12px">${urgency} ${urgencyEmoji}</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 12px;font-weight:600">Industria</td>
+          <td style="padding:8px 12px">${industry}</td>
+        </tr>
+        <tr style="background:#f3f4f6">
+          <td style="padding:8px 12px;font-weight:600">Intención</td>
+          <td style="padding:8px 12px">${intent}</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 12px;font-weight:600">Nombre</td>
+          <td style="padding:8px 12px">${contact.name}</td>
+        </tr>
+        <tr style="background:#f3f4f6">
+          <td style="padding:8px 12px;font-weight:600">Email</td>
+          <td style="padding:8px 12px"><a href="mailto:${contact.email}">${contact.email}</a></td>
+        </tr>
+      </table>
+      <p><strong>Mensaje:</strong><br>
+         <em style="color:#374151">"${contact.message.substring(0, 350)}${contact.message.length > 350 ? '...' : ''}"</em></p>
+      <p style="background:#fef3c7;border-left:4px solid #f59e0b;padding:10px 14px;border-radius:4px;font-size:13px">
+        <strong>Decisión del Agente:</strong> ${action}<br>
+        <span style="color:#6b7280">${reason}</span>
+      </p>
+      <p style="margin-top:24px">
+        <a href="${bookingLink || dashUrl}" style="background:#1e40af;color:white;padding:11px 22px;text-decoration:none;border-radius:6px;display:inline-block;margin-right:10px;font-size:14px">📅 Enviar link de cita</a>
+        <a href="${dashUrl}" style="background:#059669;color:white;padding:11px 22px;text-decoration:none;border-radius:6px;display:inline-block;font-size:14px">👁 Ver en Dashboard</a>
+      </p>`;
+
+    const { error } = await resend.emails.send({
+      from:    `${this.fromName} <${fromEmail}>`,
+      to:      adminEmail,
+      subject,
+      text:    `[BAO Agent] ${qualification.toUpperCase()} Lead — ${contact.name} (${score}/100) | ${urgency} urgency | ${contact.email}\n\nMensaje: ${contact.message.substring(0, 200)}`,
+      html:    this.buildHtmlEmail(bodyHtml, 'Admin'),
+      headers: { 'X-Priority': '1', 'Importance': 'high', 'Precedence': 'personal' }
+    });
+    if (error) throw new Error(`Admin alert error: ${error.message}`);
+    console.log(`[AgentCore] Admin alert sent for ${contact.email} (${qualification} ${score}/100)`);
+  }
+
   async verifyConnection() {
     try {
       const resend = this.getResend();

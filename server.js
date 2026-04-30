@@ -16,6 +16,8 @@ const CustomerService = require('./services/customerService');
 const leadAnalysisService = require('./services/leadAnalysis');
 const emailService = require('./services/emailService');
 const schedulerService = require('./services/schedulerService');
+const agentCore     = require('./services/agentCore');
+const calendarAgent = require('./services/calendarAgent');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -278,11 +280,11 @@ app.post('/api/contact', validateContactForm, async (req, res) => {
     });
     await contact.save();
 
-    // Tone analysis — background, non-blocking (Promise.resolve guards against sync throws)
-    Promise.resolve()
+    // Tone analysis — background, non-blocking
+    const tonePromise = Promise.resolve()
       .then(() => toneAnalysisService.analyzeMessageTone(message))
-      .then(toneAnalysis => {
-        if (!toneAnalysis) return;
+      .then(async toneAnalysis => {
+        if (!toneAnalysis) return null;
         console.log(`Tone analysis complete - Sentiment: ${toneAnalysis.sentiment}, Emotion: ${toneAnalysis.emotion}`);
         const sanitizedTone = {
           sentiment: ['positive', 'negative', 'neutral'].includes(toneAnalysis.sentiment) ? toneAnalysis.sentiment : 'neutral',
@@ -291,12 +293,13 @@ app.post('/api/contact', validateContactForm, async (req, res) => {
           summary: toneAnalysis.summary ? String(toneAnalysis.summary).substring(0, 500) : null,
           analyzedAt: toneAnalysis.analyzedAt || new Date()
         };
-        return Contact.findByIdAndUpdate(contact._id, { $set: { toneAnalysis: sanitizedTone } }, { runValidators: false });
+        await Contact.findByIdAndUpdate(contact._id, { $set: { toneAnalysis: sanitizedTone } }, { runValidators: false });
+        return toneAnalysis;
       })
-      .catch(err => console.error('Tone analysis async error:', err.message));
+      .catch(err => { console.error('Tone analysis async error:', err.message); return null; });
 
     // Lead analysis — background, non-blocking
-    Promise.resolve()
+    const leadPromise = Promise.resolve()
       .then(() => leadAnalysisService.analyzeLeadPotential(name, email, message))
       .then(async leadAnalysis => {
         const update = { leadAnalysis };
@@ -314,8 +317,18 @@ app.post('/api/contact', validateContactForm, async (req, res) => {
             .then(() => Contact.findByIdAndUpdate(contact._id, { $set: { welcomeEmailSent: true } }))
             .catch(err => console.error('Welcome email error:', err.message));
         }
+        return leadAnalysis;
       })
-      .catch(err => console.error('Lead analysis async error:', err.message));
+      .catch(err => { console.error('Lead analysis async error:', err.message); return null; });
+
+    // AgentCore — orchestrates after both analyses complete
+    Promise.all([tonePromise, leadPromise])
+      .then(async ([toneAnalysis, leadAnalysis]) => {
+        if (!leadAnalysis) return;
+        const freshContact = await Contact.findById(contact._id);
+        if (freshContact) await agentCore.processContact(freshContact, leadAnalysis, toneAnalysis);
+      })
+      .catch(err => console.error('[AgentCore] Processing error:', err.message));
 
     console.log(`New contact form submission from ${email}`);
 
@@ -1377,6 +1390,43 @@ app.get('/api/admin/email-status', requireAuth, async (req, res) => {
   res.json(status);
 });
 
+// ─── AGENT CORE + CALENDAR ENDPOINTS ────────────────────────────────────────
+
+// Agent Core — decision log
+app.get('/api/admin/agent-core/log', requireAuth, (req, res) => {
+  const limit = Math.min(parseInt(req.query.limit || '20', 10), 100);
+  res.json({ success: true, decisions: agentCore.getDecisionLog(limit) });
+});
+
+// Agent Core — stats
+app.get('/api/admin/agent-core/stats', requireAuth, (req, res) => {
+  res.json({
+    success: true,
+    agentCore: agentCore.getStats(),
+    calendar:  calendarAgent.getStats()
+  });
+});
+
+// Generate booking link for a specific lead
+app.get('/api/admin/leads/:id/booking-link', requireAuth, async (req, res) => {
+  try {
+    const contact = await Contact.findById(req.params.id);
+    if (!contact) return res.status(404).json({ success: false, message: 'Lead not found' });
+    const link = calendarAgent.generateLink(contact, 'admin_manual');
+    res.json({ success: true, bookingLink: link, contact: { name: contact.name, email: contact.email } });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Booking redirect — track click then redirect to booking URL (no auth needed)
+app.get('/api/booking/redirect', (req, res) => {
+  const { email, source = 'direct' } = req.query;
+  if (email) calendarAgent.trackClick(email, source);
+  const bookingUrl = process.env.BOOKING_URL || 'https://cadencewave.io';
+  res.redirect(302, bookingUrl);
+});
+
 // ─── END LEAD CAPTURE AGENT ENDPOINTS ────────────────────────────────────────
 
 // Re-analyze all messages with DeepSeek
@@ -1749,13 +1799,15 @@ app.post('/api/chat', async (req, res) => {
     const apiKey = process.env.DEEPSEEK_API_KEY || process.env.OPENAI_API_KEY;
     if (!apiKey) return res.json({ success: true, reply: 'Hi! Thanks for reaching out to CadenceWave. Please send us an email at cadencewave.io and we will get back to you soon.' });
 
+    const bookingUrl  = process.env.BOOKING_URL || 'https://cadencewave.io';
     const systemPrompt = `You are BAO, CadenceWave's AI assistant on the website cadencewave.io.
 CadenceWave is a digital transformation & agile consultancy.
 Your role: answer questions about CadenceWave services, help visitors understand how we can help them, and encourage them to fill out the contact form or schedule a discovery call.
 Services we offer: Agile transformation, Digital Transformation, Agile Coaching, PI Planning, DevOps, Scrum training, team performance improvement.
 Always be friendly, concise, and professional. Detect the visitor's language and respond in the same language.
 If asked about pricing, say "We provide custom quotes based on your needs — fill out our contact form and we'll get back to you within 24h."
-If asked about availability, invite them to schedule a free 30-min discovery call at cadencewave.io.
+If someone wants to schedule a meeting, call, demo, or appointment, provide this booking link: ${bookingUrl}
+If asked about availability, invite them to schedule a free 30-min discovery call using: ${bookingUrl}
 Keep replies under 120 words.`;
 
     const messages = [
