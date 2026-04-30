@@ -1,4 +1,4 @@
-// Lead Capture Agent Dashboard — Cadence Wave
+// Lead Capture Agent Dashboard — CadenceWave
 class LeadCaptureAgent {
     constructor() {
         this.apiBase = window.location.origin + '/api';

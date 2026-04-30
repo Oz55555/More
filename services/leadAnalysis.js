@@ -198,7 +198,7 @@ Scoring guide: 70-100=hot(clear need+company email), 40-69=warm(exploratory), 20
   async generateEmailWithAI(name, message, leadAnalysis, lang) {
     const firstName = name.split(' ')[0];
     const interests = (leadAnalysis?.interestAreas || []).join(', ') || 'digital transformation';
-    const prompt = `You are a representative of Cadence Wave (cadencewave.io), a digital transformation consultancy.
+    const prompt = `You are a representative of CadenceWave (cadencewave.io), a digital transformation consultancy.
 Detect the language of the client's message and write the entire email in that SAME language.
 Write a personalized outreach email to this contact form lead. Use their REAL name throughout the email.
 

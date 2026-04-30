@@ -258,7 +258,7 @@ class EmailService {
       const { data, error } = await resend.emails.send({
         from: `${this.fromName} <${this.fromEmail}>`,
         to: this.fromEmail,
-        subject: 'Cadence Wave — Connection Test',
+        subject: 'CadenceWave — Connection Test',
         text: 'Email service is working.'
       });
       if (error) return { success: false, message: error.message };
