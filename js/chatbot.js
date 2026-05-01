@@ -30,6 +30,15 @@
         history.forEach(m => appendMessage(m.role === 'user' ? 'user' : 'bot', m.content, false));
       } catch (_) { history = []; }
     }
+    // Proactive greeting after 18 s if chat not yet opened
+    setTimeout(function () {
+      if (!isOpen && history.length === 0) openChat();
+    }, 18000);
+    // "Book a Free Call" buttons open BAO chat
+    document.addEventListener('click', function (e) {
+      const btn = e.target.closest('#hero-book-btn, #contact-book-btn');
+      if (btn) { e.preventDefault(); if (!isOpen) openChat(); }
+    });
   }
 
   function injectStyles() {
