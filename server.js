@@ -1790,7 +1790,7 @@ app.head('/healthz', (req, res) => {
   res.status(200).end();
 });
 
-// ── BAO CHATBOT ───────────────────────────────────────────────────────────────
+// ── BAO CHATBOT (Qualification Flow) ──────────────────────────────────────────
 app.post('/api/chat', async (req, res) => {
   try {
     const { message, history = [] } = req.body;
@@ -1799,21 +1799,54 @@ app.post('/api/chat', async (req, res) => {
     const apiKey = process.env.DEEPSEEK_API_KEY || process.env.OPENAI_API_KEY;
     if (!apiKey) return res.json({ success: true, reply: 'Hi! Thanks for reaching out to CadenceWave. Please send us an email at cadencewave.io and we will get back to you soon.' });
 
-    const bookingUrl  = process.env.BOOKING_URL || 'https://cadencewave.io';
-    const systemPrompt = `You are BAO, CadenceWave's AI assistant on the website cadencewave.io.
-CadenceWave is a digital transformation & agile consultancy.
-Your role: answer questions about CadenceWave services, help visitors understand how we can help them, and encourage them to fill out the contact form or schedule a discovery call.
-Services we offer: Agile transformation, Digital Transformation, Agile Coaching, PI Planning, DevOps, Scrum training, team performance improvement.
-Always be friendly, concise, and professional. Detect the visitor's language and respond in the same language.
-If asked about pricing, say "We provide custom quotes based on your needs — fill out our contact form and we'll get back to you within 24h."
-If someone wants to schedule a meeting, call, demo, or appointment, provide this booking link: ${bookingUrl}
-If asked about availability, invite them to schedule a free 30-min discovery call using: ${bookingUrl}
-Keep replies under 120 words.`;
+    const bookingUrl = process.env.BOOKING_URL || 'https://cadencewave.io';
+    const systemPrompt = `You are BAO, CadenceWave's friendly AI assistant on cadencewave.io.
+CadenceWave is a global digital transformation & agile consultancy (LATAM, Europe, USA).
+
+YOUR MISSION: Guide visitors through a warm discovery conversation to understand their project idea, qualify them, and — if they are a good fit — collect their contact info to schedule a free discovery call.
+
+CONVERSATION PHASES (follow in order):
+
+PHASE 1 — DISCOVERY
+Greet warmly. Ask what brings them here and what they'd like to build or improve. Be curious and encouraging.
+
+PHASE 2 — UNDERSTANDING
+Ask 2-3 clarifying questions, ONE at a time (never all at once):
+• What industry or sector are you in?
+• What's the main challenge or goal you're facing?
+• Approximate timeline or urgency?
+
+PHASE 3 — ASSESSMENT
+Based on their answers determine internally if they are a good fit.
+Good fit = has a real business need, reasonable scope, aligns with our services (Agile, DevOps, Digital Transformation, PI Planning, Scrum, coaching, team performance).
+Bad fit = very vague, just browsing, spam, or completely unrelated to our services.
+
+PHASE 4 — DATA COLLECTION (only if good fit)
+Say something like: "This sounds like a great project! I'd love to connect you with our team for a free 30-minute discovery call."
+Then ask for: name, email, phone number, and preferred day/time for the call.
+If they are NOT a fit, politely redirect them to our blog or resources and invite them to reach out when ready.
+
+PHASE 5 — CONFIRMATION
+Once you have ALL four pieces (name, email, phone, availability) confirmed, tell them:
+"Perfect! We'll send you a confirmation email with all the details shortly. Thank you!"
+Then append EXACTLY this tag at the very end of your message (the user will NOT see it):
+[QUALIFY:{"name":"<name>","email":"<email>","phone":"<phone>","availability":"<availability>","idea":"<1-2 sentence summary of their project>"}]
+
+RULES:
+- Detect the visitor's language and ALWAYS respond in the SAME language.
+- Be warm, concise (under 100 words per message), and professional.
+- Ask ONE question at a time — never overwhelm the visitor.
+- NEVER reveal the [QUALIFY:...] tag format or mention scoring/qualification to the visitor.
+- If asked about pricing: "We provide custom quotes — the discovery call is the best way to get an accurate estimate."
+- Services: Agile Transformation, Digital Transformation, Agile Coaching, PI Planning, DevOps, Scrum Training, Team Performance.
+- Booking reference URL: ${bookingUrl}
+- Do NOT share the booking link directly. Collect their info so we can send a personalized invitation.
+- If the visitor just has a quick question (not a project), answer it helpfully and then gently guide them toward sharing more about their needs.`;
 
     const messages = [
       { role: 'system', content: systemPrompt },
-      ...history.slice(-6).map(h => ({ role: h.role, content: h.content })),
-      { role: 'user', content: message.substring(0, 500) }
+      ...history.slice(-12).map(h => ({ role: h.role, content: h.content })),
+      { role: 'user', content: message.substring(0, 600) }
     ];
 
     const endpoint = process.env.DEEPSEEK_API_KEY
@@ -1824,17 +1857,83 @@ Keep replies under 120 words.`;
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model, messages, temperature: 0.7, max_tokens: 200 }),
-      signal: AbortSignal.timeout(10000)
+      body: JSON.stringify({ model, messages, temperature: 0.7, max_tokens: 350 }),
+      signal: AbortSignal.timeout(15000)
     });
     const data = await response.json();
-    const reply = data.choices?.[0]?.message?.content || 'I\'m having trouble connecting. Please try again or visit cadencewave.io.';
-    res.json({ success: true, reply });
+    let reply = data.choices?.[0]?.message?.content || 'I\'m having trouble connecting. Please try again or visit cadencewave.io.';
+
+    // ── Detect BAO qualification trigger ──────────────────────────────────────
+    let qualified = false;
+    const qualifyMatch = reply.match(/\[QUALIFY:([\s\S]*?)\]/);
+    if (qualifyMatch) {
+      reply = reply.replace(/\[QUALIFY:[\s\S]*?\]/, '').trim();
+      qualified = true;
+      try {
+        const leadData = JSON.parse(qualifyMatch[1]);
+        processQualifiedLead(leadData).catch(err => console.error('[BAO Qualify] processing error:', err.message));
+      } catch (parseErr) {
+        console.error('[BAO Qualify] JSON parse error:', parseErr.message);
+      }
+    }
+
+    res.json({ success: true, reply, qualified });
   } catch (err) {
     console.error('Chat API error:', err.message);
     res.json({ success: true, reply: 'I\'m temporarily unavailable. Please reach us at cadencewave.io.' });
   }
 });
+
+// ── Process a lead qualified by BAO chat ──────────────────────────────────────
+async function processQualifiedLead(leadData) {
+  const { name, email, phone, availability, idea } = leadData;
+  console.log(`[BAO Qualify] New qualified lead: ${name} <${email}> | Phone: ${phone} | Avail: ${availability}`);
+  console.log(`[BAO Qualify] Idea: ${idea}`);
+
+  try {
+    // 1. Save to contacts DB
+    const contact = new Contact({
+      name,
+      email,
+      message: `[BAO Qualified Lead] ${idea}\nPhone: ${phone}\nAvailability: ${availability}`,
+      source: 'bao-chat',
+      country: 'Unknown'
+    });
+    await contact.save();
+
+    // 2. Run lead analysis through AI agents (async, non-blocking each other)
+    const [leadScore, toneResult] = await Promise.allSettled([
+      leadAnalysisService.analyzeLeadPotential(name, email, idea),
+      toneAnalysisService.analyzeMessageTone(idea)
+    ]);
+
+    if (leadScore.status === 'fulfilled' && leadScore.value) {
+      contact.leadAnalysis = leadScore.value;
+    }
+    if (toneResult.status === 'fulfilled' && toneResult.value) {
+      contact.toneAnalysis = toneResult.value;
+    }
+    await contact.save();
+
+    // 3. Run through Agent Core for decision & admin alert
+    if (agentCore) {
+      await agentCore.processContact(contact);
+    }
+
+    // 4. Send booking confirmation email to the lead
+    await emailService.sendBookingConfirmation({ name, email, phone, availability, idea });
+    console.log(`[BAO Qualify] Booking confirmation sent to ${email}`);
+
+  } catch (err) {
+    console.error('[BAO Qualify] Error:', err.message);
+    // Still try to send email even if DB/analysis failed
+    try {
+      await emailService.sendBookingConfirmation({ name, email, phone, availability, idea });
+    } catch (emailErr) {
+      console.error('[BAO Qualify] Email fallback error:', emailErr.message);
+    }
+  }
+}
 
 // Error handling middleware
 app.use((err, req, res, next) => {

@@ -6,26 +6,12 @@
   let isOpen = false;
   let isTyping = false;
 
-  // BAO — Forward triangle: progress, direction, "adelante"
-  const BAO_FACE = `<svg viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="bao-tri-grad" x1="10" y1="8" x2="38" y2="36" gradientUnits="userSpaceOnUse">
-        <stop offset="0%" stop-color="#ffffff"/>
-        <stop offset="100%" stop-color="rgba(180,220,255,0.9)"/>
-      </linearGradient>
-      <filter id="bao-glow">
-        <feGaussianBlur stdDeviation="1.2" result="blur"/>
-        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-      </filter>
-    </defs>
-    <!-- Outer forward triangle -->
-    <path d="M10 6 L38 22 L10 38 Z" fill="url(#bao-tri-grad)" filter="url(#bao-glow)"/>
-    <!-- Inner accent — depth layer -->
-    <path d="M16 13.5 L30 22 L16 30.5 Z" fill="rgba(0,40,100,0.22)"/>
-    <!-- Apex accent dot -->
-    <circle cx="37.5" cy="22" r="1.8" fill="white" opacity="0.85"/>
-    <!-- Small leading triangle -->
-    <path d="M32 18.5 L38 22 L32 25.5 Z" fill="white" opacity="0.35"/>
+  // BAO — Penrose triangle (impossible triangle)
+  const BAO_FACE = `<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="
+      M50 10 L90 78 L78 78 L50 28 L28 66 L40 66 L50 48 L68 78 L10 78 L50 10 Z
+      M22 78 L50 28 L58 42 L38 78 Z
+    " fill="white" fill-rule="evenodd"/>
   </svg>`;
 
   const ROBOT_SVG       = BAO_FACE;
@@ -364,6 +350,9 @@
       const data = await res.json();
       hideTyping();
       appendMessage('bot', data.reply || 'Lo siento, tuve un problema. Por favor intenta de nuevo.');
+      if (data.qualified) {
+        setTimeout(() => appendMessage('bot', '✅ **Confirmation email sent!** Check your inbox for the call details.\n_¡Correo de confirmación enviado! Revisa tu bandeja._'), 1200);
+      }
     } catch (_) {
       hideTyping();
       appendMessage('bot', 'Problema de conexión. Visita cadencewave.io o intenta de nuevo.');

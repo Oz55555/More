@@ -252,6 +252,48 @@ class EmailService {
     console.log(`[AgentCore] Admin alert sent for ${contact.email} (${qualification} ${score}/100)`);
   }
 
+  async sendBookingConfirmation({ name, email, phone, availability, idea }) {
+    const fromEmail = (process.env.EMAIL_FROM || '').trim();
+    if (!fromEmail) return;
+    const resend = this.getResend();
+    const firstName = name.split(' ')[0];
+    const bookingUrl = process.env.BOOKING_URL || 'https://cadencewave.io';
+
+    const subject = `${firstName}, your CadenceWave discovery call is confirmed ✓`;
+
+    const bodyText = `Hi ${firstName},\n\nThank you for chatting with BAO! We're excited about your project.\n\nHere are your call details:\n- Idea: ${idea}\n- Preferred time: ${availability}\n- Phone: ${phone}\n\nPlease confirm your slot using this link:\n${bookingUrl}\n\nIf you need to reschedule, just reply to this email.\n\nBest regards,\nCadenceWave Team`;
+
+    const bodyHtml = `
+      <p>Hi <strong>${firstName}</strong>,</p>
+      <p>Thank you for chatting with BAO! We're excited to learn more about your project.</p>
+      <div style="background:#f0f7ff;border-left:4px solid #0057a8;padding:14px 18px;border-radius:6px;margin:18px 0;">
+        <p style="margin:0 0 6px;font-weight:600;color:#0057a8;">Your Discovery Call Details</p>
+        <table style="font-size:14px;color:#374151;" cellpadding="4" cellspacing="0">
+          <tr><td style="font-weight:600;">Project:</td><td>${idea}</td></tr>
+          <tr><td style="font-weight:600;">Preferred time:</td><td>${availability}</td></tr>
+          <tr><td style="font-weight:600;">Phone:</td><td>${phone}</td></tr>
+          <tr><td style="font-weight:600;">Duration:</td><td>30 minutes (free)</td></tr>
+        </table>
+      </div>
+      <p style="margin-top:20px;">
+        <a href="${bookingUrl}" style="background:#0057a8;color:white;padding:12px 24px;text-decoration:none;border-radius:6px;display:inline-block;font-weight:600;font-size:14px;">📅 Confirm Your Slot</a>
+      </p>
+      <p style="font-size:13px;color:#6b7280;margin-top:16px;">If you need to reschedule, just reply to this email. We're happy to accommodate.</p>
+      <p>Best regards,<br><strong>CadenceWave Team</strong></p>`;
+
+    const { error } = await resend.emails.send({
+      from: `${this.fromName} <${fromEmail}>`,
+      to: email,
+      reply_to: fromEmail,
+      subject,
+      text: bodyText,
+      html: this.buildHtmlEmail(bodyHtml, name),
+      headers: { 'X-Priority': '1', 'Importance': 'high', 'Precedence': 'personal' }
+    });
+    if (error) throw new Error(`Booking confirmation email error: ${error.message}`);
+    console.log(`[BAO] Booking confirmation sent to ${email}`);
+  }
+
   async verifyConnection() {
     try {
       const resend = this.getResend();
