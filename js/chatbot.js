@@ -6,12 +6,36 @@
   let isOpen = false;
   let isTyping = false;
 
-  // BAO — Penrose triangle (impossible triangle)
-  const BAO_FACE = `<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="
-      M50 10 L90 78 L78 78 L50 28 L28 66 L40 66 L50 48 L68 78 L10 78 L50 10 Z
-      M22 78 L50 28 L58 42 L38 78 Z
-    " fill="white" fill-rule="evenodd"/>
+  // BAO — Blue metallic Penrose triangle
+  const BAO_FACE = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="baoL" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#a8d4ff"/>
+        <stop offset="50%" stop-color="#2b7cd4"/>
+        <stop offset="100%" stop-color="#0a3d7a"/>
+      </linearGradient>
+      <linearGradient id="baoR" x1="0" y1="0" x2="1" y2="0.5">
+        <stop offset="0%" stop-color="#1a5faa"/>
+        <stop offset="50%" stop-color="#3b9aee"/>
+        <stop offset="100%" stop-color="#0e4a8e"/>
+      </linearGradient>
+      <linearGradient id="baoB" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="#0d3b72"/>
+        <stop offset="50%" stop-color="#1565b8"/>
+        <stop offset="100%" stop-color="#0a3060"/>
+      </linearGradient>
+      <linearGradient id="baoH" x1="0" y1="0" x2="0.5" y2="1">
+        <stop offset="0%" stop-color="#cce4ff"/>
+        <stop offset="100%" stop-color="#4da6ff"/>
+      </linearGradient>
+    </defs>
+    <polygon points="50,8 30,42 38,42 50,22 74,64 66,64" fill="url(#baoL)"/>
+    <polygon points="74,64 66,64 50,42 58,42 90,82 82,82" fill="url(#baoR)"/>
+    <polygon points="90,82 10,82 18,82 26,68 34,82 82,82" fill="url(#baoB)"/>
+    <polygon points="10,82 50,8 58,22 26,78 18,78" fill="url(#baoL)"/>
+    <polygon points="26,78 34,78 58,34 50,22 26,68" fill="url(#baoH)"/>
+    <polygon points="34,78 82,78 74,64 42,64" fill="url(#baoR)"/>
+    <polygon points="50,42 42,56 34,56 26,68 34,82 42,68 58,42" fill="#0b3566" opacity="0.55"/>
   </svg>`;
 
   const ROBOT_SVG       = BAO_FACE;
@@ -45,7 +69,7 @@
       #bao-bubble {
         position:fixed; bottom:28px; right:28px; z-index:9999; cursor:pointer;
         width:60px; height:60px; border-radius:50%;
-        background:linear-gradient(145deg,#0066cc,#1e3a8a);
+        background:linear-gradient(145deg,#0a1628,#121e33);
         box-shadow:0 6px 24px rgba(0,83,155,.45), 0 2px 8px rgba(0,0,0,.2);
         display:flex; align-items:center; justify-content:center;
         transition:transform .25s cubic-bezier(.34,1.56,.64,1), box-shadow .25s;
@@ -56,7 +80,7 @@
         50%{ box-shadow:0 6px 24px rgba(0,83,155,.45),0 0 0 10px rgba(0,102,204,0); }
       }
       #bao-bubble:hover { transform:scale(1.12); box-shadow:0 10px 30px rgba(0,83,155,.55); animation:none; }
-      #bao-bubble svg { width:34px; height:34px; color:white; }
+      #bao-bubble svg { width:38px; height:38px; }
       #bao-badge {
         position:absolute; top:-3px; right:-3px; background:#ef4444; color:#fff;
         font-size:10px; font-weight:800; border-radius:50%; width:20px; height:20px;
@@ -92,8 +116,8 @@
       }
       #bao-avatar {
         width:42px; height:42px; border-radius:50%;
-        background:rgba(255,255,255,.15); backdrop-filter:blur(4px);
-        border:2px solid rgba(255,255,255,.3);
+        background:rgba(10,22,40,.85); backdrop-filter:blur(4px);
+        border:2px solid rgba(100,180,255,.3);
         display:flex; align-items:center; justify-content:center; flex-shrink:0;
       }
       #bao-avatar svg { width:28px; height:28px; }
