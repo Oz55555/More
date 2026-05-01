@@ -6,14 +6,26 @@
   let isOpen = false;
   let isTyping = false;
 
-  // BAO — 4-pointed sparkle (trending AI iconography: ChatGPT / Gemini / Copilot style)
+  // BAO — Forward triangle: progress, direction, "adelante"
   const BAO_FACE = `<svg viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <!-- Main sparkle star -->
-    <path d="M22 3 L26.4 17.6 L41 22 L26.4 26.4 L22 41 L17.6 26.4 L3 22 L17.6 17.6 Z"
-          fill="white"/>
-    <!-- Small accent sparkle (upper-right) -->
-    <path d="M37 5 L38.2 8.8 L42 10 L38.2 11.2 L37 15 L35.8 11.2 L32 10 L35.8 8.8 Z"
-          fill="white" opacity="0.6"/>
+    <defs>
+      <linearGradient id="bao-tri-grad" x1="10" y1="8" x2="38" y2="36" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#ffffff"/>
+        <stop offset="100%" stop-color="rgba(180,220,255,0.9)"/>
+      </linearGradient>
+      <filter id="bao-glow">
+        <feGaussianBlur stdDeviation="1.2" result="blur"/>
+        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+    <!-- Outer forward triangle -->
+    <path d="M10 6 L38 22 L10 38 Z" fill="url(#bao-tri-grad)" filter="url(#bao-glow)"/>
+    <!-- Inner accent — depth layer -->
+    <path d="M16 13.5 L30 22 L16 30.5 Z" fill="rgba(0,40,100,0.22)"/>
+    <!-- Apex accent dot -->
+    <circle cx="37.5" cy="22" r="1.8" fill="white" opacity="0.85"/>
+    <!-- Small leading triangle -->
+    <path d="M32 18.5 L38 22 L32 25.5 Z" fill="white" opacity="0.35"/>
   </svg>`;
 
   const ROBOT_SVG       = BAO_FACE;
