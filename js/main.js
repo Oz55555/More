@@ -181,7 +181,7 @@ const projects = [
     {
         title: 'Healthcare AI Platform - US Medical Research Institute',
         description: 'Implemented SAFe framework for AI-driven diagnostic platform development. Established cross-functional ARTs integrating data scientists, medical experts, and software engineers for FDA-compliant solutions.',
-        image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=480&h=320&fit=crop&fm=webp&q=75',
+        image: 'https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?w=480&h=320&fit=crop&fm=webp&q=75',
         tags: ['Healthcare AI', 'FDA Compliance', 'Cross-functional', 'Research'],
         metrics: 'FDA approval • 85% diagnostic accuracy • 6-month delivery',
         outcome: 'First AI diagnostic tool approved for clinical use'
