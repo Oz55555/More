@@ -6,36 +6,31 @@
   let isOpen = false;
   let isTyping = false;
 
-  // BAO — Blue metallic Penrose triangle
+  // BAO — Blue metallic Penrose triangle (impossible triangle)
   const BAO_FACE = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
     <defs>
-      <linearGradient id="baoL" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#a8d4ff"/>
-        <stop offset="50%" stop-color="#2b7cd4"/>
-        <stop offset="100%" stop-color="#0a3d7a"/>
+      <linearGradient id="pL" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#b0d8ff"/><stop offset="100%" stop-color="#1a5faa"/>
       </linearGradient>
-      <linearGradient id="baoR" x1="0" y1="0" x2="1" y2="0.5">
-        <stop offset="0%" stop-color="#1a5faa"/>
-        <stop offset="50%" stop-color="#3b9aee"/>
-        <stop offset="100%" stop-color="#0e4a8e"/>
+      <linearGradient id="pR" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#3091e6"/><stop offset="100%" stop-color="#0c3a6e"/>
       </linearGradient>
-      <linearGradient id="baoB" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0%" stop-color="#0d3b72"/>
-        <stop offset="50%" stop-color="#1565b8"/>
-        <stop offset="100%" stop-color="#0a3060"/>
-      </linearGradient>
-      <linearGradient id="baoH" x1="0" y1="0" x2="0.5" y2="1">
-        <stop offset="0%" stop-color="#cce4ff"/>
-        <stop offset="100%" stop-color="#4da6ff"/>
+      <linearGradient id="pB" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="#0e4080"/><stop offset="100%" stop-color="#1b6ec2"/>
       </linearGradient>
     </defs>
-    <polygon points="50,8 30,42 38,42 50,22 74,64 66,64" fill="url(#baoL)"/>
-    <polygon points="74,64 66,64 50,42 58,42 90,82 82,82" fill="url(#baoR)"/>
-    <polygon points="90,82 10,82 18,82 26,68 34,82 82,82" fill="url(#baoB)"/>
-    <polygon points="10,82 50,8 58,22 26,78 18,78" fill="url(#baoL)"/>
-    <polygon points="26,78 34,78 58,34 50,22 26,68" fill="url(#baoH)"/>
-    <polygon points="34,78 82,78 74,64 42,64" fill="url(#baoR)"/>
-    <polygon points="50,42 42,56 34,56 26,68 34,82 42,68 58,42" fill="#0b3566" opacity="0.55"/>
+    <!-- Left bar (top-left to bottom-left) — light face -->
+    <polygon points="50,5 17,85 28,85 50,22" fill="url(#pL)"/>
+    <!-- Right bar (top-right to bottom-right) — medium face -->
+    <polygon points="50,5 83,85 72,85 50,22" fill="url(#pR)"/>
+    <!-- Bottom bar (bottom-left to bottom-right) — dark face -->
+    <polygon points="17,85 83,85 78,75 22,75" fill="url(#pB)"/>
+    <!-- Impossible overlap: left bar passes OVER right bar at bottom-right -->
+    <polygon points="72,85 83,85 78,75 67,75" fill="url(#pL)"/>
+    <!-- Impossible overlap: bottom bar passes OVER left bar at top-left -->
+    <polygon points="17,85 28,85 38,68 22,75" fill="url(#pR)"/>
+    <!-- Inner triangle hole -->
+    <polygon points="50,35 33,75 67,75" fill="#0a1628"/>
   </svg>`;
 
   const ROBOT_SVG       = BAO_FACE;
