@@ -1218,7 +1218,7 @@ app.post('/api/admin/reanalyze/:messageId', requireAuth, async (req, res) => {
 app.get('/api/admin/leads', requireAuth, async (req, res) => {
   try {
     const { qualification, emailSent, limit = 100 } = req.query;
-    const query = {};
+    const query = { source: { $ne: 'bao-chat' } };
     if (qualification && qualification !== 'all') {
       query['leadAnalysis.qualification'] = qualification;
     }
@@ -1239,7 +1239,7 @@ app.get('/api/admin/leads', requireAuth, async (req, res) => {
 // Get lead statistics summary
 app.get('/api/admin/leads/stats', requireAuth, async (req, res) => {
   try {
-    const all = await Contact.find({}).sort({ submittedAt: -1 });
+    const all = await Contact.find({ source: { $ne: 'bao-chat' } }).sort({ submittedAt: -1 });
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -1266,6 +1266,25 @@ app.get('/api/admin/leads/stats', requireAuth, async (req, res) => {
   } catch (error) {
     console.error('Lead stats error:', error);
     res.status(500).json({ success: false, message: 'Error fetching lead stats' });
+  }
+});
+
+// ── BAO Qualified Leads ───────────────────────────────────────────────────────
+app.get('/api/admin/bao-leads', requireAuth, async (req, res) => {
+  try {
+    const leads = await Contact.find({ source: 'bao-chat' }).sort({ submittedAt: -1 });
+    const stats = {
+      total: leads.length,
+      thisWeek: leads.filter(c => new Date(c.submittedAt) >= new Date(Date.now() - 7 * 86400000)).length,
+      hot: leads.filter(c => c.leadAnalysis?.qualification === 'hot').length,
+      warm: leads.filter(c => c.leadAnalysis?.qualification === 'warm').length,
+      cold: leads.filter(c => ['cold','not_qualified'].includes(c.leadAnalysis?.qualification) || !c.leadAnalysis?.qualification).length,
+      emailsSent: leads.filter(c => c.emailStatus?.sent).length
+    };
+    res.json({ success: true, data: leads, stats });
+  } catch (error) {
+    console.error('BAO leads error:', error);
+    res.status(500).json({ success: false, message: 'Error fetching BAO leads' });
   }
 });
 
@@ -1896,8 +1915,7 @@ async function processQualifiedLead(leadData) {
       name,
       email,
       message: `[BAO Qualified Lead] ${idea}\nPhone: ${phone}\nAvailability: ${availability}`,
-      source: 'bao-chat',
-      country: 'Unknown'
+      source: 'bao-chat'
     });
     await contact.save();
 

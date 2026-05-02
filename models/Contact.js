@@ -88,6 +88,11 @@ const contactSchema = new mongoose.Schema({
     messageId: { type: String, default: null },
     subject: { type: String, default: null }
   },
+  source: {
+    type: String,
+    enum: ['contact-form', 'bao-chat'],
+    default: 'contact-form'
+  },
   flaggedAsHighRisk: { type: Boolean, default: false },
   flaggedAt: { type: Date, default: null }
 });

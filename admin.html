@@ -175,7 +175,84 @@
                 </div>
             </section>
 
-            <!-- â”€â”€ SECONDARY: Token Usage â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+            <!-- ── BAO QUALIFIED LEADS ──────────────────────────────────────────────── -->
+            <section class="bao-leads-section">
+                <div class="section-header">
+                    <div class="section-title-group">
+                        <h2><i class="fas fa-robot"></i> BAO — Leads Cualificados</h2>
+                        <span class="agent-badge bao-badge">Chat IA</span>
+                    </div>
+                    <div class="lead-controls">
+                        <button id="refreshBaoBtn" class="btn btn-primary btn-sm">
+                            <i class="fas fa-sync-alt"></i> Actualizar
+                        </button>
+                        <button id="exportBaoBtn" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-download"></i> Exportar CSV
+                        </button>
+                    </div>
+                </div>
+
+                <!-- BAO Stats -->
+                <div class="bao-stats-row">
+                    <div class="bao-stat-card">
+                        <i class="fas fa-comments"></i>
+                        <div><h3 id="baoStatTotal">0</h3><p>Captados</p></div>
+                    </div>
+                    <div class="bao-stat-card">
+                        <i class="fas fa-calendar-week"></i>
+                        <div><h3 id="baoStatWeek">0</h3><p>Esta Semana</p></div>
+                    </div>
+                    <div class="bao-stat-card hot">
+                        <i class="fas fa-fire"></i>
+                        <div><h3 id="baoStatHot">0</h3><p>Hot</p></div>
+                    </div>
+                    <div class="bao-stat-card warm">
+                        <i class="fas fa-temperature-half"></i>
+                        <div><h3 id="baoStatWarm">0</h3><p>Warm</p></div>
+                    </div>
+                    <div class="bao-stat-card">
+                        <i class="fas fa-envelope-circle-check"></i>
+                        <div><h3 id="baoStatEmails">0</h3><p>Emails</p></div>
+                    </div>
+                </div>
+
+                <!-- BAO Filters -->
+                <div class="lead-filters bao-filters">
+                    <button class="filter-btn active" data-bao-filter="all">Todos</button>
+                    <button class="filter-btn" data-bao-filter="hot">&#x1F525; Hot</button>
+                    <button class="filter-btn" data-bao-filter="warm">&#x1F321; Warm</button>
+                    <button class="filter-btn" data-bao-filter="cold">&#x2744; Cold</button>
+                    <input type="text" id="baoLeadSearch" placeholder="Buscar por nombre o email..." class="lead-search">
+                </div>
+
+                <!-- BAO Leads Table -->
+                <div class="table-container">
+                    <table id="baoLeadsTable">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Contacto</th>
+                                <th>Idea / Proyecto</th>
+                                <th>Teléfono</th>
+                                <th>Disponibilidad</th>
+                                <th>Score</th>
+                                <th>Calificación</th>
+                                <th>Email Status</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="baoLeadsTableBody">
+                            <tr>
+                                <td colspan="9" class="loading">
+                                    <i class="fas fa-spinner fa-spin"></i> Cargando leads de BAO...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ── SECONDARY: Token Usage â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
             <details class="collapsible-section">
                 <summary><i class="fas fa-coins"></i> DeepSeek API Usage <span class="collapse-badge" id="tokenBadge">&mdash;</span></summary>
                 <div class="collapsible-body">

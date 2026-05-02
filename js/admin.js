@@ -5,6 +5,9 @@ class LeadCaptureAgent {
         this.leads = [];
         this.filteredLeads = [];
         this.currentFilter = 'all';
+        this.baoLeads = [];
+        this.filteredBaoLeads = [];
+        this.baoFilter = 'all';
         this.currentLeadId = null;
         this.charts = {};
         this.stats = {};
@@ -14,6 +17,7 @@ class LeadCaptureAgent {
     async init() {
         this.bindEvents();
         await this.loadLeads();
+        await this.loadBaoLeads();
         await this.loadTokenStats();
         this.renderCharts();
     }
@@ -26,16 +30,18 @@ class LeadCaptureAgent {
             if (el) el.addEventListener(event, fn.bind(this));
         };
 
-        bind('refreshBtn', 'click', async () => { await this.loadLeads(); await this.loadTokenStats(); });
+        bind('refreshBtn', 'click', async () => { await this.loadLeads(); await this.loadBaoLeads(); await this.loadTokenStats(); });
+        bind('refreshBaoBtn', 'click', async () => { await this.loadBaoLeads(); });
+        bind('exportBaoBtn', 'click', this.exportBaoCSV);
         bind('logoutBtn', 'click', this.logout);
         bind('rescoreAllBtn', 'click', this.rescoreAll);
         bind('exportLeadsBtn', 'click', this.exportCSV);
         bind('emailStatusBtn', 'click', this.checkEmailStatus);
 
-        // Filter buttons
-        document.querySelectorAll('.filter-btn').forEach(btn => {
+        // Filter buttons (main leads — scoped to [data-filter])
+        document.querySelectorAll('[data-filter]').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('[data-filter]').forEach(b => b.classList.remove('active'));
                 e.target.classList.add('active');
                 this.currentFilter = e.target.dataset.filter;
                 this.applyFilter();
@@ -45,6 +51,18 @@ class LeadCaptureAgent {
         // Search
         const search = document.getElementById('leadSearch');
         if (search) search.addEventListener('input', () => this.applyFilter());
+
+        // BAO filter buttons
+        document.querySelectorAll('[data-bao-filter]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('[data-bao-filter]').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                this.baoFilter = e.target.dataset.baoFilter;
+                this.applyBaoFilter();
+            });
+        });
+        const baoSearch = document.getElementById('baoLeadSearch');
+        if (baoSearch) baoSearch.addEventListener('input', () => this.applyBaoFilter());
 
         // Modal close buttons
         bind('closeLeadModal', 'click', this.closeModal);
@@ -92,6 +110,145 @@ class LeadCaptureAgent {
         } catch (err) {
             console.error('Token stats error:', err);
         }
+    }
+
+    // ── BAO LEADS ─────────────────────────────────────────────────────────────
+
+    async loadBaoLeads() {
+        const tbody = document.getElementById('baoLeadsTableBody');
+        if (tbody) tbody.innerHTML = `<tr><td colspan="9" class="loading"><i class="fas fa-spinner fa-spin"></i> Cargando leads de BAO...</td></tr>`;
+        try {
+            const data = await this.apiFetch('/admin/bao-leads');
+            if (!data) return;
+            this.baoLeads = data.data || [];
+            this.baoStats = data.stats || {};
+            this.renderBaoStats();
+            this.applyBaoFilter();
+        } catch (err) {
+            console.error('Load BAO leads error:', err);
+            if (tbody) tbody.innerHTML = `<tr><td colspan="9" class="loading"><i class="fas fa-exclamation-triangle"></i> Error al cargar</td></tr>`;
+        }
+    }
+
+    renderBaoStats() {
+        const s = this.baoStats || {};
+        this.setText('baoStatTotal', s.total || 0);
+        this.setText('baoStatWeek', s.thisWeek || 0);
+        this.setText('baoStatHot', s.hot || 0);
+        this.setText('baoStatWarm', s.warm || 0);
+        this.setText('baoStatEmails', s.emailsSent || 0);
+    }
+
+    applyBaoFilter() {
+        const search = (document.getElementById('baoLeadSearch')?.value || '').toLowerCase();
+        const filter = this.baoFilter;
+
+        this.filteredBaoLeads = this.baoLeads.filter(l => {
+            const q = l.leadAnalysis?.qualification;
+            if (filter === 'hot' && q !== 'hot') return false;
+            if (filter === 'warm' && q !== 'warm') return false;
+            if (filter === 'cold' && !['cold', 'not_qualified', null, undefined].includes(q)) return false;
+            if (search) {
+                const nameMatch = (l.name || '').toLowerCase().includes(search);
+                const emailMatch = (l.email || '').toLowerCase().includes(search);
+                if (!nameMatch && !emailMatch) return false;
+            }
+            return true;
+        });
+
+        this.filteredBaoLeads.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
+        this.renderBaoTable();
+    }
+
+    renderBaoTable() {
+        const tbody = document.getElementById('baoLeadsTableBody');
+        if (!tbody) return;
+
+        if (this.filteredBaoLeads.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="9" class="loading"><i class="fas fa-robot"></i> Sin leads de BAO</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = this.filteredBaoLeads.map(l => {
+            const la = l.leadAnalysis || {};
+            const es = l.emailStatus || {};
+            const score = la.score ?? '—';
+            const qual = la.qualification || 'unknown';
+            const date = new Date(l.submittedAt).toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'2-digit', hour:'2-digit', minute:'2-digit' });
+
+            // Parse phone & availability from message
+            const msgLines = (l.message || '').split('\n');
+            const ideaLine = msgLines[0]?.replace('[BAO Qualified Lead] ', '') || '—';
+            const phoneLine = msgLines.find(m => m.startsWith('Phone:'))?.replace('Phone: ', '') || '—';
+            const availLine = msgLines.find(m => m.startsWith('Availability:'))?.replace('Availability: ', '') || '—';
+
+            const scoreClass = score >= 70 ? 'score-hot' : score >= 40 ? 'score-warm' : 'score-cold';
+            const qualLabel = { hot:'🔥 Hot', warm:'🌡 Warm', cold:'❄️ Cold', not_qualified:'— N/Q' }[qual] || '?';
+            const emailLabel = es.sent
+                ? `<span class="email-sent">✉️ Enviado</span>`
+                : `<span class="email-pending">⏳ Pendiente</span>`;
+
+            return `<tr class="${qual === 'hot' ? 'hot-row' : ''}">
+                <td class="date-cell">${date}</td>
+                <td>
+                    <div class="contact-cell">
+                        <strong>${this.esc(l.name)}</strong>
+                        <small><a href="mailto:${this.esc(l.email)}">${this.esc(l.email)}</a></small>
+                    </div>
+                </td>
+                <td class="msg-preview" title="${this.esc(ideaLine)}">${this.esc(ideaLine.substring(0, 60))}${ideaLine.length > 60 ? '…' : ''}</td>
+                <td>${this.esc(phoneLine)}</td>
+                <td>${this.esc(availLine)}</td>
+                <td><span class="score-badge ${scoreClass}">${score}</span></td>
+                <td><span class="qual-badge qual-${qual}">${qualLabel}</span></td>
+                <td>${emailLabel}</td>
+                <td class="actions-cell">
+                    <button class="btn-xs btn-view" data-id="${l._id}" title="Ver detalle"><i class="fas fa-eye"></i></button>
+                    <button class="btn-xs btn-delete" data-id="${l._id}" data-name="${this.esc(l.name)}" title="Eliminar"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>`;
+        }).join('');
+
+        tbody.querySelectorAll('.btn-view').forEach(b => b.addEventListener('click', () => this.openModal(b.dataset.id)));
+        tbody.querySelectorAll('.btn-delete').forEach(b => b.addEventListener('click', () => this.quickDeleteBao(b.dataset.id, b.dataset.name)));
+    }
+
+    async quickDeleteBao(id, name) {
+        const ok = await this.showConfirm('Eliminar lead BAO', `¿Eliminar el lead de <strong>${name}</strong>?`);
+        if (!ok) return;
+        try {
+            const data = await this.apiFetch(`/admin/contacts/${id}`, 'DELETE');
+            if (!data) return;
+            this.baoLeads = this.baoLeads.filter(l => l._id !== id);
+            this.applyBaoFilter();
+            this.toast(`🗑️ Lead BAO de ${name} eliminado`, 'success');
+        } catch (err) {
+            this.toast('Error al eliminar: ' + err.message, 'error');
+        }
+    }
+
+    exportBaoCSV() {
+        const headers = ['Fecha','Nombre','Email','Teléfono','Disponibilidad','Idea','Score','Calificación','Email Enviado'];
+        const rows = this.filteredBaoLeads.map(l => {
+            const la = l.leadAnalysis || {};
+            const msgLines = (l.message || '').split('\n');
+            const idea = msgLines[0]?.replace('[BAO Qualified Lead] ', '') || '';
+            const phone = msgLines.find(m => m.startsWith('Phone:'))?.replace('Phone: ', '') || '';
+            const avail = msgLines.find(m => m.startsWith('Availability:'))?.replace('Availability: ', '') || '';
+            return [
+                new Date(l.submittedAt).toLocaleDateString('es-ES'),
+                l.name, l.email, phone, avail,
+                `"${idea.replace(/"/g, '""')}"`,
+                la.score ?? '', la.qualification ?? '',
+                l.emailStatus?.sent ? 'Sí' : 'No'
+            ].join(',');
+        });
+        const csv = [headers.join(','), ...rows].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `cadencewave-bao-leads-${Date.now()}.csv`; a.click();
+        URL.revokeObjectURL(url);
     }
 
     // ── STATS RENDER ───────────────────────────────────────────────────────────
@@ -247,7 +404,7 @@ class LeadCaptureAgent {
     // ── MODAL ──────────────────────────────────────────────────────────────────
 
     openModal(id) {
-        const lead = this.leads.find(l => l._id === id);
+        const lead = this.leads.find(l => l._id === id) || this.baoLeads.find(l => l._id === id);
         if (!lead) return;
         this.currentLeadId = id;
         const la = lead.leadAnalysis || {};
