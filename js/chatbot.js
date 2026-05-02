@@ -6,7 +6,7 @@
   let isOpen = false;
   let isTyping = false;
 
-  // BAO — Blue metallic Penrose triangle (impossible triangle)
+  // BAO — Blue metallic Penrose triangle (equilateral, impossible triangle)
   const BAO_FACE = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <linearGradient id="pL" x1="0" y1="0" x2="0" y2="1">
@@ -19,18 +19,18 @@
         <stop offset="0%" stop-color="#0e4080"/><stop offset="100%" stop-color="#1b6ec2"/>
       </linearGradient>
     </defs>
-    <!-- Left bar (top-left to bottom-left) — light face -->
-    <polygon points="50,5 17,85 28,85 50,22" fill="url(#pL)"/>
-    <!-- Right bar (top-right to bottom-right) — medium face -->
-    <polygon points="50,5 83,85 72,85 50,22" fill="url(#pR)"/>
-    <!-- Bottom bar (bottom-left to bottom-right) — dark face -->
-    <polygon points="17,85 83,85 78,75 22,75" fill="url(#pB)"/>
-    <!-- Impossible overlap: left bar passes OVER right bar at bottom-right -->
-    <polygon points="72,85 83,85 78,75 67,75" fill="url(#pL)"/>
-    <!-- Impossible overlap: bottom bar passes OVER left bar at top-left -->
-    <polygon points="17,85 28,85 38,68 22,75" fill="url(#pR)"/>
+    <!-- Left bar -->
+    <polygon points="50,10 57,22 24,79 10,79" fill="url(#pL)"/>
+    <!-- Bottom bar -->
+    <polygon points="10,79 90,79 83,67 17,67" fill="url(#pB)"/>
+    <!-- Right bar -->
+    <polygon points="50,10 90,79 76,79 43,22" fill="url(#pR)"/>
+    <!-- Overlap: left over bottom at bottom-left -->
+    <polygon points="10,79 24,79 17,67" fill="url(#pL)"/>
+    <!-- Overlap: bottom over right at bottom-right -->
+    <polygon points="90,79 76,79 83,67" fill="url(#pB)"/>
     <!-- Inner triangle hole -->
-    <polygon points="50,35 33,75 67,75" fill="#0a1628"/>
+    <polygon points="50,34 31,67 69,67" fill="#0a1628"/>
   </svg>`;
 
   const ROBOT_SVG       = BAO_FACE;
