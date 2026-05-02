@@ -1547,6 +1547,28 @@ footer {
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
 }
 
+/* ── BAO Hint ────────────────────────────────────────────────── */
+.hero-bao-hint {
+    margin-top: 14px;
+    font-size: 0.92rem;
+    color: rgba(255,255,255,0.75);
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+.hero-bao-hint:hover { color: #fff; }
+.hero-bao-hint strong { color: #7ec8f8; }
+.bao-hint-arrow {
+    display: inline-block;
+    animation: baoArrowBounce 1.5s ease-in-out infinite;
+    font-size: 1.1rem;
+    margin-left: 4px;
+}
+@keyframes baoArrowBounce {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(4px, 4px); }
+}
+
 /* ── Project Badge ────────────────────────────────────────────── */
 .project-badge {
     display: inline-flex;

@@ -53,7 +53,7 @@
     }, 18000);
     // "Book a Free Call" buttons open BAO chat
     document.addEventListener('click', function (e) {
-      const btn = e.target.closest('#hero-book-btn, #contact-book-btn');
+      const btn = e.target.closest('#hero-book-btn, #contact-book-btn, #baoHint');
       if (btn) { e.preventDefault(); if (!isOpen) openChat(); }
     });
   }
