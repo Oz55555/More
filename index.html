@@ -47,9 +47,14 @@
 
     <!-- Intro Video Overlay -->
     <div id="intro-overlay">
-        <video id="intro-video" playsinline muted preload="auto">
-            <source src="/Video/CadenceWave1.mp4" type="video/mp4">
-        </video>
+        <div id="intro-videos-wrap">
+            <video id="intro-video-1" class="intro-vid" playsinline muted preload="auto">
+                <source src="/Video/CadenceWave1.mp4" type="video/mp4">
+            </video>
+            <video id="intro-video-2" class="intro-vid" playsinline muted preload="auto">
+                <source src="/Video/CadenceWave2.mp4" type="video/mp4">
+            </video>
+        </div>
         <button id="intro-skip" aria-label="Skip intro">Skip <i class="fas fa-forward"></i></button>
     </div>
 
