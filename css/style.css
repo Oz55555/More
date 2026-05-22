@@ -173,10 +173,10 @@
 
 /* Base Styles */
 :root {
-    --primary-color: #00539B;
-    --secondary-color: #1e3a8a;
+    --primary-color: #2563EB;
+    --secondary-color: #1D4ED8;
     --accent-color: #00C9B1;
-    --accent-gradient: linear-gradient(135deg, #00539B, #00C9B1);
+    --accent-gradient: linear-gradient(135deg, #2563EB, #00C9B1);
     --dark-section: #060d1c;
     --text-color: #1f2937;
     --light-text: #4b5563;
@@ -931,7 +931,7 @@ textarea {
 }
 
 .submit-btn {
-    background: var(--accent-gradient);
+    background: var(--primary-color);
     color: white;
     border: none;
     padding: 0.8rem 2.5rem;
@@ -943,9 +943,9 @@ textarea {
 }
 
 .submit-btn:hover {
-    filter: brightness(1.12);
+    background: var(--secondary-color);
     transform: translateY(-2px);
-    box-shadow: 0 10px 24px rgba(0,201,177,0.3);
+    box-shadow: 0 10px 24px rgba(37,99,235,0.35);
 }
 
 .social-links {
