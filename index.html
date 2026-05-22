@@ -47,15 +47,20 @@
 
     <!-- Intro Video Overlay -->
     <div id="intro-overlay">
-        <div id="intro-videos-wrap">
-            <video id="intro-video-1" class="intro-vid" playsinline muted preload="auto">
+        <div id="intro-modal">
+            <div id="intro-progress"><span id="intro-progress-bar"></span></div>
+            <video id="intro-video-1" class="intro-vid active" playsinline muted preload="auto">
                 <source src="/Video/CadenceWave1.mp4" type="video/mp4">
             </video>
             <video id="intro-video-2" class="intro-vid" playsinline muted preload="auto">
                 <source src="/Video/CadenceWave2.mp4" type="video/mp4">
             </video>
+            <div id="intro-dots">
+                <span class="intro-dot active"></span>
+                <span class="intro-dot"></span>
+            </div>
+            <button id="intro-skip" aria-label="Skip intro">Skip <i class="fas fa-forward"></i></button>
         </div>
-        <button id="intro-skip" aria-label="Skip intro">Skip <i class="fas fa-forward"></i></button>
     </div>
 
     <!-- Header -->
@@ -310,38 +315,52 @@
         const v1      = document.getElementById('intro-video-1');
         const v2      = document.getElementById('intro-video-2');
         const skip    = document.getElementById('intro-skip');
-        let ended1 = false, ended2 = false;
+        const dots    = document.querySelectorAll('.intro-dot');
+        const bar     = document.getElementById('intro-progress-bar');
+        let current   = 1;
 
         function dismiss() {
             overlay.classList.add('fade-out');
             overlay.addEventListener('transitionend', function () {
                 overlay.classList.add('hidden');
+                document.body.style.overflow = '';
             }, { once: true });
         }
 
-        function checkBothEnded() {
-            if (ended1 && ended2) {
-                document.body.style.overflow = '';
-                dismiss();
-            }
+        function switchToVideo2() {
+            v1.classList.remove('active');
+            v2.classList.add('active');
+            dots[0].classList.remove('active');
+            dots[1].classList.add('active');
+            current = 2;
+            bar.style.width = '50%';
+            v2.play().catch(() => {});
+        }
+
+        function updateBar(video, half) {
+            video.addEventListener('timeupdate', function () {
+                if (!video.duration) return;
+                const pct = (video.currentTime / video.duration) * 50;
+                bar.style.width = (half + pct) + '%';
+            });
         }
 
         // Block scroll while playing
         document.body.style.overflow = 'hidden';
+        bar.style.width = '0%';
+        updateBar(v1, 0);
+        updateBar(v2, 50);
 
-        v1.addEventListener('ended', function () { ended1 = true; checkBothEnded(); });
-        v2.addEventListener('ended', function () { ended2 = true; checkBothEnded(); });
+        v1.addEventListener('ended', switchToVideo2);
+        v2.addEventListener('ended', function () { dismiss(); });
 
         skip.addEventListener('click', function () {
             v1.pause(); v2.pause();
-            document.body.style.overflow = '';
             dismiss();
         });
 
-        // Autoplay both simultaneously
-        Promise.all([v1.play(), v2.play()]).catch(function () {
+        v1.play().catch(function () {
             skip.innerHTML = 'Enter Site &nbsp;<i class="fas fa-arrow-right"></i>';
-            skip.style.cssText += 'bottom:50%;right:50%;transform:translate(50%,50%);';
         });
     })();
     </script>
