@@ -368,8 +368,8 @@ nav {
     position: absolute;
     inset: 0;
     background:
-        radial-gradient(ellipse 70% 65% at 100% 100%, rgba(0, 180, 200, 0.38) 0%, transparent 65%),
-        radial-gradient(ellipse 50% 50% at 0% 50%,   rgba(10, 30, 80, 0.55) 0%, transparent 70%);
+        radial-gradient(ellipse 70% 65% at 100% 100%, rgba(102, 102, 255, 0.42) 0%, transparent 65%),
+        radial-gradient(ellipse 50% 50% at 0% 50%,   rgba(0, 71, 171, 0.5) 0%, transparent 70%);
     z-index: 2;
 }
 
