@@ -173,8 +173,11 @@
 
 /* Base Styles */
 :root {
-    --primary-color: #00539B; /* New Blue */
+    --primary-color: #00539B;
     --secondary-color: #1e3a8a;
+    --accent-color: #00C9B1;
+    --accent-gradient: linear-gradient(135deg, #00539B, #00C9B1);
+    --dark-section: #060d1c;
     --text-color: #1f2937;
     --light-text: #4b5563;
     --background: #ffffff;
@@ -550,7 +553,7 @@ section.hero {
     transform: translateX(-50%);
     width: 80px;
     height: 4px;
-    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    background: var(--accent-gradient);
     border-radius: 2px;
 }
 
@@ -683,14 +686,30 @@ section.hero {
     transform: translateY(-2px);
 }
 
-/* Why Us & Our Culture Sections */
-.why-us,
-.culture {
-    background-color: var(--light-bg);
+/* Why Us Section — dark background */
+.why-us {
+    background-color: var(--dark-section);
+}
+.why-us .section-title {
+    color: #fff;
+}
+.why-us .section-subtitle {
+    color: rgba(255,255,255,0.65);
 }
 
+/* Culture Section — white background */
 .culture {
-    background-color: #fff; /* Alternate background color */
+    background-color: #fff;
+}
+.culture .why-us-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+}
+.culture .why-us-card h3 {
+    color: var(--text-color);
+}
+.culture .why-us-card p {
+    color: var(--light-text);
 }
 
 .section-subtitle {
@@ -708,23 +727,23 @@ section.hero {
 }
 
 .why-us-card {
-    background: #fff;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(0,201,177,0.2);
     padding: 2.5rem 2rem;
     text-align: center;
-    border: 1px solid #e5e7eb;
     border-radius: 10px;
     transition: var(--transition);
 }
 
 .why-us-card:hover {
     transform: translateY(-10px);
-    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.08);
-    border-color: var(--primary-color);
+    box-shadow: 0 15px 40px rgba(0,201,177,0.15);
+    border-color: var(--accent-color);
 }
 
 .why-us-icon {
     font-size: 3rem;
-    color: var(--primary-color);
+    color: var(--accent-color);
     margin-bottom: 1.5rem;
     display: inline-block;
 }
@@ -732,11 +751,11 @@ section.hero {
 .why-us-card h3 {
     font-size: 1.5rem;
     margin-bottom: 1rem;
-    color: var(--text-color);
+    color: #fff;
 }
 
 .why-us-card p {
-    color: var(--light-text);
+    color: rgba(255,255,255,0.6);
     font-size: 0.95rem;
     line-height: 1.7;
 }
@@ -792,7 +811,7 @@ section.hero {
 }
 
 .project-outcome {
-    border-left: 4px solid #10b981;
+    border-left: 4px solid var(--accent-color);
 }
 
 .metrics-label,
@@ -829,10 +848,11 @@ section.hero {
 }
 
 .consultation-btn:hover {
-    background: var(--primary-color);
+    background: var(--accent-gradient);
+    border-color: transparent;
     color: #fff;
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 83, 155, 0.3);
+    box-shadow: 0 6px 20px rgba(0,201,177,0.35);
 }
 
 .project-img {
@@ -911,7 +931,7 @@ textarea {
 }
 
 .submit-btn {
-    background: var(--primary-color);
+    background: var(--accent-gradient);
     color: white;
     border: none;
     padding: 0.8rem 2.5rem;
@@ -923,9 +943,9 @@ textarea {
 }
 
 .submit-btn:hover {
-    background: var(--secondary-color);
+    filter: brightness(1.12);
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.15);
+    box-shadow: 0 10px 24px rgba(0,201,177,0.3);
 }
 
 .social-links {
@@ -949,7 +969,8 @@ textarea {
 }
 
 .social-links a:hover {
-    background: var(--primary-color);
+    background: var(--accent-gradient);
+    color: #fff;
 }
 
 /* Footer */
