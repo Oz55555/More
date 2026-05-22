@@ -441,7 +441,7 @@ nav {
     font-weight: 400;
     color: rgba(255,255,255,0.65);
     margin-bottom: 2rem;
-    max-width: 520px;
+    white-space: nowrap;
     line-height: 1.6;
 }
 
@@ -1255,7 +1255,13 @@ footer {
     .hero-content h2 {
         font-size: 1.35rem;
         line-height: 1.4;
-        margin-bottom: 2rem;
+        margin-bottom: 1rem;
+        padding: 0 1rem;
+    }
+
+    .hero-subtitle {
+        white-space: normal;
+        font-size: 0.95rem;
         padding: 0 1rem;
     }
 
