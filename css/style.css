@@ -1589,8 +1589,8 @@ footer {
 }
 #intro-modal {
     position: relative;
-    width: 42%;
-    max-width: 700px;
+    width: 65%;
+    max-width: 960px;
     min-width: 300px;
     background: #0a0a0a;
     border-radius: 16px;
