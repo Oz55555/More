@@ -307,8 +307,10 @@
     <script>
     (function () {
         const overlay = document.getElementById('intro-overlay');
-        const video   = document.getElementById('intro-video');
+        const v1      = document.getElementById('intro-video-1');
+        const v2      = document.getElementById('intro-video-2');
         const skip    = document.getElementById('intro-skip');
+        let ended1 = false, ended2 = false;
 
         function dismiss() {
             overlay.classList.add('fade-out');
@@ -317,26 +319,29 @@
             }, { once: true });
         }
 
-        // Block body scroll while playing
+        function checkBothEnded() {
+            if (ended1 && ended2) {
+                document.body.style.overflow = '';
+                dismiss();
+            }
+        }
+
+        // Block scroll while playing
         document.body.style.overflow = 'hidden';
 
-        video.addEventListener('ended', function () {
-            document.body.style.overflow = '';
-            dismiss();
-        });
+        v1.addEventListener('ended', function () { ended1 = true; checkBothEnded(); });
+        v2.addEventListener('ended', function () { ended2 = true; checkBothEnded(); });
 
         skip.addEventListener('click', function () {
+            v1.pause(); v2.pause();
             document.body.style.overflow = '';
             dismiss();
         });
 
-        // Autoplay (muted required by browsers)
-        video.play().catch(function () {
-            // If autoplay blocked, show skip immediately
-            skip.textContent = 'Enter Site';
-            skip.style.bottom = '50%';
-            skip.style.right = '50%';
-            skip.style.transform = 'translate(50%, 50%)';
+        // Autoplay both simultaneously
+        Promise.all([v1.play(), v2.play()]).catch(function () {
+            skip.innerHTML = 'Enter Site &nbsp;<i class="fas fa-arrow-right"></i>';
+            skip.style.cssText += 'bottom:50%;right:50%;transform:translate(50%,50%);';
         });
     })();
     </script>
