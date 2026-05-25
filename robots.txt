@@ -3,5 +3,9 @@ Allow: /
 Disallow: /admin
 Disallow: /login
 Disallow: /api/
+Disallow: /payment
+Disallow: /transfer
+Disallow: /donation
+Disallow: /donation-select
 
 Sitemap: https://www.cadencewave.io/sitemap.xml
