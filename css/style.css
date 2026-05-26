@@ -434,7 +434,13 @@ nav {
     font-weight: 400;
     margin-bottom: 1rem;
     color: #fff;
-    white-space: nowrap;
+    line-height: 1.35;
+}
+
+.hero-h2-accent {
+    font-size: 1.35em;
+    font-weight: 500;
+    display: block;
 }
 
 .hero-subtitle {
