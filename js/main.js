@@ -22,21 +22,15 @@ function updateFlagDisplay(countryCode) {
             // If flag fails to load, show globe
             this.src = globeIcon;
             this.alt = 'World';
-            console.log(`⚠️ Flag for ${countryCode} not found, showing globe`);
         };
-        console.log(`✅ Flag updated to: ${countryCode === 'world' ? 'World (Globe)' : countryCode.toUpperCase()}`);
-    } else {
-        console.log('❌ Flag element not found');
     }
 }
 
 // Detect country from IP geolocation and show flag
 async function detectAndShowCountryFlag() {
-    console.log('🌎 Starting country detection...');
     let countryCode = 'world'; // Default to globe for unknown countries
     
     try {
-        console.log('🔍 Calling backend geolocation API...');
         const response = await fetch('/api/geolocation', {
             method: 'GET',
             headers: {
@@ -46,32 +40,13 @@ async function detectAndShowCountryFlag() {
         
         if (response.ok) {
             const data = await response.json();
-            console.log('📍 Geolocation response:', data);
-            
-            if (data.client_ip) {
-                console.log(`🌐 Your IP: ${data.client_ip}`);
-            }
             
             if (data.success && data.country_code) {
-                const detectedCode = data.country_code.toLowerCase();
-                console.log(`🌍 Detected country: ${detectedCode.toUpperCase()}`);
-                if (data.data && data.data.city) {
-                    console.log(`📍 Location: ${data.data.city}, ${data.data.country_name || detectedCode.toUpperCase()}`);
-                }
-                countryCode = detectedCode;
-                console.log(`✅ Using detected country: ${countryCode.toUpperCase()}`);
-            } else {
-                console.log(`⚠️ Geolocation failed. Using default: Globe`);
-                if (data.message) {
-                    console.log(`ℹ️ Reason: ${data.message}`);
-                }
+                countryCode = data.country_code.toLowerCase();
             }
-        } else {
-            console.log(`❌ Backend API returned status ${response.status}`);
         }
     } catch (error) {
-        console.log('❌ Geolocation API call failed:', error.message);
-        console.log(`⚠️ Using default: Globe`);
+        // silently fall back to globe
     }
     
     // Update the flag
@@ -82,9 +57,6 @@ async function detectAndShowCountryFlag() {
 window.setCountry = function(code) {
     if (code && code.length === 2) {
         updateFlagDisplay(code.toLowerCase());
-        console.log(`🔧 Manually set country to: ${code.toUpperCase()}`);
-    } else {
-        console.log(`❌ Invalid country code. Use a 2-letter ISO code (e.g., 'mx', 'us', 'es', 'br', 'ar', etc.)`);
     }
 };
 
