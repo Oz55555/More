@@ -430,11 +430,12 @@ nav {
 }
 
 .hero-content h2 {
-    font-size: clamp(1rem, 2.3vw, 1.55rem);
+    font-size: clamp(0.85rem, 1.8vw, 1.35rem);
     font-weight: 400;
     margin-bottom: 1rem;
     color: #fff;
     line-height: 1.35;
+    white-space: nowrap;
 }
 
 .hero-h2-accent {
