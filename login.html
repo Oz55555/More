@@ -18,6 +18,7 @@
                 <p>Ingrese sus credenciales para acceder al panel de administración</p>
             </div>
             
+            <!-- Step 1: Credentials -->
             <form id="loginForm" class="login-form">
                 <div class="form-group">
                     <label for="username">
@@ -54,7 +55,6 @@
                     </div>
                 </div>
                 
-                
                 <button type="submit" class="login-btn" id="loginBtn">
                     <i class="fas fa-sign-in-alt"></i>
                     Iniciar Sesión
@@ -70,6 +70,57 @@
                     Verificando credenciales...
                 </div>
             </form>
+
+            <!-- Step 2: 2FA Code (hidden until credentials pass) -->
+            <div id="mfaStep" style="display: none;">
+                <div class="mfa-header">
+                    <i class="fas fa-mobile-alt" style="font-size:2rem; color: #6366f1; margin-bottom: 0.75rem; display:block;"></i>
+                    <h2 style="font-size:1.1rem; margin-bottom:0.4rem; color:#fff;">Verificación en dos pasos</h2>
+                    <p style="font-size:0.88rem; color:rgba(255,255,255,0.55); margin-bottom:1.5rem;">
+                        Abre tu app autenticadora (Google Authenticator, Authy) e ingresa el código de 6 dígitos.
+                    </p>
+                </div>
+                <form id="mfaForm" class="login-form">
+                    <div class="form-group">
+                        <label for="totpToken">
+                            <i class="fas fa-key"></i>
+                            Código 2FA
+                        </label>
+                        <input
+                            type="text"
+                            id="totpToken"
+                            name="totpToken"
+                            inputmode="numeric"
+                            pattern="[0-9]{6}"
+                            maxlength="6"
+                            autocomplete="one-time-code"
+                            placeholder="000000"
+                            style="letter-spacing: 0.4rem; font-size: 1.4rem; text-align: center;"
+                        >
+                    </div>
+
+                    <button type="submit" class="login-btn" id="mfaBtn">
+                        <i class="fas fa-shield-alt"></i>
+                        Verificar
+                    </button>
+
+                    <div id="mfaError" class="error-message" style="display: none;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span id="mfaErrorText"></span>
+                    </div>
+
+                    <div id="mfaLoading" class="loading-message" style="display: none;">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        Verificando código...
+                    </div>
+
+                    <div style="text-align:center; margin-top:1rem;">
+                        <button type="button" id="backToLogin" style="background:none; border:none; color:rgba(255,255,255,0.45); font-size:0.82rem; cursor:pointer; text-decoration:underline;">
+                            ← Volver al inicio de sesión
+                        </button>
+                    </div>
+                </form>
+            </div>
             
             <div class="login-footer">
                 <a href="/" class="back-link">

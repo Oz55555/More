@@ -5,6 +5,8 @@ const cors = require('cors');
 const helmet = require('helmet');
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
+const speakeasy = require('speakeasy');
+const QRCode = require('qrcode');
 const { body, validationResult } = require('express-validator');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
@@ -393,9 +395,22 @@ app.post('/api/admin/login', [
     
     // Check credentials
     if (username === adminUsername && password === adminPassword) {
+      const totpSecret = process.env.ADMIN_TOTP_SECRET;
+
+      if (totpSecret) {
+        // 2FA enabled — require TOTP before creating full session
+        req.session.pendingMfa = true;
+        req.session.pendingUsername = username;
+        return res.json({
+          success: true,
+          mfaRequired: true,
+          message: 'Credenciales válidas. Ingrese el código 2FA.'
+        });
+      }
+
+      // No 2FA configured — direct login (backward compatible)
       req.session.isAuthenticated = true;
       req.session.username = username;
-      
       res.json({
         success: true,
         message: 'Login successful',
@@ -413,6 +428,89 @@ app.post('/api/admin/login', [
       success: false,
       message: 'Error interno del servidor'
     });
+  }
+});
+
+// 2FA Verify endpoint
+app.post('/api/admin/2fa/verify', async (req, res) => {
+  try {
+    if (!req.session || !req.session.pendingMfa) {
+      return res.status(401).json({ success: false, message: 'Sesión inválida. Inicie sesión nuevamente.' });
+    }
+
+    const { token } = req.body;
+    if (!token || token.length !== 6) {
+      return res.status(400).json({ success: false, message: 'El código debe tener 6 dígitos.' });
+    }
+
+    const secret = process.env.ADMIN_TOTP_SECRET;
+    if (!secret) {
+      return res.status(500).json({ success: false, message: '2FA no está configurado en el servidor.' });
+    }
+
+    const verified = speakeasy.totp.verify({
+      secret,
+      encoding: 'base32',
+      token,
+      window: 1
+    });
+
+    if (verified) {
+      req.session.pendingMfa = false;
+      req.session.isAuthenticated = true;
+      req.session.username = req.session.pendingUsername;
+      delete req.session.pendingUsername;
+      return res.json({ success: true, redirectUrl: '/admin' });
+    }
+
+    return res.status(401).json({ success: false, message: 'Código incorrecto. Verifique su app autenticadora.' });
+  } catch (error) {
+    console.error('2FA verify error:', error);
+    res.status(500).json({ success: false, message: 'Error interno al verificar 2FA.' });
+  }
+});
+
+// 2FA Setup endpoint — generate QR code (requires admin credentials)
+app.post('/api/admin/2fa/setup', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const adminUsername = process.env.ADMIN_USERNAME || 'admin';
+    const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+
+    if (username !== adminUsername || password !== adminPassword) {
+      return res.status(401).json({ success: false, message: 'Credenciales incorrectas.' });
+    }
+
+    let secret = process.env.ADMIN_TOTP_SECRET;
+    let isNewSecret = false;
+
+    if (!secret) {
+      const generated = speakeasy.generateSecret({ name: 'CadenceWave Admin', issuer: 'CadenceWave' });
+      secret = generated.base32;
+      isNewSecret = true;
+    }
+
+    const otpauthUrl = speakeasy.otpauthURL({
+      secret,
+      encoding: 'base32',
+      label: encodeURIComponent('CadenceWave Admin'),
+      issuer: 'CadenceWave'
+    });
+
+    const qrDataUrl = await QRCode.toDataURL(otpauthUrl);
+
+    res.json({
+      success: true,
+      qrCode: qrDataUrl,
+      secret,
+      isNewSecret,
+      instructions: isNewSecret
+        ? `Copia este secreto y agrégalo a Railway como ADMIN_TOTP_SECRET=${secret} y luego escanea el QR.`
+        : 'Escanea el QR con Google Authenticator, Authy o similar.'
+    });
+  } catch (error) {
+    console.error('2FA setup error:', error);
+    res.status(500).json({ success: false, message: 'Error configurando 2FA.' });
   }
 });
 
