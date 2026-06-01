@@ -7,5 +7,6 @@ Disallow: /payment
 Disallow: /transfer
 Disallow: /donation
 Disallow: /donation-select
+Disallow: /test-cookies
 
 Sitemap: https://www.cadencewave.io/sitemap.xml
