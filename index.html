@@ -96,8 +96,55 @@
       "url": "https://www.cadencewave.io/"
     }
     </script>
+
+    <!-- Structured Data: ProfessionalService -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ProfessionalService",
+      "name": "CadenceWave",
+      "url": "https://www.cadencewave.io/",
+      "logo": "https://www.cadencewave.io/images/cw.webp",
+      "description": "Global agile consultancy specializing in digital transformation, SAFe implementation, DevSecOps, and cloud modernization for enterprises in Healthcare, Finance, and Technology.",
+      "serviceType": [
+        "Digital Transformation Consulting",
+        "Agile Release Train (ART) Implementation",
+        "SAFe 6.0 Consulting",
+        "DevSecOps Implementation",
+        "Cloud Modernization",
+        "AI-Powered Engineering"
+      ],
+      "areaServed": [
+        {"@type": "Place", "name": "Latin America"},
+        {"@type": "Place", "name": "Europe"},
+        {"@type": "Place", "name": "United States"}
+      ],
+      "sameAs": ["https://www.linkedin.com/company/cadencewave/"]
+    }
+    </script>
 </head>
 <body>
+    <noscript>
+        <div style="padding:24px;font-family:sans-serif;background:#0a0f1e;color:#fff">
+            <h1>CadenceWave | Agile &amp; Digital Transformation Experts</h1>
+            <p>CadenceWave is a global digital transformation &amp; agile consultancy serving enterprises in LATAM, Europe, and USA across Healthcare, Finance, and Technology sectors.</p>
+            <nav style="margin:16px 0">
+                <a href="#about" style="color:#4fc3f7;margin-right:16px">About</a>
+                <a href="#projects" style="color:#4fc3f7;margin-right:16px">Our Work</a>
+                <a href="#contact" style="color:#4fc3f7">Contact</a>
+            </nav>
+            <h2>Our Services</h2>
+            <ul>
+                <li>Agile Release Train (ART) Implementation</li>
+                <li>SAFe 6.0 Consulting &amp; Coaching</li>
+                <li>DevSecOps &amp; Continuous Delivery</li>
+                <li>Cloud Modernization &amp; Architecture</li>
+                <li>AI-Powered Engineering</li>
+                <li>Digital Transformation Strategy</li>
+            </ul>
+            <p>Contact us: <a href="#contact" style="color:#4fc3f7">cadencewave.io</a> | <a href="https://www.linkedin.com/company/cadencewave/" style="color:#4fc3f7">LinkedIn</a></p>
+        </div>
+    </noscript>
     <!-- Page Loader -->
     <div id="page-loader" class="page-loader">
         <div class="loader-content">
@@ -169,16 +216,6 @@
     </header>
 
     <!-- Hero Section -->
-
-    <script type="application/ld+json">
-        {
-          "@context": "https://schema.org",
-          "@type": "Organization",
-          "name": "CadenceWave.io",
-          "url": "https://www.cadencewave.io",
-          "logo": "https://www.cadencewave.io/images/cw.png"
-        }
-        </script>
     <section id="home" class="hero">
         <div class="carousel-container">
             <picture>
@@ -339,7 +376,44 @@
     <!-- Projects Section -->
     <section id="projects" class="projects">
         <h2 class="section-title">Our Work</h2>
-        <div class="projects-grid"></div>
+        <div class="projects-grid">
+            <article class="project-card">
+                <h3>Healthcare ART Implementation - European Pharma Giant</h3>
+                <p>Led the implementation of 3 Agile Release Trains for a multinational pharmaceutical company, transforming drug development processes and reducing time-to-market by 40%. Coordinated 150+ team members across 8 countries.</p>
+                <p><strong>Key Metrics:</strong> 40% faster delivery &bull; 150+ team members &bull; 8 countries</p>
+                <p><strong>Outcome:</strong> Successful PI Planning events with 95% commitment reliability</p>
+            </article>
+            <article class="project-card">
+                <h3>Financial Services Digital Transformation - LATAM Bank</h3>
+                <p>Established 2 ARTs for core banking modernization across Mexico and Colombia. Implemented DevSecOps practices and automated compliance workflows, achieving 99.9% system uptime during transformation.</p>
+                <p><strong>Key Metrics:</strong> 99.9% uptime &bull; 60% faster releases &bull; $2M cost savings</p>
+                <p><strong>Outcome:</strong> Zero security incidents during 18-month transformation</p>
+            </article>
+            <article class="project-card">
+                <h3>Tech Startup Scale-Up - Silicon Valley SaaS Platform</h3>
+                <p>Designed and launched the first ART for a rapidly growing SaaS company, scaling from 30 to 120 engineers. Implemented value stream mapping and established continuous delivery pipelines supporting 10M+ users.</p>
+                <p><strong>Key Metrics:</strong> 4x team growth &bull; 10M+ users &bull; 50% faster features</p>
+                <p><strong>Outcome:</strong> Seamless scaling with maintained code quality and team velocity</p>
+            </article>
+            <article class="project-card">
+                <h3>Manufacturing IoT Transformation - German Industrial Leader</h3>
+                <p>Orchestrated ART implementation for Industry 4.0 initiative, connecting 500+ manufacturing devices across 12 facilities. Established lean-agile practices for hardware-software integration teams.</p>
+                <p><strong>Key Metrics:</strong> 500+ connected devices &bull; 12 facilities &bull; 30% efficiency gain</p>
+                <p><strong>Outcome:</strong> Real-time production visibility and predictive maintenance</p>
+            </article>
+            <article class="project-card">
+                <h3>Telecom 5G Network Rollout - Multi-National Carrier</h3>
+                <p>Led agile transformation for 5G infrastructure deployment across USA and Europe. Coordinated 4 ARTs managing network planning, deployment, and optimization with strict regulatory compliance.</p>
+                <p><strong>Key Metrics:</strong> 4 ARTs &bull; 200+ cell towers/month &bull; 99.99% reliability</p>
+                <p><strong>Outcome:</strong> Fastest 5G rollout in company history with zero compliance issues</p>
+            </article>
+            <article class="project-card">
+                <h3>Healthcare AI Platform - US Medical Research Institute</h3>
+                <p>Implemented SAFe framework for AI-driven diagnostic platform development. Established cross-functional ARTs integrating data scientists, medical experts, and software engineers for FDA-compliant solutions.</p>
+                <p><strong>Key Metrics:</strong> FDA approval &bull; 85% diagnostic accuracy &bull; 6-month delivery</p>
+                <p><strong>Outcome:</strong> First AI diagnostic tool approved for clinical use</p>
+            </article>
+        </div>
     </section>
 
     <!-- Contact Section -->
