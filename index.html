@@ -166,11 +166,11 @@
     <div id="intro-overlay">
         <div id="intro-modal">
             <div id="intro-progress"><span id="intro-progress-bar"></span></div>
-            <video id="intro-video-1" class="intro-vid active" playsinline muted preload="metadata">
-                <source src="/Video/CadenceWave1.mp4" type="video/mp4">
+            <video id="intro-video-1" class="intro-vid active" playsinline muted preload="none">
+                <source data-src="/Video/CadenceWave1.mp4" type="video/mp4">
             </video>
             <video id="intro-video-2" class="intro-vid" playsinline muted preload="none">
-                <source src="/Video/CadenceWave2.mp4" type="video/mp4">
+                <source data-src="/Video/CadenceWave2.mp4" type="video/mp4">
             </video>
             <div id="intro-dots">
                 <span class="intro-dot active"></span>
@@ -204,7 +204,7 @@
                 <li><a href="#contact">Consultancy</a></li>
                 <li><a href="#contact">Contact</a></li>
                 <li class="country-flag-nav" aria-hidden="true">
-                    <img id="nav-country-flag" class="nav-flag-icon" src="" alt="Visitor country flag">
+                    <img id="nav-country-flag" class="nav-flag-icon" alt="Visitor country flag">
                 </li>
             </ul>
             <button class="hamburger" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="nav-links">
@@ -477,6 +477,7 @@
             dots[1].classList.add('active');
             current = 2;
             bar.style.width = '50%';
+            loadVideo(v2);
             v2.play().catch(() => {});
         }
 
@@ -494,6 +495,14 @@
         updateBar(v1, 0);
         updateBar(v2, 50);
 
+        function loadVideo(videoEl) {
+            const source = videoEl.querySelector('source[data-src]');
+            if (source && !source.src) {
+                source.src = source.getAttribute('data-src');
+                videoEl.load();
+            }
+        }
+
         v1.addEventListener('ended', switchToVideo2);
         v2.addEventListener('ended', function () { dismiss(); });
 
@@ -502,6 +511,7 @@
             dismiss();
         });
 
+        loadVideo(v1);
         v1.play().catch(function () {
             skip.innerHTML = 'Enter Site &nbsp;<i class="fas fa-arrow-right"></i>';
         });
