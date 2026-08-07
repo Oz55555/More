@@ -358,6 +358,25 @@ sections.forEach(section => {
     observer.observe(section);
 });
 
+// URL update on section scroll (history.replaceState for SEO anchor URLs)
+const sectionUrlObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            const id = entry.target.getAttribute('id');
+            if (id) {
+                const newUrl = id === 'home'
+                    ? window.location.pathname
+                    : `${window.location.pathname}#${id}`;
+                history.replaceState(null, '', newUrl);
+            }
+        }
+    });
+}, { threshold: 0.4 });
+
+document.querySelectorAll('section[id]').forEach(section => {
+    sectionUrlObserver.observe(section);
+});
+
 // Navbar scroll effect for transparent header
 const header = document.querySelector('header');
 
