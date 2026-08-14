@@ -198,9 +198,9 @@ Scoring guide: 70-100=hot(clear need+company email), 40-69=warm(exploratory), 20
   async generateEmailWithAI(name, message, leadAnalysis, lang) {
     const firstName = name.split(' ')[0];
     const interests = (leadAnalysis?.interestAreas || []).join(', ') || 'digital transformation';
-    const prompt = `You are a representative of CadenceWave (cadencewave.io), a digital transformation consultancy.
-Detect the language of the client's message and write the entire email in that SAME language.
-Write a personalized follow-up email to someone who submitted a contact form. Use their REAL name.
+    const prompt = `You are writing a personal reply email on behalf of CadenceWave (cadencewave.io), a digital transformation consultancy.
+This email must look and feel like a personal message from a colleague — NOT a marketing or promotional email.
+Detect the language of the client's message and write the entire response in that SAME language.
 
 Client first name: ${firstName}
 Full name: ${name}
@@ -208,20 +208,24 @@ Message: "${message.substring(0, 300)}"
 Interests: ${interests}
 Intent: ${leadAnalysis?.intent || 'general inquiry'}
 
-RULES FOR SUBJECT LINE (critical for inbox delivery — never spam):
-- Write a short, plain, professional subject. Max 8 words.
-- Good formats: "Following up on your message, ${firstName}" / "Re: Your inquiry — CadenceWave" / "Your question about [topic]"
-- NEVER use: emotional language, exclamation marks, ALL CAPS, emojis, urgency phrases, or sales slogans.
-- The subject must sound like a normal business reply email, not marketing.
+SUBJECT LINE rules (critical):
+- Plain, conversational, max 7 words. No punctuation at end.
+- Must read like a human reply, not a campaign.
+- Examples: "Re: your message to CadenceWave" / "Following up, ${firstName}" / "Your question about ${interests}"
+- NEVER use: exclamation marks, ALL CAPS, emojis, "free", "offer", "opportunity", "sale", emotional phrases.
 
-RULES FOR BODY:
-- Use "${firstName}" as the greeting name — never placeholders like [Name].
-- Respond in the exact language of the client's message.
-- Acknowledge their specific need briefly, mention 2 relevant CadenceWave benefits, mention BAO AI assistant (24/7), invite 30-min discovery call (cadencewave.io).
-- Keep tone professional and helpful, NOT salesy or emotional.
-- Sign ONLY as: "CadenceWave Team" — do NOT use personal names.
+BODY rules:
+- Write exactly as a knowledgeable colleague would reply to a colleague — short, direct, no hype.
+- 3-4 short paragraphs max.
+- Greet by first name: "Hola ${firstName}," or "Hi ${firstName},"
+- Briefly address their specific question or need.
+- Mention one concrete way CadenceWave can help (specific to their message, not generic).
+- One soft call to action: suggest a quick call or reply to this email. NO aggressive CTAs.
+- Sign as: "Oscar\\nCadenceWave" (a real person name makes emails land in Primary).
+- NO bullet lists, NO bold headers, NO promotional language like "benefits", "solutions", "transform your business".
 
 Return ONLY JSON: {"subject":"...","bodyText":"...","bodyHtml":"<p>...</p>"}`;
+
 
     const apiKey = this.deepseekApiKey || this.openaiApiKey;
     const endpoint = this.deepseekApiKey
@@ -264,15 +268,15 @@ Return ONLY JSON: {"subject":"...","bodyText":"...","bodyHtml":"<p>...</p>"}`;
     const firstName = name.split(' ')[0];
     if (lang === 'es') {
       return {
-        subject: `Gracias por tu mensaje, ${firstName} — CadenceWave`,
-        bodyText: `Hola ${firstName},\n\nGracias por contactarnos sobre ${intent}. En CadenceWave nos especializamos en ${areas} y estaremos encantados de ayudarte.\n\nPodemos agendar una llamada de descubrimiento de 30 minutos para entender mejor tus necesidades. También tienes disponible BAO, nuestra asistente de IA, que puede responderte de inmediato.\n\nEscríbenos o visita cadencewave.io para más información.\n\nSaludos,\nCadenceWave Team\ncadencewave.io`,
-        bodyHtml: `<p>Hola <strong>${firstName}</strong>,</p><p>Gracias por contactar a CadenceWave. Recibimos tu mensaje y nos da mucho gusto saber que estás interesado/a en <strong>${areas}</strong>.</p><p>En CadenceWave ayudamos a organizaciones a acelerar su transformación digital usando marcos ágiles como SAFe, logrando resultados concretos en tiempo récord.</p><p>Tienes disponible <strong>BAO</strong>, nuestra asistente de inteligencia artificial, para que puedas obtener respuestas inmediatas 24/7.</p><p><strong>¿Agendamos una llamada de descubrimiento de 30 min?</strong> → <a href="https://cadencewave.io">cadencewave.io</a></p><br><p>Saludos,<br><strong>CadenceWave Team</strong><br>cadencewave.io</p>`
+        subject: `Re: tu mensaje a CadenceWave`,
+        bodyText: `Hola ${firstName},\n\nGracias por escribirnos. Vi tu mensaje sobre ${intent} y quería responderte directamente.\n\nEn CadenceWave trabajamos en ${areas}. Si tienes unos minutos esta semana, podríamos hablar y ver si podemos ayudarte con lo que necesitas.\n\nMe puedes responder aquí o visitar cadencewave.io si quieres saber más antes.\n\nSaludos,\nOscar\nCadenceWave`,
+        bodyHtml: `<p>Hola ${firstName},</p><p>Gracias por escribirnos. Vi tu mensaje sobre ${intent} y quería responderte directamente.</p><p>En CadenceWave trabajamos en ${areas}. Si tienes unos minutos esta semana, podríamos hablar y ver si podemos ayudarte con lo que necesitas.</p><p>Me puedes responder aquí o visitar <a href="https://cadencewave.io">cadencewave.io</a> si quieres saber más antes.</p><p>Saludos,<br>Oscar<br>CadenceWave</p>`
       };
     }
     return {
-      subject: `Re: Your inquiry to CadenceWave, ${firstName}`,
-      bodyText: `Hi ${firstName},\n\nThank you for reaching out to CadenceWave about ${intent}. We specialize in ${areas} and we'd love to help.\n\nLet's schedule a 30-min discovery call to understand your needs better. You also have access to BAO, our AI assistant, for immediate answers 24/7.\n\nReply to this email or visit cadencewave.io to learn more.\n\nBest regards,\nCadenceWave Team\ncadencewave.io`,
-      bodyHtml: `<p>Hi <strong>${firstName}</strong>,</p><p>Thank you for reaching out to CadenceWave. We received your message and we're excited about your interest in <strong>${areas}</strong>.</p><p>At CadenceWave, we help organizations accelerate digital transformation using proven agile frameworks like SAFe, delivering measurable results.</p><p><strong>BAO</strong>, our AI assistant, is available 24/7 to provide you with immediate answers — just reply to this email.</p><p><strong>Ready to explore how we can help?</strong> → <a href="https://cadencewave.io">cadencewave.io</a></p><br><p>Best regards,<br><strong>CadenceWave Team</strong><br>cadencewave.io</p>`
+      subject: `Re: your message to CadenceWave`,
+      bodyText: `Hi ${firstName},\n\nThanks for getting in touch. I saw your message about ${intent} and wanted to reply directly.\n\nAt CadenceWave we work on ${areas}. If you have a few minutes this week, we could have a quick chat and see if we can help.\n\nFeel free to reply here or check cadencewave.io if you'd like to know more first.\n\nBest,\nOscar\nCadenceWave`,
+      bodyHtml: `<p>Hi ${firstName},</p><p>Thanks for getting in touch. I saw your message about ${intent} and wanted to reply directly.</p><p>At CadenceWave we work on ${areas}. If you have a few minutes this week, we could have a quick chat and see if we can help.</p><p>Feel free to reply here or check <a href="https://cadencewave.io">cadencewave.io</a> if you'd like to know more first.</p><p>Best,<br>Oscar<br>CadenceWave</p>`
     };
   }
 }

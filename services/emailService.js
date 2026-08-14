@@ -21,23 +21,10 @@ class EmailService {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body style="margin:0;padding:0;background:#ffffff;font-family:Arial,sans-serif;">
-  <div style="max-width:580px;margin:0 auto;padding:32px 24px;">
-    <!-- Minimal header -->
-    <div style="margin-bottom:28px;padding-bottom:16px;border-bottom:1px solid #e5e7eb;">
-      <img src="https://www.cadencewave.io/images/cw.png" alt="" width="28" height="28" style="vertical-align:middle;margin-right:8px;border-radius:4px;" />
-      <span style="font-size:15px;font-weight:600;color:#111827;vertical-align:middle;">CadenceWave</span>
-    </div>
-    <!-- Body -->
-    <div style="color:#111827;font-size:15px;line-height:1.7;">
+<body style="margin:0;padding:0;background:#ffffff;font-family:Georgia,serif;">
+  <div style="max-width:560px;margin:0 auto;padding:24px 16px;">
+    <div style="color:#222222;font-size:15px;line-height:1.8;">
       ${bodyHtml}
-    </div>
-    <!-- Footer -->
-    <div style="margin-top:32px;padding-top:16px;border-top:1px solid #e5e7eb;">
-      <p style="margin:0;font-size:12px;color:#9ca3af;">
-        cadencewave.io &nbsp;·&nbsp; You received this because you submitted a contact form on our site.
-        &nbsp;·&nbsp; <a href="mailto:info@cadencewave.io?subject=unsubscribe" style="color:#9ca3af">Unsubscribe</a>
-      </p>
     </div>
   </div>
 </body>
@@ -61,11 +48,7 @@ class EmailService {
       reply_to: fromEmail,
       subject: emailContent.subject,
       text: emailContent.bodyText,
-      html: htmlBody,
-      headers: {
-        'List-Unsubscribe': `<mailto:${fromEmail}?subject=unsubscribe>`,
-        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
-      }
+      html: htmlBody
     });
 
     if (error) throw new Error(`Resend error: ${error.message}`);
