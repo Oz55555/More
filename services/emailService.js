@@ -35,7 +35,8 @@ class EmailService {
     <!-- Footer -->
     <div style="margin-top:32px;padding-top:16px;border-top:1px solid #e5e7eb;">
       <p style="margin:0;font-size:12px;color:#9ca3af;">
-        cadencewave.io &nbsp;·&nbsp; You're receiving this because you submitted a contact form on our site.
+        cadencewave.io &nbsp;·&nbsp; You received this because you submitted a contact form on our site.
+        &nbsp;·&nbsp; <a href="mailto:info@cadencewave.io?subject=unsubscribe" style="color:#9ca3af">Unsubscribe</a>
       </p>
     </div>
   </div>
@@ -60,7 +61,11 @@ class EmailService {
       reply_to: fromEmail,
       subject: emailContent.subject,
       text: emailContent.bodyText,
-      html: htmlBody
+      html: htmlBody,
+      headers: {
+        'List-Unsubscribe': `<mailto:${fromEmail}?subject=unsubscribe>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
+      }
     });
 
     if (error) throw new Error(`Resend error: ${error.message}`);
