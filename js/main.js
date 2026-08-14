@@ -112,7 +112,7 @@ window.addEventListener('load', function() {
 const projects = [
     {
         title: 'Healthcare ART Implementation - European Pharma Giant',
-        description: 'Led the implementation of 3 Agile Release Trains for a multinational pharmaceutical company, transforming drug development processes and reducing time-to-market by 40%. Coordinated 150+ team members across 8 countries.',
+        description: 'Our lead consultant spearheaded the implementation of 3 Agile Release Trains for a multinational pharmaceutical company in a prior enterprise role, transforming drug development processes and reducing time-to-market by 40%. Coordinated 150+ team members across 8 countries.',
         image: 'https://images.unsplash.com/photo-1584036561566-baf8f5f1b144?w=480&h=320&fit=crop&fm=webp&q=75',
         tags: ['SAFe 6.0', 'ART Setup', 'Healthcare', 'PI Planning'],
         metrics: '40% faster delivery • 150+ team members • 8 countries',
@@ -120,7 +120,7 @@ const projects = [
     },
     {
         title: 'Financial Services Digital Transformation - LATAM Bank',
-        description: 'Established 2 ARTs for core banking modernization across Mexico and Colombia. Implemented DevSecOps practices and automated compliance workflows, achieving 99.9% system uptime during transformation.',
+        description: 'A CadenceWave consultant established 2 ARTs for core banking modernization across Mexico and Colombia in a previous enterprise role. Implemented DevSecOps practices and automated compliance workflows, achieving 99.9% system uptime during transformation.',
         image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=480&h=320&fit=crop&fm=webp&q=75',
         tags: ['Digital Banking', 'DevSecOps', 'Compliance', 'Cross-border'],
         metrics: '99.9% uptime • 60% faster releases • $2M cost savings',
@@ -128,7 +128,7 @@ const projects = [
     },
     {
         title: 'Tech Startup Scale-Up - Silicon Valley SaaS Platform',
-        description: 'Designed and launched the first ART for a rapidly growing SaaS company, scaling from 30 to 120 engineers. Implemented value stream mapping and established continuous delivery pipelines supporting 10M+ users.',
+        description: 'One of our senior consultants designed and launched the first ART for a rapidly growing SaaS company prior to joining CadenceWave, scaling the engineering team from 30 to 120. Implemented value stream mapping and continuous delivery pipelines supporting 10M+ users.',
         image: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=480&h=320&fit=crop&fm=webp&q=75',
         tags: ['Startup Scaling', 'Value Streams', 'SaaS', 'Continuous Delivery'],
         metrics: '4x team growth • 10M+ users • 50% faster features',
@@ -136,7 +136,7 @@ const projects = [
     },
     {
         title: 'Manufacturing IoT Transformation - German Industrial Leader',
-        description: 'Orchestrated ART implementation for Industry 4.0 initiative, connecting 500+ manufacturing devices across 12 facilities. Established lean-agile practices for hardware-software integration teams.',
+        description: 'A CadenceWave team member orchestrated ART implementation for an Industry 4.0 initiative in a previous role, connecting 500+ manufacturing devices across 12 facilities and establishing lean-agile practices for hardware-software integration teams.',
         image: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=480&h=320&fit=crop&fm=webp&q=75',
         tags: ['Industry 4.0', 'IoT Integration', 'Lean-Agile', 'Manufacturing'],
         metrics: '500+ connected devices • 12 facilities • 30% efficiency gain',
@@ -144,7 +144,7 @@ const projects = [
     },
     {
         title: 'Telecom 5G Network Rollout - Multi-National Carrier',
-        description: 'Led agile transformation for 5G infrastructure deployment across USA and Europe. Coordinated 4 ARTs managing network planning, deployment, and optimization with strict regulatory compliance.',
+        description: 'Our consultant led the agile transformation for a 5G infrastructure deployment across USA and Europe in a prior enterprise role, coordinating 4 ARTs across network planning, deployment, and optimization with strict regulatory compliance.',
         image: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=480&h=320&fit=crop&fm=webp&q=75',
         tags: ['5G Networks', 'Infrastructure', 'Regulatory Compliance', 'Multi-ART'],
         metrics: '4 ARTs • 200+ cell towers/month • 99.99% reliability',
@@ -152,7 +152,7 @@ const projects = [
     },
     {
         title: 'Healthcare AI Platform - US Medical Research Institute',
-        description: 'Implemented SAFe framework for AI-driven diagnostic platform development. Established cross-functional ARTs integrating data scientists, medical experts, and software engineers for FDA-compliant solutions.',
+        description: 'A CadenceWave consultant implemented the SAFe framework for an AI-driven diagnostic platform in a previous role, establishing cross-functional ARTs that integrated data scientists, medical experts, and software engineers for FDA-compliant solutions.',
         image: 'https://images.unsplash.com/photo-1530026405186-ed1f139313f8?w=480&h=320&fit=crop&fm=webp&q=75',
         tags: ['Healthcare AI', 'FDA Compliance', 'Cross-functional', 'Research'],
         metrics: 'FDA approval • 85% diagnostic accuracy • 6-month delivery',
