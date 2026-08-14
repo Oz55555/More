@@ -1431,17 +1431,48 @@ app.post('/api/admin/leads/:id/send-email', requireAuth, async (req, res) => {
   }
 });
 
-// Temporary diagnostic: check email env vars visible to the process
-app.get('/api/debug-email-check', (req, res) => {
+// Diagnostic: check Resend email configuration
+app.get('/api/debug-email-check', requireAuth, (req, res) => {
+  const apiKey = process.env.RESEND_API_KEY || '';
+  const fromEmail = process.env.EMAIL_FROM || '';
   res.json({
-    EMAIL_USER_set: !!process.env.EMAIL_USER,
-    EMAIL_USER_value: process.env.EMAIL_USER ? process.env.EMAIL_USER.replace(/(.{3}).*(@.*)/, '$1***$2') : null,
-    EMAIL_PASS_set: !!process.env.EMAIL_PASS,
-    EMAIL_PASS_length: process.env.EMAIL_PASS ? process.env.EMAIL_PASS.length : 0,
-    EMAIL_HOST: process.env.EMAIL_HOST || '(not set)',
-    EMAIL_PORT: process.env.EMAIL_PORT || '(not set)',
+    RESEND_API_KEY_set: !!apiKey,
+    RESEND_API_KEY_prefix: apiKey ? apiKey.substring(0, 6) + '...' : null,
+    EMAIL_FROM_set: !!fromEmail,
+    EMAIL_FROM_value: fromEmail || '(not set)',
+    EMAIL_FROM_NAME: process.env.EMAIL_FROM_NAME || '(not set)',
+    ADMIN_EMAIL_set: !!process.env.ADMIN_EMAIL,
     NODE_ENV: process.env.NODE_ENV || '(not set)'
   });
+});
+
+// Test: send a real email to admin to verify Resend is working
+app.post('/api/debug-send-test-email', requireAuth, async (req, res) => {
+  try {
+    const { Resend } = require('resend');
+    const apiKey = process.env.RESEND_API_KEY;
+    const fromEmail = process.env.EMAIL_FROM;
+    const toEmail = process.env.ADMIN_EMAIL || fromEmail;
+
+    if (!apiKey) return res.status(500).json({ success: false, message: 'RESEND_API_KEY not set' });
+    if (!fromEmail) return res.status(500).json({ success: false, message: 'EMAIL_FROM not set' });
+    if (!toEmail) return res.status(500).json({ success: false, message: 'ADMIN_EMAIL not set' });
+
+    const resend = new Resend(apiKey);
+    const { data, error } = await resend.emails.send({
+      from: `CadenceWave <${fromEmail}>`,
+      to: toEmail,
+      subject: '[Test] CadenceWave Email Delivery Check',
+      text: 'If you receive this, Resend is configured correctly and the domain is verified.',
+      html: '<p>If you receive this, <strong>Resend is configured correctly</strong> and the domain is verified.</p>'
+    });
+
+    if (error) return res.status(500).json({ success: false, message: error.message, error });
+
+    res.json({ success: true, messageId: data.id, sentTo: toEmail, sentFrom: fromEmail });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
 // Preview AI-generated email for a lead (without sending)
