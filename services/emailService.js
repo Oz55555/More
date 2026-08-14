@@ -57,16 +57,10 @@ class EmailService {
     const { data, error } = await resend.emails.send({
       from: fromField,
       to: contact.email,
-      reply_to: this.fromEmail,
+      reply_to: fromEmail,
       subject: emailContent.subject,
       text: emailContent.bodyText,
-      html: htmlBody,
-      headers: {
-        'X-Priority': '1',
-        'Importance': 'high',
-        'X-MS-Exchange-Organization-SCL': '-1',
-        'Precedence': 'personal'
-      }
+      html: htmlBody
     });
 
     if (error) throw new Error(`Resend error: ${error.message}`);
