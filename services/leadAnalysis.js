@@ -221,11 +221,10 @@ BODY rules:
 - Briefly address their specific question or need.
 - Mention one concrete way CadenceWave can help (specific to their message, not generic).
 - One soft call to action: suggest a quick call or reply to this email. NO aggressive CTAs.
-- Sign as: "Oscar\\nCadenceWave" (a real person name makes emails land in Primary).
+- Sign as: "CadenceWave Team\ncadencewave.io"
 - NO bullet lists, NO bold headers, NO promotional language like "benefits", "solutions", "transform your business".
 
 Return ONLY JSON: {"subject":"...","bodyText":"...","bodyHtml":"<p>...</p>"}`;
-
 
     const apiKey = this.deepseekApiKey || this.openaiApiKey;
     const endpoint = this.deepseekApiKey
@@ -242,7 +241,6 @@ Return ONLY JSON: {"subject":"...","bodyText":"...","bodyHtml":"<p>...</p>"}`;
     const data = await response.json();
     if (!data.choices?.[0]) throw new Error(`AI email API error: ${data.error?.message || data.message || JSON.stringify(data)}`);
     const raw = data.choices[0].message.content;
-    // Strip markdown code fences if present (```json ... ```)
     const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
     const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
@@ -251,7 +249,6 @@ Return ONLY JSON: {"subject":"...","bodyText":"...","bodyHtml":"<p>...</p>"}`;
     }
 
     const result = JSON.parse(jsonMatch[0]);
-    // Safety: replace any leftover placeholders with the real name
     const replacePlaceholders = (str) => str
       .replace(/\[nombre del contacto\]/gi, firstName)
       .replace(/\[nombre\]/gi, firstName)
@@ -269,14 +266,14 @@ Return ONLY JSON: {"subject":"...","bodyText":"...","bodyHtml":"<p>...</p>"}`;
     if (lang === 'es') {
       return {
         subject: `Re: tu mensaje a CadenceWave`,
-        bodyText: `Hola ${firstName},\n\nGracias por escribirnos. Vi tu mensaje sobre ${intent} y quería responderte directamente.\n\nEn CadenceWave trabajamos en ${areas}. Si tienes unos minutos esta semana, podríamos hablar y ver si podemos ayudarte con lo que necesitas.\n\nMe puedes responder aquí o visitar cadencewave.io si quieres saber más antes.\n\nSaludos,\nOscar\nCadenceWave`,
-        bodyHtml: `<p>Hola ${firstName},</p><p>Gracias por escribirnos. Vi tu mensaje sobre ${intent} y quería responderte directamente.</p><p>En CadenceWave trabajamos en ${areas}. Si tienes unos minutos esta semana, podríamos hablar y ver si podemos ayudarte con lo que necesitas.</p><p>Me puedes responder aquí o visitar <a href="https://cadencewave.io">cadencewave.io</a> si quieres saber más antes.</p><p>Saludos,<br>Oscar<br>CadenceWave</p>`
+        bodyText: `Hola ${firstName},\n\nGracias por escribirnos. Vi tu mensaje sobre ${intent} y quería responderte directamente.\n\nEn CadenceWave trabajamos en ${areas}. Si tienes unos minutos esta semana, podríamos hablar y ver si podemos ayudarte con lo que necesitas.\n\nMe puedes responder aquí o visitar cadencewave.io si quieres saber más antes.\n\nSaludos,\nCadenceWave Team\ncadencewave.io`,
+        bodyHtml: `<p>Hola ${firstName},</p><p>Gracias por escribirnos. Vi tu mensaje sobre ${intent} y quería responderte directamente.</p><p>En CadenceWave trabajamos en ${areas}. Si tienes unos minutos esta semana, podríamos hablar y ver si podemos ayudarte con lo que necesitas.</p><p>Me puedes responder aquí o visitar <a href="https://cadencewave.io">cadencewave.io</a> si quieres saber más antes.</p><p>Saludos,<br>CadenceWave Team<br>cadencewave.io</p>`
       };
     }
     return {
       subject: `Re: your message to CadenceWave`,
-      bodyText: `Hi ${firstName},\n\nThanks for getting in touch. I saw your message about ${intent} and wanted to reply directly.\n\nAt CadenceWave we work on ${areas}. If you have a few minutes this week, we could have a quick chat and see if we can help.\n\nFeel free to reply here or check cadencewave.io if you'd like to know more first.\n\nBest,\nOscar\nCadenceWave`,
-      bodyHtml: `<p>Hi ${firstName},</p><p>Thanks for getting in touch. I saw your message about ${intent} and wanted to reply directly.</p><p>At CadenceWave we work on ${areas}. If you have a few minutes this week, we could have a quick chat and see if we can help.</p><p>Feel free to reply here or check <a href="https://cadencewave.io">cadencewave.io</a> if you'd like to know more first.</p><p>Best,<br>Oscar<br>CadenceWave</p>`
+      bodyText: `Hi ${firstName},\n\nThanks for getting in touch. I saw your message about ${intent} and wanted to reply directly.\n\nAt CadenceWave we work on ${areas}. If you have a few minutes this week, we could have a quick chat and see if we can help.\n\nFeel free to reply here or check cadencewave.io if you'd like to know more first.\n\nBest,\nCadenceWave Team\ncadencewave.io`,
+      bodyHtml: `<p>Hi ${firstName},</p><p>Thanks for getting in touch. I saw your message about ${intent} and wanted to reply directly.</p><p>At CadenceWave we work on ${areas}. If you have a few minutes this week, we could have a quick chat and see if we can help.</p><p>Feel free to reply here or check <a href="https://cadencewave.io">cadencewave.io</a> if you'd like to know more first.</p><p>Best,<br>CadenceWave Team<br>cadencewave.io</p>`
     };
   }
 }
