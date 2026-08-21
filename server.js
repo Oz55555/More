@@ -1647,6 +1647,69 @@ app.get('/api/admin/calendly-bookings', requireAuth, async (req, res) => {
   }
 });
 
+// Sync existing Calendly events into the database
+app.post('/api/admin/calendly/sync', requireAuth, async (req, res) => {
+  try {
+    const token = process.env.CALENDLY_API_TOKEN;
+    if (!token) return res.status(400).json({ success: false, message: 'CALENDLY_API_TOKEN no está configurado.' });
+
+    const meRes = await fetch('https://api.calendly.com/users/me', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const meData = await meRes.json();
+    if (!meRes.ok) return res.status(400).json({ success: false, message: meData.message || 'Error con Calendly API.' });
+
+    const orgUri = meData.resource?.current_organization;
+    if (!orgUri) return res.status(400).json({ success: false, message: 'No se pudo obtener la organización.' });
+
+    // Fetch scheduled (active) events
+    const evRes = await fetch(`https://api.calendly.com/scheduled_events?organization=${encodeURIComponent(orgUri)}&status=active&count=100`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const evData = await evRes.json();
+    const events = evData.collection || [];
+
+    let imported = 0;
+    for (const ev of events) {
+      const eventUuid = ev.uri.split('/').pop();
+      // Fetch invitees for each event
+      const invRes = await fetch(`https://api.calendly.com/scheduled_events/${eventUuid}/invitees?count=100`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const invData = await invRes.json();
+      for (const inv of (invData.collection || [])) {
+        const qa = inv.questions_and_answers || [];
+        const notes = qa.map(q => `${q.question}: ${q.answer}`).join('\n') || null;
+        await CalendlyBooking.findOneAndUpdate(
+          { calendlyEventUuid: eventUuid },
+          {
+            calendlyEventUuid:   eventUuid,
+            calendlyInviteeUuid: inv.uri?.split('/').pop() || null,
+            name:        inv.name  || 'Unknown',
+            email:       inv.email || '',
+            timezone:    inv.timezone || null,
+            eventName:   ev.name || '30 Minute Meeting',
+            startTime:   new Date(ev.start_time),
+            endTime:     ev.end_time ? new Date(ev.end_time) : null,
+            status:      'scheduled',
+            notes,
+            cancelUrl:     inv.cancel_url     || null,
+            rescheduleUrl: inv.reschedule_url || null
+          },
+          { upsert: true, new: true }
+        );
+        imported++;
+      }
+    }
+
+    console.log(`[Calendly Sync] Imported ${imported} booking(s)`);
+    res.json({ success: true, message: `Sincronización completa. ${imported} reunión(es) importada(s).`, imported });
+  } catch (err) {
+    console.error('[Calendly sync error]', err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // Register Calendly webhook subscription automatically
 app.post('/api/admin/calendly/register-webhook', requireAuth, async (req, res) => {
   try {

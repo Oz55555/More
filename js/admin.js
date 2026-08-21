@@ -18,6 +18,7 @@ class LeadCaptureAgent {
         this.bindEvents();
         await this.loadLeads();
         await this.loadBaoLeads();
+        await this.syncCalendly(true);
         await this.loadCalendlyBookings();
         await this.loadTokenStats();
         this.renderCharts();
@@ -34,7 +35,7 @@ class LeadCaptureAgent {
         bind('refreshBtn', 'click', async () => { await this.loadLeads(); await this.loadBaoLeads(); await this.loadCalendlyBookings(); await this.loadTokenStats(); });
         bind('refreshBaoBtn', 'click', async () => { await this.loadBaoLeads(); });
         bind('refreshCalendlyBtn', 'click', async () => { await this.loadCalendlyBookings(); });
-        bind('registerCalendlyWebhookBtn', 'click', this.registerCalendlyWebhook);
+        bind('syncCalendlyBtn', 'click', this.syncCalendly);
         bind('exportBaoBtn', 'click', this.exportBaoCSV);
         bind('logoutBtn', 'click', this.logout);
         bind('rescoreAllBtn', 'click', this.rescoreAll);
@@ -799,6 +800,26 @@ class LeadCaptureAgent {
                 <td style="white-space:nowrap">${actions}</td>
             </tr>`;
         }).join('');
+    }
+
+    async syncCalendly(silent = false) {
+        const btn = document.getElementById('syncCalendlyBtn');
+        if (btn && !silent) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sincronizando...'; }
+        const opts = { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' } };
+        try {
+            const res = await fetch(this.apiBase + '/admin/calendly/sync', opts);
+            if (res.status === 401) { window.location.href = '/login'; return; }
+            const data = await res.json();
+            if (btn && !silent) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-cloud-download-alt"></i> Sincronizar'; }
+            if (data && data.success) {
+                if (!silent) this.toast(data.message, 'success');
+                await this.loadCalendlyBookings();
+            } else if (!silent && data.message) {
+                this.toast(data.message, 'error');
+            }
+        } catch (e) {
+            if (btn && !silent) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-cloud-download-alt"></i> Sincronizar'; }
+        }
     }
 
     async registerCalendlyWebhook() {
