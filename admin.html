@@ -253,6 +253,65 @@
                 </div>
             </section>
 
+            <!-- ── CALENDLY BOOKINGS ─────────────────────────────────────────────────── -->
+            <section class="calendly-section">
+                <div class="section-header">
+                    <div class="section-title-group">
+                        <h2><i class="fas fa-calendar-check"></i> Reuniones Agendadas — Calendly</h2>
+                        <span class="agent-badge calendly-badge">Calendly</span>
+                    </div>
+                    <div class="lead-controls">
+                        <button id="refreshCalendlyBtn" class="btn btn-primary btn-sm">
+                            <i class="fas fa-sync-alt"></i> Actualizar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Calendly Stats -->
+                <div class="bao-stats-row">
+                    <div class="bao-stat-card">
+                        <i class="fas fa-calendar-alt"></i>
+                        <div><h3 id="clyStatTotal">0</h3><p>Total</p></div>
+                    </div>
+                    <div class="bao-stat-card hot">
+                        <i class="fas fa-calendar-day"></i>
+                        <div><h3 id="clyStatUpcoming">0</h3><p>Próximas</p></div>
+                    </div>
+                    <div class="bao-stat-card warm">
+                        <i class="fas fa-calendar-week"></i>
+                        <div><h3 id="clyStatWeek">0</h3><p>Esta Semana</p></div>
+                    </div>
+                    <div class="bao-stat-card">
+                        <i class="fas fa-calendar-times"></i>
+                        <div><h3 id="clyStatCancelled">0</h3><p>Canceladas</p></div>
+                    </div>
+                </div>
+
+                <!-- Bookings Table -->
+                <div class="table-container">
+                    <table id="calendlyTable">
+                        <thead>
+                            <tr>
+                                <th>Fecha / Hora</th>
+                                <th>Contacto</th>
+                                <th>Tipo de Reunión</th>
+                                <th>Zona Horaria</th>
+                                <th>Estado</th>
+                                <th>Notas</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="calendlyTableBody">
+                            <tr>
+                                <td colspan="7" class="loading">
+                                    <i class="fas fa-spinner fa-spin"></i> Cargando reuniones...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
             <!-- ── SECONDARY: Token Usage â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
             <details class="collapsible-section">
                 <summary><i class="fas fa-coins"></i> DeepSeek API Usage <span class="collapse-badge" id="tokenBadge">&mdash;</span></summary>

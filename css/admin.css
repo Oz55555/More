@@ -1910,6 +1910,31 @@ tr:hover {
 .email-sent { color: #059669; font-weight: 600; font-size: 0.82rem; }
 .email-pending { color: #d97706; font-weight: 600; font-size: 0.82rem; }
 
+/* ── Calendly Bookings Section ───────────────────────────────────── */
+.calendly-section {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    border-left: 4px solid #006bff;
+}
+.calendly-section .section-header { margin-bottom: 18px; }
+.calendly-section .section-header h2 i { color: #006bff; }
+.agent-badge.calendly-badge { background: linear-gradient(135deg, #006bff, #0033a0); color: #fff; }
+
+.booking-status-scheduled { color: #059669; font-weight: 600; font-size: 0.82rem; }
+.booking-status-cancelled  { color: #dc2626; font-weight: 600; font-size: 0.82rem; }
+.booking-status-rescheduled { color: #d97706; font-weight: 600; font-size: 0.82rem; }
+
+.booking-notes-cell {
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
 /* Responsive */
 @media (max-width: 1200px) { .lead-stats-bar { grid-template-columns: repeat(3,1fr); } }
 @media (max-width: 900px) { .lead-pipeline { grid-template-columns: 1fr; } .lead-detail-grid { grid-template-columns: 1fr; } .bao-stats-row { flex-wrap: wrap; } }

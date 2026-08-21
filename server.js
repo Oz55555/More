@@ -13,6 +13,7 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const Contact = require('./models/Contact');
 const Customer = require('./models/Customer');
 const PaymentHistory = require('./models/PaymentHistory');
+const CalendlyBooking = require('./models/CalendlyBooking');
 const toneAnalysisService = require('./services/toneAnalysis');
 const CustomerService = require('./services/customerService');
 const leadAnalysisService = require('./services/leadAnalysis');
@@ -1573,6 +1574,77 @@ app.get('/api/booking/redirect', (req, res) => {
   if (email) calendarAgent.trackClick(email, source);
   const bookingUrl = process.env.BOOKING_URL || 'https://cadencewave.io';
   res.redirect(302, bookingUrl);
+});
+
+// ─── CALENDLY WEBHOOK + BOOKINGS ─────────────────────────────────────────────
+
+// Calendly webhook — receives invitee.created / invitee.canceled events (no auth)
+app.post('/api/webhooks/calendly', async (req, res) => {
+  try {
+    const { event, payload } = req.body;
+    if (!event || !payload) return res.status(400).json({ ok: false });
+
+    const invitee      = payload.invitee      || {};
+    const scheduledEvent = payload.event || {};
+    const qa           = payload.questions_and_answers || [];
+    const notes        = qa.map(q => `${q.question}: ${q.answer}`).join('\n') || null;
+
+    const eventUuid = scheduledEvent.uuid || invitee.uuid || `${Date.now()}`;
+
+    if (event === 'invitee.created') {
+      await CalendlyBooking.findOneAndUpdate(
+        { calendlyEventUuid: eventUuid },
+        {
+          calendlyEventUuid:   eventUuid,
+          calendlyInviteeUuid: invitee.uuid || null,
+          name:        invitee.name  || 'Unknown',
+          email:       invitee.email || '',
+          timezone:    invitee.timezone || null,
+          eventName:   scheduledEvent.name || '30 Minute Meeting',
+          startTime:   new Date(scheduledEvent.start_time || Date.now()),
+          endTime:     scheduledEvent.end_time ? new Date(scheduledEvent.end_time) : null,
+          status:      'scheduled',
+          notes,
+          cancelUrl:     invitee.cancel_url     || null,
+          rescheduleUrl: invitee.reschedule_url || null
+        },
+        { upsert: true, new: true }
+      );
+      console.log(`[Calendly] New booking: ${invitee.name} <${invitee.email}>`);
+    }
+
+    if (event === 'invitee.canceled') {
+      await CalendlyBooking.findOneAndUpdate(
+        { calendlyEventUuid: eventUuid },
+        { status: 'cancelled' }
+      );
+      console.log(`[Calendly] Booking cancelled: ${invitee.email}`);
+    }
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[Calendly webhook error]', err.message);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// Get all Calendly bookings for admin panel
+app.get('/api/admin/calendly-bookings', requireAuth, async (req, res) => {
+  try {
+    const bookings = await CalendlyBooking.find().sort({ startTime: -1 });
+    const now = new Date();
+    const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+    const stats = {
+      total:     bookings.length,
+      scheduled: bookings.filter(b => b.status === 'scheduled').length,
+      cancelled: bookings.filter(b => b.status === 'cancelled').length,
+      thisWeek:  bookings.filter(b => b.createdAt >= weekAgo).length,
+      upcoming:  bookings.filter(b => b.status === 'scheduled' && b.startTime >= now).length
+    };
+    res.json({ success: true, bookings, stats });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
 // ─── END LEAD CAPTURE AGENT ENDPOINTS ────────────────────────────────────────

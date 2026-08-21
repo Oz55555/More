@@ -18,6 +18,7 @@ class LeadCaptureAgent {
         this.bindEvents();
         await this.loadLeads();
         await this.loadBaoLeads();
+        await this.loadCalendlyBookings();
         await this.loadTokenStats();
         this.renderCharts();
     }
@@ -30,8 +31,9 @@ class LeadCaptureAgent {
             if (el) el.addEventListener(event, fn.bind(this));
         };
 
-        bind('refreshBtn', 'click', async () => { await this.loadLeads(); await this.loadBaoLeads(); await this.loadTokenStats(); });
+        bind('refreshBtn', 'click', async () => { await this.loadLeads(); await this.loadBaoLeads(); await this.loadCalendlyBookings(); await this.loadTokenStats(); });
         bind('refreshBaoBtn', 'click', async () => { await this.loadBaoLeads(); });
+        bind('refreshCalendlyBtn', 'click', async () => { await this.loadCalendlyBookings(); });
         bind('exportBaoBtn', 'click', this.exportBaoCSV);
         bind('logoutBtn', 'click', this.logout);
         bind('rescoreAllBtn', 'click', this.rescoreAll);
@@ -747,6 +749,55 @@ class LeadCaptureAgent {
         this.setText('totalRequests', (total?.requests || 0).toLocaleString());
         this.setText('totalCost', `$${(total?.cost || 0).toFixed(4)}`);
         this.setText('avgTokensPerRequest', this.tokenStats.averageTokensPerRequest || 0);
+    }
+
+    // ── CALENDLY BOOKINGS ──────────────────────────────────────────────────────
+
+    async loadCalendlyBookings() {
+        const tbody = document.getElementById('calendlyTableBody');
+        if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="loading"><i class="fas fa-spinner fa-spin"></i> Cargando reuniones...</td></tr>`;
+        const data = await this.apiFetch('/admin/calendly-bookings');
+        if (!data || !data.success) {
+            if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="loading"><i class="fas fa-exclamation-triangle"></i> Error al cargar reuniones</td></tr>`;
+            return;
+        }
+        this.setText('clyStatTotal',     data.stats.total);
+        this.setText('clyStatUpcoming',  data.stats.upcoming);
+        this.setText('clyStatWeek',      data.stats.thisWeek);
+        this.setText('clyStatCancelled', data.stats.cancelled);
+        this.renderCalendlyBookings(data.bookings);
+    }
+
+    renderCalendlyBookings(bookings) {
+        const tbody = document.getElementById('calendlyTableBody');
+        if (!tbody) return;
+        if (!bookings || bookings.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" class="loading">No hay reuniones registradas aún.</td></tr>`;
+            return;
+        }
+        const statusLabel = { scheduled: 'Agendada', cancelled: 'Cancelada', rescheduled: 'Reagendada' };
+        tbody.innerHTML = bookings.map(b => {
+            const dt = b.startTime ? new Date(b.startTime) : null;
+            const dateStr = dt ? dt.toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' }) : '—';
+            const timeStr = dt ? dt.toLocaleTimeString('es-MX', { hour:'2-digit', minute:'2-digit' }) : '';
+            const statusClass = `booking-status-${b.status}`;
+            const label = statusLabel[b.status] || b.status;
+            const notes = b.notes ? `<span class="booking-notes-cell" title="${this.esc(b.notes)}">${this.esc(b.notes)}</span>` : '<span style="color:#9ca3af">—</span>';
+            const actions = `
+                ${b.rescheduleUrl ? `<a href="${this.esc(b.rescheduleUrl)}" target="_blank" class="btn btn-info" style="padding:4px 8px;font-size:0.75rem;" title="Reagendar"><i class="fas fa-calendar-edit"></i></a>` : ''}
+                ${b.cancelUrl ? `<a href="${this.esc(b.cancelUrl)}" target="_blank" class="btn btn-warning" style="padding:4px 8px;font-size:0.75rem;" title="Cancelar"><i class="fas fa-times"></i></a>` : ''}
+                <a href="mailto:${this.esc(b.email)}" class="btn btn-secondary" style="padding:4px 8px;font-size:0.75rem;" title="Enviar correo"><i class="fas fa-envelope"></i></a>
+            `;
+            return `<tr>
+                <td><strong>${dateStr}</strong>${timeStr ? `<br><small style="color:#6b7280">${timeStr}</small>` : ''}</td>
+                <td><strong>${this.esc(b.name)}</strong><br><small style="color:#6b7280">${this.esc(b.email)}</small></td>
+                <td>${this.esc(b.eventName || '30 min Meeting')}</td>
+                <td style="font-size:0.8rem;color:#6b7280">${this.esc(b.timezone || '—')}</td>
+                <td><span class="${statusClass}"><i class="fas fa-circle" style="font-size:0.6rem;margin-right:4px;"></i>${label}</span></td>
+                <td>${notes}</td>
+                <td style="white-space:nowrap">${actions}</td>
+            </tr>`;
+        }).join('');
     }
 
     // ── LOGOUT ─────────────────────────────────────────────────────────────────
