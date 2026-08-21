@@ -1657,10 +1657,11 @@ app.post('/api/admin/calendly/sync', requireAuth, async (req, res) => {
       headers: { Authorization: `Bearer ${token}` }
     });
     const meData = await meRes.json();
-    if (!meRes.ok) return res.status(400).json({ success: false, message: meData.message || 'Error con Calendly API.' });
+    if (!meRes.ok) return res.status(400).json({ success: false, message: `Calendly /users/me error ${meRes.status}: ${meData.message || meData.title || JSON.stringify(meData)}` });
 
-    const orgUri = meData.resource?.current_organization;
-    if (!orgUri) return res.status(400).json({ success: false, message: 'No se pudo obtener la organización.' });
+    const orgUri  = meData.resource?.current_organization;
+    const userUri = meData.resource?.uri;
+    if (!orgUri) return res.status(400).json({ success: false, message: 'No se pudo obtener la organización. Verifica que el token tenga scope de User Management.' });
 
     // Fetch scheduled (active) events
     const evRes = await fetch(`https://api.calendly.com/scheduled_events?organization=${encodeURIComponent(orgUri)}&status=active&count=100`, {

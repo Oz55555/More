@@ -814,7 +814,7 @@ class LeadCaptureAgent {
             if (data && data.success) {
                 if (!silent) this.toast(data.message, 'success');
                 await this.loadCalendlyBookings();
-            } else if (!silent && data.message) {
+            } else if (data && data.message) {
                 this.toast(data.message, 'error');
             }
         } catch (e) {
