@@ -1647,6 +1647,56 @@ app.get('/api/admin/calendly-bookings', requireAuth, async (req, res) => {
   }
 });
 
+// Register Calendly webhook subscription automatically
+app.post('/api/admin/calendly/register-webhook', requireAuth, async (req, res) => {
+  try {
+    const token = process.env.CALENDLY_API_TOKEN;
+    if (!token) return res.status(400).json({ success: false, message: 'CALENDLY_API_TOKEN no está configurado en las variables de entorno.' });
+
+    // 1. Get current user + org URI
+    const meRes = await fetch('https://api.calendly.com/users/me', {
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+    });
+    const meData = await meRes.json();
+    if (!meRes.ok) return res.status(400).json({ success: false, message: meData.message || 'Error obteniendo usuario de Calendly.' });
+
+    const orgUri  = meData.resource?.current_organization;
+    const userUri = meData.resource?.uri;
+    if (!orgUri) return res.status(400).json({ success: false, message: 'No se pudo obtener la organización de Calendly.' });
+
+    const webhookUrl = 'https://www.cadencewave.io/api/webhooks/calendly';
+
+    // 2. Check if webhook already exists
+    const listRes = await fetch(`https://api.calendly.com/webhook_subscriptions?organization=${encodeURIComponent(orgUri)}&scope=organization`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const listData = await listRes.json();
+    const existing = (listData.collection || []).find(w => w.callback_url === webhookUrl && w.state === 'active');
+    if (existing) return res.json({ success: true, message: 'El webhook ya estaba registrado y activo.', alreadyExists: true });
+
+    // 3. Create webhook
+    const createRes = await fetch('https://api.calendly.com/webhook_subscriptions', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url: webhookUrl,
+        events: ['invitee.created', 'invitee.canceled'],
+        organization: orgUri,
+        user: userUri,
+        scope: 'organization'
+      })
+    });
+    const createData = await createRes.json();
+    if (!createRes.ok) return res.status(400).json({ success: false, message: createData.message || 'Error registrando webhook.' });
+
+    console.log('[Calendly] Webhook registrado:', webhookUrl);
+    res.json({ success: true, message: 'Webhook registrado exitosamente en Calendly.' });
+  } catch (err) {
+    console.error('[Calendly register-webhook error]', err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // ─── END LEAD CAPTURE AGENT ENDPOINTS ────────────────────────────────────────
 
 // Re-analyze all messages with DeepSeek

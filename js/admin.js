@@ -34,6 +34,7 @@ class LeadCaptureAgent {
         bind('refreshBtn', 'click', async () => { await this.loadLeads(); await this.loadBaoLeads(); await this.loadCalendlyBookings(); await this.loadTokenStats(); });
         bind('refreshBaoBtn', 'click', async () => { await this.loadBaoLeads(); });
         bind('refreshCalendlyBtn', 'click', async () => { await this.loadCalendlyBookings(); });
+        bind('registerCalendlyWebhookBtn', 'click', this.registerCalendlyWebhook);
         bind('exportBaoBtn', 'click', this.exportBaoCSV);
         bind('logoutBtn', 'click', this.logout);
         bind('rescoreAllBtn', 'click', this.rescoreAll);
@@ -798,6 +799,16 @@ class LeadCaptureAgent {
                 <td style="white-space:nowrap">${actions}</td>
             </tr>`;
         }).join('');
+    }
+
+    async registerCalendlyWebhook() {
+        const btn = document.getElementById('registerCalendlyWebhookBtn');
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registrando...'; }
+        const data = await this.apiFetch('/admin/calendly/register-webhook', 'POST');
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-plug"></i> Registrar Webhook'; }
+        if (data && data.success) {
+            this.toast(data.message || 'Webhook registrado ✓', 'success');
+        }
     }
 
     // ── LOGOUT ─────────────────────────────────────────────────────────────────
