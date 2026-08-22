@@ -1711,6 +1711,21 @@ app.post('/api/admin/calendly/sync', requireAuth, async (req, res) => {
   }
 });
 
+// Mark a Calendly booking as cancelled in the DB
+app.patch('/api/admin/calendly-bookings/:id/cancel', requireAuth, async (req, res) => {
+  try {
+    const booking = await CalendlyBooking.findByIdAndUpdate(
+      req.params.id,
+      { status: 'cancelled' },
+      { new: true }
+    );
+    if (!booking) return res.status(404).json({ success: false, message: 'Reunión no encontrada.' });
+    res.json({ success: true, booking });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // Register Calendly webhook subscription automatically
 app.post('/api/admin/calendly/register-webhook', requireAuth, async (req, res) => {
   try {

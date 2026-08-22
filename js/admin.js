@@ -785,12 +785,17 @@ class LeadCaptureAgent {
             const statusClass = `booking-status-${b.status}`;
             const label = statusLabel[b.status] || b.status;
             const notes = b.notes ? `<span class="booking-notes-cell" title="${this.esc(b.notes)}">${this.esc(b.notes)}</span>` : '<span style="color:#9ca3af">—</span>';
+            const isCancelled = b.status === 'cancelled';
             const actions = `
-                ${b.rescheduleUrl ? `<a href="${this.esc(b.rescheduleUrl)}" target="_blank" class="btn btn-info" style="padding:4px 8px;font-size:0.75rem;" title="Reagendar"><i class="fas fa-calendar-edit"></i></a>` : ''}
-                ${b.cancelUrl ? `<a href="${this.esc(b.cancelUrl)}" target="_blank" class="btn btn-warning" style="padding:4px 8px;font-size:0.75rem;" title="Cancelar"><i class="fas fa-times"></i></a>` : ''}
-                <a href="mailto:${this.esc(b.email)}" class="btn btn-secondary" style="padding:4px 8px;font-size:0.75rem;" title="Enviar correo"><i class="fas fa-envelope"></i></a>
+                ${b.rescheduleUrl && !isCancelled
+                    ? `<a href="${this.esc(b.rescheduleUrl)}" target="_blank" class="btn btn-info" style="padding:4px 10px;font-size:0.75rem;" title="Reagendar en Calendly"><i class="fas fa-arrows-rotate"></i></a>`
+                    : ''}
+                ${b.cancelUrl && !isCancelled
+                    ? `<button class="btn btn-warning btn-cancel-booking" data-id="${b._id}" data-name="${this.esc(b.name)}" data-url="${this.esc(b.cancelUrl)}" style="padding:4px 10px;font-size:0.75rem;" title="Cancelar reunión"><i class="fas fa-ban"></i></button>`
+                    : ''}
+                <button class="btn btn-secondary btn-email-booking" data-email="${this.esc(b.email)}" data-name="${this.esc(b.name)}" data-date="${this.esc(dateStr)}" data-time="${this.esc(timeStr)}" style="padding:4px 10px;font-size:0.75rem;" title="Enviar correo al cliente"><i class="fas fa-envelope"></i></button>
             `;
-            return `<tr>
+            return `<tr data-booking-id="${b._id}">
                 <td><strong>${dateStr}</strong>${timeStr ? `<br><small style="color:#6b7280">${timeStr}</small>` : ''}</td>
                 <td><strong>${this.esc(b.name)}</strong><br><small style="color:#6b7280">${this.esc(b.email)}</small></td>
                 <td>${this.esc(b.eventName || '30 min Meeting')}</td>
@@ -800,6 +805,37 @@ class LeadCaptureAgent {
                 <td style="white-space:nowrap">${actions}</td>
             </tr>`;
         }).join('');
+
+        // Bind cancel buttons
+        tbody.querySelectorAll('.btn-cancel-booking').forEach(btn => {
+            btn.addEventListener('click', () => this.cancelBooking(btn.dataset.id, btn.dataset.name, btn.dataset.url));
+        });
+
+        // Bind email buttons
+        tbody.querySelectorAll('.btn-email-booking').forEach(btn => {
+            btn.addEventListener('click', () => this.emailBookingContact(btn.dataset.email, btn.dataset.name, btn.dataset.date, btn.dataset.time));
+        });
+    }
+
+    async cancelBooking(id, name, cancelUrl) {
+        const ok = confirm(`¿Cancelar la reunión con ${name}?\n\nSe abrirá Calendly para completar la cancelación.`);
+        if (!ok) return;
+        const opts = { method: 'PATCH', credentials: 'include', headers: { 'Content-Type': 'application/json' } };
+        const res = await fetch(`${this.apiBase}/admin/calendly-bookings/${id}/cancel`, opts);
+        const data = await res.json();
+        if (data.success) {
+            this.toast(`Reunión con ${name} marcada como cancelada.`, 'success');
+            window.open(cancelUrl, '_blank');
+            await this.loadCalendlyBookings();
+        } else {
+            this.toast(data.message || 'Error al cancelar.', 'error');
+        }
+    }
+
+    emailBookingContact(email, name, date, time) {
+        const subject = encodeURIComponent(`Seguimiento — Reunión del ${date}${time ? ' a las ' + time : ''}`);
+        const body = encodeURIComponent(`Hola ${name},\n\nEsperamos que todo haya ido bien en nuestra reunión del ${date}${time ? ' a las ' + time : ''}.\n\nQuedo a tus órdenes para cualquier consulta.\n\nSaludos,\nCadenceWave`);
+        window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
     }
 
     async syncCalendly(silent = false) {
