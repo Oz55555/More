@@ -1667,7 +1667,7 @@ tr:hover {
 .header-brand { display: flex; align-items: center; gap: 14px; }
 .header-brand > i { font-size: 2rem; color: #60a5fa; }
 .header-brand h1 { font-size: 1.3rem; margin: 0; }
-.header-subtitle { font-size: 0.8rem; color: rgba(255,255,255,0.65); margin: 2px 0 0; }
+.header-subtitle { font-size: 0.8rem; color: #6b7280; margin: 2px 0 0; }
 .agent-status-pill { display: flex; align-items: center; gap: 8px; background: rgba(16,185,129,0.2); border: 1px solid rgba(16,185,129,0.4); border-radius: 50px; padding: 6px 14px; font-size: 0.8rem; font-weight: 600; color: #10b981; }
 .pulse-dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; animation: pulseDot 1.5s infinite; }
 @keyframes pulseDot { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.5; transform:scale(1.4); } }
