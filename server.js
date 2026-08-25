@@ -283,6 +283,11 @@ app.post('/api/contact', validateContactForm, async (req, res) => {
     });
     await contact.save();
 
+    // Send welcome/confirmation email immediately — non-blocking, unconditional
+    emailService.sendWelcomeEmail(contact)
+      .then(() => Contact.findByIdAndUpdate(contact._id, { $set: { welcomeEmailSent: true } }))
+      .catch(err => console.error('Welcome email error:', err.message));
+
     // Tone analysis — background, non-blocking
     const tonePromise = Promise.resolve()
       .then(() => toneAnalysisService.analyzeMessageTone(message))
@@ -313,13 +318,6 @@ app.post('/api/contact', validateContactForm, async (req, res) => {
         if (leadAnalysis.conversionScore)update.conversionScore= leadAnalysis.conversionScore;
         await Contact.findByIdAndUpdate(contact._id, { $set: update }, { runValidators: false });
         console.log(`Lead analyzed: ${email} — Score: ${leadAnalysis?.score} (${leadAnalysis?.qualification}) | Industry: ${leadAnalysis?.industry} | Spam: ${leadAnalysis?.isSpam}`);
-        // Send welcome email if not spam
-        if (!leadAnalysis.isSpam) {
-          const populatedContact = await Contact.findById(contact._id);
-          emailService.sendWelcomeEmail(populatedContact)
-            .then(() => Contact.findByIdAndUpdate(contact._id, { $set: { welcomeEmailSent: true } }))
-            .catch(err => console.error('Welcome email error:', err.message));
-        }
         return leadAnalysis;
       })
       .catch(err => { console.error('Lead analysis async error:', err.message); return null; });
