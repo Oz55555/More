@@ -503,7 +503,8 @@ class LeadCaptureAgent {
 
     async sendEmail() {
         if (!this.currentLeadId) return;
-        const lead = this.leads.find(l => l._id === this.currentLeadId);
+        const lead = this.leads.find(l => l._id === this.currentLeadId)
+                  || this.baoLeads.find(l => l._id === this.currentLeadId);
         if (!lead) return;
 
         const ok = await this.showConfirm(
@@ -523,14 +524,20 @@ class LeadCaptureAgent {
             this.toast(`✅ Email enviado a ${lead.email}`, 'success');
             btn.textContent = '✉️ Email enviado';
 
-            // Update local data
+            // Update local data (regular leads)
             const idx = this.leads.findIndex(l => l._id === this.currentLeadId);
             if (idx >= 0) {
                 this.leads[idx].emailStatus = { sent: true, sentAt: new Date(), subject: data.result?.subject };
             }
+            // Update local data (BAO leads)
+            const baoIdx = this.baoLeads.findIndex(l => l._id === this.currentLeadId);
+            if (baoIdx >= 0) {
+                this.baoLeads[baoIdx].emailStatus = { sent: true, sentAt: new Date(), subject: data.result?.subject };
+            }
             this.stats.emailsSent = (this.stats.emailsSent || 0) + 1;
             this.renderStats();
             this.applyFilter();
+            this.applyBaoFilter();
         } catch (err) {
             this.toast('Error al enviar email: ' + err.message, 'error');
             btn.disabled = false;
